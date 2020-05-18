@@ -1,0 +1,26 @@
+menu "TRICORE Options"
+	depends on TRICORE
+
+config ARCH
+	default "tricore"
+
+choice
+	prompt "TRICORE core family"
+	default CPU_TRICORE
+
+config CPU_TRICORE_3X
+	bool "TRICORE 3x cores"
+	select CPU_TRICORE
+	select ATOMIC_OPERATIONS_C
+	help
+	  This option signifies the use of an TRICORE 3X CPU
+
+endchoice
+
+config CPU_TRICORE_CSA_SIZE
+	int "Context Save Area (CSA) Size"
+	default CONFIG_MAIN_STACK_SIZE / 2
+
+config CONFIG_TRICORE_CALL_DEPTH
+	int "CSA Call depth for per thread"
+	default 64

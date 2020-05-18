@@ -79,6 +79,9 @@
 
   #elif defined(CONFIG_ARCH_POSIX)
 
+  #elif defined(CONFIG_ARCH_TRICORE)
+    #define PERFOPT_ALIGN .balign  8
+
   #else
 
     #error Architecture unsupported

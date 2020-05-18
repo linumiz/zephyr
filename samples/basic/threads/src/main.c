@@ -75,6 +75,7 @@ void blink(const struct led *led, uint32_t sleep_ms, uint32_t id)
 
 void blink0(void)
 {
+#if 0
 	const struct led led0 = {
 #if DT_NODE_HAS_STATUS(LED0_NODE, okay)
 		.gpio_dev_name = DT_GPIO_LABEL(LED0_NODE, gpios),
@@ -85,12 +86,18 @@ void blink0(void)
 #error "Unsupported board: led0 devicetree alias is not defined"
 #endif
 	};
+#endif
 
-	blink(&led0, 100, 0);
+	//blink(&led0, 100, 0);
+	while(1) {
+		printk("blink0\n");
+		k_msleep(2000);
+	}
 }
 
 void blink1(void)
 {
+#if 0
 	const struct led led1 = {
 #if DT_NODE_HAS_STATUS(LED1_NODE, okay)
 		.gpio_dev_name = DT_GPIO_LABEL(LED1_NODE, gpios),
@@ -101,8 +108,13 @@ void blink1(void)
 #error "Unsupported board: led1 devicetree alias is not defined"
 #endif
 	};
+#endif
 
-	blink(&led1, 1000, 1);
+	while(1) {
+		printk("blink1\n");
+		k_msleep(1000);
+	}
+//	blink(&led1, 1000, 1);
 }
 
 void uart_out(void)
@@ -120,5 +132,7 @@ K_THREAD_DEFINE(blink0_id, STACKSIZE, blink0, NULL, NULL, NULL,
 		PRIORITY, 0, 0);
 K_THREAD_DEFINE(blink1_id, STACKSIZE, blink1, NULL, NULL, NULL,
 		PRIORITY, 0, 0);
+#if 0
 K_THREAD_DEFINE(uart_out_id, STACKSIZE, uart_out, NULL, NULL, NULL,
 		PRIORITY, 0, 0);
+#endif

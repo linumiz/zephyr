@@ -349,7 +349,14 @@ do {                                                                    \
 #define SECTION_FUNC(sect, sym) section_func sect, sym
 #define SECTION_SUBSEC_FUNC(sect, subsec, sym) \
 	section_subsec_func sect, subsec, sym
-#else /* !CONFIG_ARC */
+
+#elif defined(CONFIG_TRICORE)
+
+#define SECTION_FUNC(sect, sym)						\
+	.section .sect.sym, "ax", @progbits;					\
+				PERFOPT_ALIGN; sym :		\
+							FUNC_INSTR(sym)
+#else
 
 #define SECTION_VAR(sect, sym)  .section .sect.##sym; sym :
 #define SECTION_FUNC(sect, sym)						\
@@ -433,6 +440,11 @@ do {                                                                    \
 #define GEN_ABSOLUTE_SYM(name, value)               \
 	__asm__(".globl\t" #name "\n\t.equ\t" #name \
 		",%c0"                              \
+		"\n\t.type\t" #name ",@object" :  : "n"(value))
+#elif defined(CONFIG_TRICORE)
+#define GEN_ABSOLUTE_SYM(name, value)               \
+	__asm__(".globl\t" #name "\n\t.equ\t" #name \
+		",%i0"                              \
 		"\n\t.type\t" #name ",@object" :  : "n"(value))
 #else
 #error processor architecture not supported
