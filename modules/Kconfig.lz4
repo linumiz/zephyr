@@ -1,0 +1,7 @@
+# Copyright (c) 2020 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+config LZ4
+	bool "Enable lz4 data compression and decompression"
+	help
+	  This option enabless the lz4 compression library support.
