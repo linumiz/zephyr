@@ -1,0 +1,14 @@
+config LIBMODBUS
+	bool "libmodbus support"
+	help
+	  This option enables the libmodbus library.
+
+config LIBMODBUS_RTU
+	bool "libmodbus with RTU support"
+	help
+		RTU modbus
+
+config LIBMODBUS_TCP
+	bool "libmodbus with TCP support"
+	help
+		TCP modbus

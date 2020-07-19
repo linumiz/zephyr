@@ -1,0 +1,4 @@
+config JSONC
+	bool "JSON-C support"
+	help
+	  This option enables the JSON-C library.
