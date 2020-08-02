@@ -21,16 +21,12 @@ manifest:
   remotes:
     - name: upstream
       url-base: https://github.com/zephyrproject-rtos
+    - name: linumiz
+      url-base: https://github.com/linumiz
 
   #
   # Please add items below based on alphabetical order
   projects:
-    - name: libmodbus
-      revision: f1eb4bc7ccb09cd8d19ab641ee37637f8c34d16d
-      path: modules/lib/libmodbus
-    - name: json-c
-      revision: 4d9f6dd22e8437732e56db568438dd714ac8031b
-      path: modules/lib/json-c
     - name: cmsis
       revision: 542b2296e6d515b265e25c6b7208e8fea3014f90
       path: modules/hal/cmsis
@@ -85,9 +81,17 @@ manifest:
     - name: hal_ti
       revision: aabc6a04a8e871cbb01e02c22bb409f68001dc64
       path: modules/hal/ti
+    - name: json-c
+      revision: zephyr
+      path: modules/lib/json-c
+      remote: linumiz
     - name: libmetal
       revision: 87e9e7f2c5b4e238236fe703db61ba23e48dc2ef
       path: modules/hal/libmetal
+    - name: libmodbus
+      revision: v3.1.6_zephyr
+      path: modules/lib/libmodbus
+      remote: linumiz
     - name: lvgl
       revision: 928b61c7c8ef5f770f10e6fd36d4fea0cf375b5e
       path: modules/lib/gui/lvgl
