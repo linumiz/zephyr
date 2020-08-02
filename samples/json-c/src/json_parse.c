@@ -4,7 +4,7 @@
 #include <zephyr.h>
 #include <sys/printk.h>
 
-int main()
+int main(void)
 {
 	struct json_object *jobj;
 	char *str = "{ \"msg-type\": [ \"0xdeadbeef\", \"irc log\" ], \
