@@ -93,7 +93,7 @@ manifest:
       revision: 7deb3aab1cc430a7650143f9833cfc8ddad76eb5
       path: modules/hal/quicklogic
     - name: libmodbus
-      revision: v3.1.6_zephyr
+      revision: v3.0.X_zephyr
       path: modules/lib/libmodbus
       remote: linumiz
     - name: lvgl
