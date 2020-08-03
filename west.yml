@@ -89,7 +89,7 @@ manifest:
       revision: 87e9e7f2c5b4e238236fe703db61ba23e48dc2ef
       path: modules/hal/libmetal
     - name: libmodbus
-      revision: v3.1.6_zephyr
+      revision: v3.0.X_zephyr
       path: modules/lib/libmodbus
       remote: linumiz
     - name: lvgl
