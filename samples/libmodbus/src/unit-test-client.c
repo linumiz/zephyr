@@ -64,8 +64,9 @@ int main(int argc, char *argv[])
         use_backend = TCP;
     }
 
+	k_msleep(10 * 1000);
     if (use_backend == TCP) {
-        ctx = modbus_new_tcp("192.168.178.66", 1502);
+        ctx = modbus_new_tcp("192.168.178.164", 1502);
     } else if (use_backend == TCP_PI) {
         ctx = modbus_new_tcp_pi("::1", "1502");
     } else {
