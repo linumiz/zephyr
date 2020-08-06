@@ -1,0 +1,4 @@
+config LIBLIGHTMODBUS
+	bool "liblightmodbus support"
+	help
+	  This option enables the liblightmodbus library.
