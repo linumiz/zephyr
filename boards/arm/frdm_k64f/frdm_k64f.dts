@@ -127,6 +127,18 @@ arduino_i2c: &i2c0 {
 
 arduino_spi: &spi0 {
 	status = "okay";
+
+	cs-gpios = <&gpiod 0 (GPIO_ACTIVE_LOW)>;
+
+	w5500@0 {
+		compatible = "wiznet,w5500";
+		reg = <0x0>;
+		spi-max-frequency = <500000>;
+		int-gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
+//		reset-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+		label = "w5500";
+	};
+
 };
 
 &ftm3 {

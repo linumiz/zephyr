@@ -32,6 +32,7 @@
 #define W5500_Sn_TX_WR		0x0024 /* Sn Transmit memory write pointer */
 #define W5500_Sn_RX_RSR		0x0026 /* Sn Receive free memory size */
 #define W5500_Sn_RX_RD		0x0028 /* Sn Receive memory read pointer */
+#define W5500_Sn_IMR		0x002C
 
 #define S0_REGS(priv)		((priv)->s0_base)
 
@@ -53,6 +54,7 @@
 #define W5500_S0_TX_WR(priv)	(S0_REGS(priv) + W5500_Sn_TX_WR)
 #define W5500_S0_RX_RSR(priv)	(S0_REGS(priv) + W5500_Sn_RX_RSR)
 #define W5500_S0_RX_RD(priv)	(S0_REGS(priv) + W5500_Sn_RX_RD)
+#define W5500_S0_IMR(priv)	(S0_REGS(priv) + W5500_Sn_IMR)
 
 #define W5500_S0_MR_MF		BIT(7) /* MAC Filter for W5500 */
 
@@ -119,6 +121,7 @@ struct w5500_runtime {
 	struct k_sem int_sem;
 	void (*generate_mac)(uint8_t *);
 	uint32_t s0_base;
+	uint8_t buf[NET_ETH_MAX_FRAME_SIZE];
 };
 
 #endif /*_W5500_*/

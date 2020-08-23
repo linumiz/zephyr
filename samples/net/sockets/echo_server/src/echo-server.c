@@ -218,7 +218,11 @@ SHELL_CMD_REGISTER(sample, &sample_commands,
 
 void main(void)
 {
+	struct net_if *iface;
 	init_app();
+
+	iface = net_if_get_default();
+	net_dhcpv4_start(iface);
 
 	if (!IS_ENABLED(CONFIG_NET_CONNECTION_MANAGER)) {
 		/* If the config library has not been configured to start the
