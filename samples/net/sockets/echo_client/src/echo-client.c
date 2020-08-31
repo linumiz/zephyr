@@ -31,12 +31,6 @@ LOG_MODULE_REGISTER(net_echo_client_sample, LOG_LEVEL_DBG);
 #include <net/net_event.h>
 #include <net/net_conn_mgr.h>
 
-#if defined(CONFIG_USERSPACE)
-#include <app_memory/app_memdomain.h>
-K_APPMEM_PARTITION_DEFINE(app_partition);
-struct k_mem_domain app_domain;
-#endif
-
 #include "common.h"
 #include "ca_certificate.h"
 
@@ -74,7 +68,7 @@ const char lorem_ipsum[] =
 
 const int ipsum_len = sizeof(lorem_ipsum) - 1;
 
-APP_DMEM struct configs conf = {
+struct configs conf = {
 	.ipv4 = {
 		.proto = "IPv4",
 		.udp.sock = INVALID_SOCK,
@@ -87,10 +81,10 @@ APP_DMEM struct configs conf = {
 	},
 };
 
-static APP_BMEM struct pollfd fds[4];
-static APP_BMEM int nfds;
+static struct pollfd fds[4];
+static int nfds;
 
-static APP_BMEM bool connected;
+static bool connected;
 K_SEM_DEFINE(run_app, 0, 1);
 
 static struct net_mgmt_event_callback mgmt_cb;
@@ -225,17 +219,6 @@ static void init_app(void)
 {
 	LOG_INF(APP_BANNER);
 
-#if defined(CONFIG_USERSPACE)
-	struct k_mem_partition *parts[] = {
-#if Z_LIBC_PARTITION_EXISTS
-		&z_libc_partition,
-#endif
-		&app_partition
-	};
-
-	k_mem_domain_init(&app_domain, ARRAY_SIZE(parts), parts);
-#endif
-
 #if defined(CONFIG_NET_SOCKETS_SOCKOPT_TLS)
 	int err = tls_credential_add(CA_CERTIFICATE_TAG,
 				    TLS_CREDENTIAL_CA_CERTIFICATE,
@@ -274,11 +257,23 @@ static void init_app(void)
 	init_vlan();
 }
 
-static void start_client(void)
+void main(void)
 {
+	int ret = 0, i = 0;
 	int iterations = CONFIG_NET_SAMPLE_SEND_ITERATIONS;
-	int i = 0;
-	int ret;
+	struct net_if *iface;
+
+	init_app();
+
+	iface = net_if_get_default();
+	net_dhcpv4_start(iface);
+	if (!IS_ENABLED(CONFIG_NET_CONNECTION_MANAGER)) {
+		/* If the config library has not been configured to start the
+		 * app only after we have a connection, then we can start
+		 * it right away.
+		 */
+		k_sem_give(&run_app);
+	}
 
 	while (iterations == 0 || i < iterations) {
 		/* Wait for the connection. */
@@ -300,27 +295,6 @@ static void start_client(void)
 
 		stop_udp_and_tcp();
 	}
-}
 
-void main(void)
-{
-	init_app();
-
-	if (!IS_ENABLED(CONFIG_NET_CONNECTION_MANAGER)) {
-		/* If the config library has not been configured to start the
-		 * app only after we have a connection, then we can start
-		 * it right away.
-		 */
-		k_sem_give(&run_app);
-	}
-
-#if defined(CONFIG_USERSPACE)
-	k_thread_access_grant(k_current_get(), &run_app);
-	k_mem_domain_add_thread(&app_domain, k_current_get());
-
-	k_thread_user_mode_enter((k_thread_entry_t)start_client, NULL, NULL,
-				 NULL);
-#else
-	start_client();
-#endif
+	exit(ret);
 }

@@ -22,10 +22,12 @@
 
 	leds {
 		compatible = "gpio-leds";
+/*
 		green_led_1: led_1 {
 			gpios = <&gpioa 5 GPIO_ACTIVE_HIGH>;
 			label = "User LD1";
 		};
+*/
 		green_led_2: led_2 {
 			gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>;
 			label = "User LD2";
@@ -42,7 +44,7 @@
 
 	aliases {
 		led0 = &green_led_2;
-		led1 = &green_led_1;
+	//	led1 = &green_led_1;
 		sw0 = &user_button;
 		eswifi0 = &wifi0;
 	};
@@ -112,6 +114,16 @@
 
 &spi1 {
 	status = "okay";
+
+	cs-gpios = <&gpioa 2 (GPIO_ACTIVE_LOW)>;
+
+	w5500@0 {
+		compatible = "wiznet,w5500";
+		reg = <0x0>;
+		spi-max-frequency = <80000000>;
+		int-gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+		label = "w5500";
+	};
 };
 
 &spi3 {
