@@ -1,0 +1,4 @@
+config LIBZIO
+	bool "libzio application library"
+	help
+	  This option enables the libzio library.
