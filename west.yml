@@ -95,9 +95,14 @@ manifest:
     - name: libmodbus
       revision: v3.0.X_zephyr
       path: modules/lib/libmodbus
+      remote: linumiz
     - name: liblightmodbus
       revision: zephyr
       path: modules/lib/liblightmodbus
+      remote: linumiz
+    - name: zio
+      revision: master
+      path: modules/lib/libzio
       remote: linumiz
     - name: lvgl
       revision: 928b61c7c8ef5f770f10e6fd36d4fea0cf375b5e
