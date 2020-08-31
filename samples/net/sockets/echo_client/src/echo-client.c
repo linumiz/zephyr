@@ -261,9 +261,12 @@ void main(void)
 {
 	int ret = 0, i = 0;
 	int iterations = CONFIG_NET_SAMPLE_SEND_ITERATIONS;
+	struct net_if *iface;
 
 	init_app();
 
+	iface = net_if_get_default();
+	net_dhcpv4_start(iface);
 	if (!IS_ENABLED(CONFIG_NET_CONNECTION_MANAGER)) {
 		/* If the config library has not been configured to start the
 		 * app only after we have a connection, then we can start
