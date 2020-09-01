@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <modbus.h>
+#include <net/net_if.h>
 
 #include "unit-test.h"
 
@@ -48,6 +49,8 @@ int main(int argc, char *argv[])
     struct timeval response_timeout;
     int use_backend;
 
+	net_dhcpv4_start(net_if_get_default());
+	k_msleep(5000);
     if (argc > 1) {
         if (strcmp(argv[1], "tcp") == 0) {
             use_backend = TCP;
