@@ -181,12 +181,10 @@ static int w5500_tx(struct device *dev, struct net_pkt *pkt)
 	uint16_t offset;
 	uint8_t off[2];
 	int ret;
-	unsigned int imask;
 
 	w5500_spi_read(dev, W5500_S0_TX_WR(ctx), off, 2);
 	offset = sys_get_be16(off);
 
-	imask = irq_lock();
 	if (net_pkt_read(pkt, ctx->buf, len)) {
 		return -EIO;
 	}
@@ -195,7 +193,6 @@ static int w5500_tx(struct device *dev, struct net_pkt *pkt)
 	if (ret < 0) {
 		return ret;
 	}
-	irq_unlock(imask);
 
 	sys_put_be16(offset + len, off);
 	ret = w5500_spi_write(dev, W5500_S0_TX_WR(ctx), off, 2);
