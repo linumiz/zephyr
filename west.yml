@@ -100,6 +100,10 @@ manifest:
       revision: zephyr
       path: modules/lib/liblightmodbus
       remote: linumiz
+    - name: lz4
+      revision: zephyr
+      path: modules/lib/lz4
+      remote: linumiz
     - name: zio
       revision: master
       path: modules/lib/libzio
