@@ -38,15 +38,15 @@ int main(int argc, char *argv[])
     uint8_t *tab_rp_bits;
     uint16_t *tab_rp_registers;
     uint16_t *tab_rp_registers_bad;
-    modbus_t *ctx;
+    modbus_t *ctx = NULL;
     int i;
     uint8_t value;
     int nb_points;
     int rc;
     float real;
     uint32_t ireal;
-    struct timeval old_response_timeout;
-    struct timeval response_timeout;
+    struct zsock_timeval old_response_timeout;
+    struct zsock_timeval response_timeout;
     int use_backend;
 
 	net_dhcpv4_start(net_if_get_default());
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 
 	k_msleep(10 * 1000);
     if (use_backend == TCP) {
-        ctx = modbus_new_tcp("192.168.178.164", 1502);
+        ctx = modbus_new_tcp("192.168.8.138", 1502);
     } else if (use_backend == TCP_PI) {
         ctx = modbus_new_tcp_pi("::1", "1502");
     } else {
