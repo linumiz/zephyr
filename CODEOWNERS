@@ -175,6 +175,7 @@
 /drivers/kscan/                           @albertofloyd @franciscomunoz @scottwcpg
 /drivers/peci/                            @albertofloyd @franciscomunoz @scottwcpg
 /drivers/ethernet/                        @jukkar @tbursztyka @pfalcon
+/drivers/ethernet/*w5500*                 @parthitce
 /drivers/entropy/*litex*                  @mateusz-holenko @kgugala @pgielda
 /drivers/flash/                           @nashif @nvlsianpu
 /drivers/flash/*nrf*                      @nvlsianpu
