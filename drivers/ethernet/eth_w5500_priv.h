@@ -32,48 +32,36 @@
 #define W5500_Sn_TX_WR		0x0024 /* Sn Transmit memory write pointer */
 #define W5500_Sn_RX_RSR		0x0026 /* Sn Receive free memory size */
 #define W5500_Sn_RX_RD		0x0028 /* Sn Receive memory read pointer */
-#define W5500_Sn_IMR		0x002C
 
-#define S0_REGS(priv)		((priv)->s0_base)
+#define W5500_S0_REGS		0x10000
 
-#define W5500_S0_MR(priv)	(S0_REGS(priv) + W5500_Sn_MR)
+#define W5500_S0_MR		(W5500_S0_REGS + W5500_Sn_MR)
 #define S0_MR_MACRAW		0x04 /* MAC RAW mode */
 #define S0_MR_MF		0x40 /* MAC Filter for W5500 */
-#define W5500_S0_CR(priv)	(S0_REGS(priv) + W5500_Sn_CR)
+#define W5500_S0_CR		(W5500_S0_REGS + W5500_Sn_CR)
 #define S0_CR_OPEN		0x01 /* OPEN command */
 #define S0_CR_CLOSE		0x10 /* CLOSE command */
 #define S0_CR_SEND		0x20 /* SEND command */
 #define S0_CR_RECV		0x40 /* RECV command */
-#define W5500_S0_IR(priv)	(S0_REGS(priv) + W5500_Sn_IR)
+#define W5500_S0_IR		(W5500_S0_REGS + W5500_Sn_IR)
 #define S0_IR_SENDOK		0x10 /* complete sending */
 #define S0_IR_RECV		0x04 /* receiving data */
-#define W5500_S0_SR(priv)	(S0_REGS(priv) + W5500_Sn_SR)
+#define W5500_S0_SR		(W5500_S0_REGS + W5500_Sn_SR)
 #define S0_SR_MACRAW		0x42 /* mac raw mode */
-#define W5500_S0_TX_FSR(priv)	(S0_REGS(priv) + W5500_Sn_TX_FSR)
-#define W5500_S0_TX_RD(priv)	(S0_REGS(priv) + W5500_Sn_TX_RD)
-#define W5500_S0_TX_WR(priv)	(S0_REGS(priv) + W5500_Sn_TX_WR)
-#define W5500_S0_RX_RSR(priv)	(S0_REGS(priv) + W5500_Sn_RX_RSR)
-#define W5500_S0_RX_RD(priv)	(S0_REGS(priv) + W5500_Sn_RX_RD)
-#define W5500_S0_IMR(priv)	(S0_REGS(priv) + W5500_Sn_IMR)
+#define W5500_S0_TX_FSR		(W5500_S0_REGS + W5500_Sn_TX_FSR)
+#define W5500_S0_TX_RD		(W5500_S0_REGS + W5500_Sn_TX_RD)
+#define W5500_S0_TX_WR		(W5500_S0_REGS + W5500_Sn_TX_WR)
+#define W5500_S0_RX_RSR		(W5500_S0_REGS + W5500_Sn_RX_RSR)
+#define W5500_S0_RX_RD		(W5500_S0_REGS + W5500_Sn_RX_RD)
+#define W5500_S0_IMR		(W5500_S0_REGS + W5500_Sn_IMR)
 
 #define W5500_S0_MR_MF		BIT(7) /* MAC Filter for W5500 */
-
 #define W5500_Sn_REGS_LEN	0x0040
-
-/*
- * W5500 specific register and memory
- *
- * W5500 register and memory are organized by multiple blocks.  Each one is
- * selected by 16bits offset address and 5bits block select bits.  So we
- * encode it into 32bits address. (lower 16bits is offset address and
- * upper 16bits is block select bits)
- */
 #define W5500_SIMR		0x0018 /* Socket Interrupt Mask Register */
 #define IR_S0			0x01
 #define RTR_DEFAULT		2000
 #define W5500_RTR		0x0019 /* Retry Time-value Register */
 
-#define W5500_S0_REGS		0x10000
 
 #define W5500_Sn_RXMEM_SIZE(n)	\
 		(0x1001e + (n) * 0x40000) /* Sn RX Memory Size */
@@ -90,11 +78,9 @@ struct w5500_config {
 	const char *gpio_port;
 	uint8_t gpio_pin;
 	gpio_dt_flags_t gpio_flags;
-
 	const char *reset_port;
 	uint8_t reset_pin;
 	gpio_dt_flags_t reset_flags;
-
 	const char *spi_port;
 	gpio_pin_t spi_cs_pin;
 	gpio_dt_flags_t spi_cs_dt_flags;
@@ -107,20 +93,20 @@ struct w5500_config {
 
 struct w5500_runtime {
 	struct net_if *iface;
+
 	K_THREAD_STACK_MEMBER(thread_stack,
 			      CONFIG_ETH_W5500_RX_THREAD_STACK_SIZE);
 	struct k_thread thread;
 	uint8_t mac_addr[6];
-	struct device *gpio;
-	struct device *reset;
-	struct device *spi;
+	const struct device *gpio;
+	const struct device *reset;
+	const struct device *spi;
 	struct spi_cs_control spi_cs;
 	struct spi_config spi_cfg;
 	struct gpio_callback gpio_cb;
-	struct k_sem tx_rx_sem;
+	struct k_sem tx_sem;
 	struct k_sem int_sem;
-	void (*generate_mac)(uint8_t *);
-	uint32_t s0_base;
+	void (*generate_mac)(uint8_t *mac);
 	uint8_t buf[NET_ETH_MAX_FRAME_SIZE];
 };
 
