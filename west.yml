@@ -81,10 +81,6 @@ manifest:
     - name: hal_ti
       revision: 405dfc8faba13e01c1cb9e29e70b31b50f71d117
       path: modules/hal/ti
-    - name: json-c
-      revision: zephyr
-      path: modules/lib/json-c
-      remote: linumiz
     - name: libmetal
       revision: 0b23894a041bd00a0d3a2288bb34751bbbef790d
       path: modules/hal/libmetal
@@ -92,22 +88,6 @@ manifest:
       repo-path: hal_quicklogic
       revision: 7deb3aab1cc430a7650143f9833cfc8ddad76eb5
       path: modules/hal/quicklogic
-    - name: libmodbus
-      revision: v3.0.X_zephyr
-      path: modules/lib/libmodbus
-      remote: linumiz
-    - name: liblightmodbus
-      revision: zephyr
-      path: modules/lib/liblightmodbus
-      remote: linumiz
-    - name: lz4
-      revision: zephyr
-      path: modules/lib/lz4
-      remote: linumiz
-    - name: zio
-      revision: master
-      path: modules/lib/libzio
-      remote: linumiz
     - name: lvgl
       revision: 928b61c7c8ef5f770f10e6fd36d4fea0cf375b5e
       path: modules/lib/gui/lvgl
@@ -162,6 +142,27 @@ manifest:
     - name: trusted-firmware-m
       path: modules/tee/tfm
       revision: 143df675557305b61f7930a50459a53a8d2bb097
+    # Linumiz application modules
+    - name: json-c
+      revision: zephyr
+      path: modules/lib/json-c
+      remote: linumiz
+    - name: libmodbus
+      revision: v3.0.X_zephyr
+      path: modules/lib/libmodbus
+      remote: linumiz
+    - name: liblightmodbus
+      revision: zephyr
+      path: modules/lib/liblightmodbus
+      remote: linumiz
+    - name: lz4
+      revision: zephyr
+      path: modules/lib/lz4
+      remote: linumiz
+    - name: zio
+      revision: master
+      path: modules/lib/libzio
+      remote: linumiz
 
   self:
     path: zephyr
