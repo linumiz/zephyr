@@ -123,6 +123,17 @@ arduino_i2c: &i2c0 {
 		int1-gpios = <&gpioc 6 GPIO_ACTIVE_LOW>;
 		int2-gpios = <&gpioc 13 GPIO_ACTIVE_LOW>;
 	};
+
+	bq34110@55 {
+		compatible = "ti,bq34110";
+		label = "BQ34110";
+		reg = <0x55>;
+		design-voltage = <3700>;
+		design-capacity = <1800>;
+		taper-current = <100>;
+		taper-voltage = <100>;
+		no-of-series-cells = <1>;
+	};
 };
 
 arduino_spi: &spi0 {

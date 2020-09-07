@@ -1,0 +1,69 @@
+# Copyright (c) 2020 Linumiz
+#
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig BQ34110
+	bool "BQ34110 Fuel Gauge"
+	depends on I2C
+	help
+	  Enable I2C-based driver for BQ34110 Fuel Gauge.
+
+if BQ34110
+
+config BQ34110_KNOWN_TEMP
+	int "Known temperature in °C"
+	default 22
+	help
+	  Specify the room temperature in °C for Calibration.
+
+config BQ34110_KNOWN_CURRENT
+	int "Known load current in mA"
+	default 200
+	help
+	  Specify the applied current in mA for Calibration.
+
+config BQ34110_KNOWN_VOLTAGE
+	int "Known Applied voltage in mV"
+	default 4200
+	help
+	  Specify the applied Voltage in mV for Calibration.
+
+choice
+	prompt "Trigger mode"
+	default BQ34110_TRIGGER_NONE
+	help
+	  Specify the type of triggering to be used by the driver.
+
+config BQ34110_TRIGGER_NONE
+	bool "No trigger"
+
+config BQ34110_TRIGGER_GLOBAL_THREAD
+	bool "Use global thread"
+	depends on GPIO
+	select BQ34110_TRIGGER
+
+config BQ34110_TRIGGER_OWN_THREAD
+	bool "Use own thread"
+	depends on GPIO
+	select BQ34110_TRIGGER
+
+endchoice
+
+config BQ34110_TRIGGER
+	bool
+
+config BQ34110_THREAD_PRIORITY
+	int "Thread priority"
+	depends on BQ34110_TRIGGER_OWN_THREAD
+	default 10
+	help
+	  Priority of thread used by the driver to handle interrupts.
+
+config BQ34110_THREAD_STACK_SIZE
+	int "Thread stack size"
+	depends on BQ34110_TRIGGER_OWN_THREAD
+	default 1024
+	help
+	  Stack size of thread used by the driver to handle interrupts.
+
+endif # BQ34110
