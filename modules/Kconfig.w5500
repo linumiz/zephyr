@@ -1,0 +1,7 @@
+# Copyright (c) 2020 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+config W5500
+	bool "Enable W5500 IO library"
+	help
+	  This option enables W5500 IO library

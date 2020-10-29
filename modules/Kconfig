@@ -30,3 +30,7 @@ source "modules/Kconfig.tinycbor"
 source "modules/Kconfig.tinycrypt"
 source "modules/Kconfig.vega"
 source "modules/Kconfig.xtensa"
+# Linumiz
+source "modules/Kconfig.lz4"
+source "modules/Kconfig.libmodbus"
+source "modules/Kconfig.w5500"
