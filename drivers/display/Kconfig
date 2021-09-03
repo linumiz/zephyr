@@ -36,6 +36,8 @@ source "drivers/display/Kconfig.ls0xx"
 source "drivers/display/Kconfig.rm68200"
 source "drivers/display/Kconfig.max7219"
 
+source "drivers/display/Kconfig.ek79652"
+
 config FRAMEBUF_DISPLAY
 	# Hidden, selected by client drivers.
 	bool
