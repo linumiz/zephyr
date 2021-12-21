@@ -68,6 +68,10 @@ config MODEM_SIMCOM_SIM7080_RAT_GSM
 	help
 	  Enable GSM mode.
 
+config MODEM_SIMCOM_SIM7080_GPS_ONLY
+	bool "GPS ONLY"
+	help
+		Enable GPS functionality alone
 endchoice
 
 endif # MODEM_SIM7080
