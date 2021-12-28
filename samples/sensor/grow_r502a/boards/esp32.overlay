@@ -1,0 +1,26 @@
+&pinctrl {
+	uart2_default: uart2_default {
+		group1 {
+			pinmux = <UART2_TX_GPIO25>;
+		};
+		group2 {
+			pinmux = <UART2_RX_GPIO26>;
+			bias-pull-up;
+		};
+	};
+};
+
+&uart2 {
+	status = "okay";
+	current-speed = <57600>;
+	pinctrl-0 = <&uart2_default>;
+	pinctrl-names = "default";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	grow_r502a@ffffffff {
+		compatible = "hzgrow,r502a";
+		reg = <0xffffffff>;
+		int-gpios = <&gpio0 23 GPIO_ACTIVE_LOW>;
+	};
+};
