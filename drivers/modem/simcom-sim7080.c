@@ -1358,6 +1358,7 @@ static char *gnss_get_next_param(char *src, const char *delim, char **saveptr)
 	*saveptr = del + 1;
 
 	if (del == start) {
+		// *start = 0;
 		return NULL;
 	}
 
@@ -1416,17 +1417,14 @@ static int parse_cgnsinf(char *gps_buf)
 
 	if (run_status == NULL) {
 		goto error;
-	} else if (*run_status != '1') {
-		goto error;
 	}
 
 	char *fix_status = gnss_get_next_param(NULL, ",", &saveptr);
 
 	if (fix_status == NULL) {
 		goto error;
-	} else if (*fix_status != '1') {
-		goto error;
 	}
+
 
 	char *utc = gnss_get_next_param(NULL, ",", &saveptr);
 
@@ -1460,8 +1458,17 @@ static int parse_cgnsinf(char *gps_buf)
 		goto error;
 	}
 
-	gnss_data.run_status = 1;
-	gnss_data.fix_status = 1;
+	if (*run_status != '0') {
+		gnss_data.run_status = 1;
+	} else {
+		gnss_data.run_status = 0;
+	}
+
+	if (*fix_status != '0') {
+		gnss_data.fix_status = 1;
+	} else {
+		gnss_data.fix_status = 0;
+	}
 
 	strncpy(gnss_data.utc, utc, sizeof(gnss_data.utc));
 
@@ -2421,7 +2428,7 @@ static int modem_init(const struct device *dev)
 	k_work_init_delayable(&mdata.rssi_query_work, modem_rssi_query_work);
 
 #if defined(CONFIG_MODEM_SIMCOM_SIM7080_GPS_ONLY)
-	return mdm_sim7080_start_gnss();
+	return 0;
 #else
 	return modem_setup();
 #endif
