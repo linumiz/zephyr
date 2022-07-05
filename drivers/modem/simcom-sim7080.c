@@ -1317,6 +1317,24 @@ static int modem_autobaud(void)
 }
 
 /**
+ * Performs modem device functionality reset.
+ *
+ */
+static int modem_reset(void)
+{
+	int ret;
+
+	ret = modem_cmd_send(&mctx.iface, &mctx.cmd_handler, NULL, 0U, "AT+CFUN=1,1",
+			     &mdata.sem_response, K_SECONDS(2));
+	if (ret < 0) {
+		LOG_ERR("Failed to reset the modem");
+		return ret;
+	}
+
+	return modem_autobaud();
+}
+
+/**
  * Get the next parameter from the gnss phrase.
  *
  * @param src The source string supported on first call.
@@ -2206,6 +2224,12 @@ static int modem_setup(void)
 	ret = modem_autobaud();
 	if (ret < 0) {
 		LOG_ERR("Booting modem failed!!");
+		goto error;
+	}
+
+	ret = modem_reset();
+	if (ret < 0) {
+		LOG_ERR("Resetting modem failed!!");
 		goto error;
 	}
 
