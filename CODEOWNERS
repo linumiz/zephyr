@@ -373,6 +373,7 @@
 /drivers/sensor/ams_iAQcore/              @alexanderwachter
 /drivers/sensor/ens210/                   @alexanderwachter
 /drivers/sensor/hts*/                     @avisconti
+/drivers/sensor/htu21d*/                  @arun-mani-tech
 /drivers/sensor/ina23*/                   @bbilas
 /drivers/sensor/lis*/                     @avisconti
 /drivers/sensor/lps*/                     @avisconti
@@ -535,6 +536,7 @@
 /dts/bindings/*/raspberrypi*pico*         @yonsch
 /dts/bindings/*/st*                       @erwango
 /dts/bindings/sensor/ams*                 @alexanderwachter
+/dts/bindings/sensor/te,htu21d.yaml       @arun-mani-tech
 /dts/bindings/*/sifive*                   @mateusz-holenko @kgugala @pgielda
 /dts/bindings/*/litex*                    @mateusz-holenko @kgugala @pgielda
 /dts/bindings/*/vexriscv*                 @mateusz-holenko @kgugala @pgielda
@@ -688,6 +690,7 @@
 /samples/net/sockets/coap_*/              @rlubos
 /samples/net/sockets/                     @rlubos @tbursztyka @pfalcon
 /samples/sensor/                          @MaureenHelm
+/samples/sensor/htu21d                    @arun-mani-tech
 /samples/shields/                         @avisconti
 /samples/subsys/logging/                  @nordic-krch @jakub-uC
 /samples/subsys/logging/syst/             @dcpleung
