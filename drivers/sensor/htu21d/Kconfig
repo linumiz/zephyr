@@ -1,0 +1,23 @@
+# HTU21D temperature & humidity sensor configuration option
+#
+# Copyright (c) 2022 Linumiz
+# Author: Arunmani <arunmani@linumiz.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
+config HTU21D
+	bool "Enable htu21d sensor"
+	default y
+	depends on DT_HAS_TE_HTU21D_ENABLED
+	depends on I2C
+	help
+	 Enable driver for HTU21D sensor.
+
+if HTU21D
+
+config HTU21D_NH_MASTER
+	bool "Allow no hold master mode"
+	help
+	 To activate no hold master mode
+endif

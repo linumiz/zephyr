@@ -146,6 +146,8 @@ source "drivers/sensor/lps22hh/Kconfig"
 
 source "drivers/sensor/lps25hb/Kconfig"
 
+source "drivers/sensor/htu21d/Kconfig"
+
 source "drivers/sensor/lsm303dlhc_magn/Kconfig"
 
 source "drivers/sensor/lsm6ds0/Kconfig"
