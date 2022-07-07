@@ -617,6 +617,7 @@ truly	Truly Semiconductors Limited
 visionox	Visionox
 tsd	Theobroma Systems Design und Consulting GmbH
 tyan	Tyan Computer Corporation
+te	Tyco Electronics
 u-blox	u-blox
 u-boot	U-Boot bootloader
 ucrobotics	uCRobotics

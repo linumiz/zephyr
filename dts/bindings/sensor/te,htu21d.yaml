@@ -1,0 +1,10 @@
+#
+# Copyright (c) 2022 Linumiz
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+description: htu21d temperature and humidity sensor.
+
+compatible: "te,htu21d"
+
+include: i2c-device.yaml
