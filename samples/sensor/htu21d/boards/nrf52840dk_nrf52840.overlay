@@ -1,0 +1,8 @@
+&i2c1 {
+	status = "okay";
+	htu21d@1a {
+                compatible = "te,htu21d";
+                reg = <0x40>;
+                label = "HTU21D";
+        };
+};
