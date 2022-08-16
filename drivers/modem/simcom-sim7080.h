@@ -60,6 +60,10 @@
 #define MDM_IMSI_LENGTH 16
 #define MDM_ICCID_LENGTH 32
 
+#define CA_CERT	"ca.crt"
+#define SERVER_CERT "client.crt"
+#define SERVER_KEY "client.key"
+
 enum sim7080_state {
 	SIM7080_STATE_INIT = 0,
 	SIM7080_STATE_NETWORKING,

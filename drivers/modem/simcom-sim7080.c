@@ -12,6 +12,11 @@ LOG_MODULE_REGISTER(modem_simcom_sim7080, CONFIG_MODEM_LOG_LEVEL);
 #include <zephyr/drivers/modem/simcom-sim7080.h>
 #include "simcom-sim7080.h"
 
+#if defined(CONFIG_NET_SOCKETS_SOCKOPT_TLS)
+#include "tls_internal.h"
+#include <zephyr/net/tls_credentials.h>
+#endif
+
 #define SMS_TP_UDHI_HEADER 0x40
 
 static struct k_thread modem_rx_thread;
@@ -126,6 +131,17 @@ MODEM_CMD_DIRECT_DEFINE(on_cmd_tx_ready)
 }
 
 /*
+ * Unlock download semaphore if ' DOWNLOAD ' is received.
+ */
+MODEM_CMD_DIRECT_DEFINE(on_cmd_download)
+{
+	modem_cmd_handler_set_error(data, 0);
+	k_sem_give(&mdata.sem_response);
+	return len;
+}
+
+
+/*
  * Connects an modem socket. Protocol can either be TCP or UDP.
  */
 static int offload_connect(void *obj, const struct sockaddr *addr, socklen_t addrlen)
@@ -153,6 +169,33 @@ static int offload_connect(void *obj, const struct sockaddr *addr, socklen_t add
 		LOG_ERR("Socket is already connected! id: %d, fd: %d", sock->id, sock->sock_fd);
 		errno = EISCONN;
 		return -1;
+	}
+
+	if (sock->ip_proto == IPPROTO_TLS_1_2) {
+		char buf[sizeof("AT+CSSLCFG=###############,#,#\r\n")];
+
+		/* Use TLSv1.2 only */
+		snprintk(buf, sizeof(buf), "AT+CSSLCFG=\"sslversion\",%d,3", sock->sock_fd);
+		ret = modem_cmd_send(&mctx.iface, &mctx.cmd_handler, NULL, 0U, buf,
+				     &mdata.sem_response, MDM_CMD_TIMEOUT);
+		if (ret < 0) {
+			goto error;
+		}
+
+		snprintk(buf, sizeof(buf), "AT+CASSLCFG=0,\"SSL\",1");
+		ret = modem_cmd_send(&mctx.iface, &mctx.cmd_handler, NULL, 0U, buf,
+				     &mdata.sem_response, MDM_CMD_TIMEOUT);
+		if (ret < 0) {
+			goto error;
+		}
+
+		snprintk(buf, sizeof(buf), "AT+CSSLCFG=\"ignorertctime\",%d,1", sock->sock_fd);
+		ret = modem_cmd_send(&mctx.iface, &mctx.cmd_handler, NULL, 0U, buf,
+				     &mdata.sem_response, MDM_CMD_TIMEOUT);
+		if (ret < 0) {
+			goto error;
+		}
+
 	}
 
 	/* get the destination port */
@@ -616,6 +659,204 @@ static int offload_ioctl(void *obj, unsigned int request, va_list args)
 	}
 }
 
+#if defined(CONFIG_NET_SOCKETS_SOCKOPT_TLS)
+static ssize_t send_cert(struct modem_socket *sock,
+			 const char *cert_data, size_t cert_len,
+			 enum tls_credential_type type)
+{
+	int ret;
+	char send_buf[sizeof("AT+CFSWFILE=#,!#########!,#,#####,#####\r\n")];
+	char convert_buf[sizeof("AT+CSSLCFG=!#######!,#,!##########!,!##########!\r\n")];
+	char *filename;
+
+	if (!sock) {
+		return -EINVAL;
+	}
+
+	ret = modem_cmd_send(&mctx.iface, &mctx.cmd_handler, NULL, 0, "AT+CFSINIT",
+				&mdata.sem_response, MDM_CMD_TIMEOUT);
+	if (ret < 0) {
+		goto exit;
+	}
+
+	switch (type) {
+		case TLS_CREDENTIAL_CA_CERTIFICATE: {
+			filename = "ca.crt";
+			snprintk(send_buf, sizeof(send_buf),
+				 "AT+CFSWFILE=3,\"%s\",0,%d,10000", filename, cert_len);
+			snprintk(convert_buf, sizeof(convert_buf),
+				  "AT+CSSLCFG=\"CONVERT\",2,\"%s\"", filename);
+			ret = modem_cmd_send_nolock(&mctx.iface, &mctx.cmd_handler,
+						    NULL, 0U, send_buf, NULL, K_NO_WAIT);
+			if (ret < 0) {
+				goto exit;
+			}
+			break;
+		}
+		case TLS_CREDENTIAL_SERVER_CERTIFICATE: {
+			filename = "client.crt";
+
+			snprintk(send_buf, sizeof(send_buf),
+				 "AT+CFSWFILE=3,\"%s\",0,%d,10000", filename, cert_len);
+
+			ret = modem_cmd_send_nolock(&mctx.iface, &mctx.cmd_handler,
+						    NULL, 0U, send_buf, NULL, K_NO_WAIT);
+			if (ret < 0) {
+				goto exit;
+			}
+			break;
+		}
+		case TLS_CREDENTIAL_PRIVATE_KEY: {
+			filename = "client.key";
+
+			snprintk(send_buf, sizeof(send_buf),
+				 "AT+CFSWFILE=3,\"%s\",0,%d,10000", filename, cert_len);
+			snprintk(convert_buf, sizeof(convert_buf),
+				  "AT+CSSLCFG=\"CONVERT\",1,\"client.crt\",\"%s\"", filename);
+
+			ret = modem_cmd_send_nolock(&mctx.iface, &mctx.cmd_handler,
+						    NULL, 0U, send_buf, NULL, K_NO_WAIT);
+			if (ret < 0) {
+				goto exit;
+			}
+			break;
+		}
+		default:
+			return -EINVAL;
+	}
+
+	k_sem_reset(&mdata.sem_response);
+	ret = k_sem_take(&mdata.sem_response, MDM_CMD_TIMEOUT);
+	if (ret < 0) {
+		LOG_ERR("Timeout waiting for DOWNLOAD");
+	}
+
+	/* Send data */
+	mctx.iface.write(&mctx.iface, cert_data, cert_len);
+
+	/* Wait for the OK */
+	k_sem_reset(&mdata.sem_response);
+	ret = k_sem_take(&mdata.sem_response, MDM_CMD_TIMEOUT);
+	if (ret < 0) {
+		LOG_ERR("Timeout waiting for OK");
+	}
+
+	ret = modem_cmd_send(&mctx.iface, &mctx.cmd_handler, NULL, 0, convert_buf,
+				&mdata.sem_response, MDM_CMD_TIMEOUT);
+	if (ret < 0) {
+		LOG_ERR("Error on converting certs");
+		goto exit;
+	}
+
+	ret = modem_cmd_send(&mctx.iface, &mctx.cmd_handler, NULL, 0, "AT+CFSTERM",
+				&mdata.sem_response, MDM_CMD_TIMEOUT);
+	if (ret < 0) {
+		LOG_ERR("Could not terminate file system functions");
+		goto exit;
+	}
+
+exit:
+	return ret;
+}
+
+static int map_credentials(struct modem_socket *sock, const void *optval, socklen_t optlen)
+{
+	sec_tag_t *sec_tags = (sec_tag_t *)optval;
+	int ret = 0;
+	int tags_len;
+	sec_tag_t tag;
+	int i;
+	char buf[sizeof("AT+CASSLCFG=#,########,############\r\n")];
+	struct tls_credential *cert;
+
+	if ((optlen % sizeof(sec_tag_t)) != 0 || (optlen == 0)) {
+		return -EINVAL;
+	}
+
+	tags_len = optlen / sizeof(sec_tag_t);
+	/* For each tag, retrieve the credentials value and type: */
+	for (i = 0; i < tags_len; i++) {
+		tag = sec_tags[i];
+		cert = credential_next_get(tag, NULL);
+		while (cert != NULL) {
+			switch (cert->type) {
+			case TLS_CREDENTIAL_CA_CERTIFICATE:
+				snprintk(buf, sizeof(buf),
+					 "AT+CASSLCFG=%d,\"CACERT\",\"ca.crt\"", sock->sock_fd);
+				break;
+			case TLS_CREDENTIAL_SERVER_CERTIFICATE:
+				snprintk(buf, sizeof(buf),
+					 "AT+CASSLCFG=%d,\"CERT\",\"client.crt\"", sock->sock_fd);
+				break;
+			case TLS_CREDENTIAL_PRIVATE_KEY:
+				break;
+			case TLS_CREDENTIAL_NONE:
+			case TLS_CREDENTIAL_PSK:
+			case TLS_CREDENTIAL_PSK_ID:
+			default:
+				/* Not handled */
+				return -EINVAL;
+			}
+
+			ret = send_cert(sock, cert->buf, cert->len, cert->type);
+			if (ret < 0) {
+				return ret;
+			}
+
+			ret = modem_cmd_send(&mctx.iface, &mctx.cmd_handler, NULL, 0, buf,
+						&mdata.sem_response, MDM_CMD_TIMEOUT);
+			if (ret < 0) {
+				LOG_ERR("Could not set certificate");
+				return ret;
+			}
+
+			cert = credential_next_get(tag, cert);
+		}
+	}
+
+	return 0;
+}
+#else
+static int map_credentials(struct modem_socket *sock, const void *optval, socklen_t optlen)
+{
+	return -ENOTSUP;
+}
+#endif
+
+static int offload_setsockopt(void *obj, int level, int optname,
+			      const void *optval, socklen_t optlen)
+{
+	struct modem_socket *sock = (struct modem_socket *)obj;
+	int ret;
+	char buf[256];
+
+	if (IS_ENABLED(CONFIG_NET_SOCKETS_SOCKOPT_TLS) && level == SOL_TLS) {
+		switch (optname) {
+		case TLS_SEC_TAG_LIST:
+			ret = map_credentials(sock, optval, optlen);
+			break;
+		case TLS_HOSTNAME:
+			snprintk(buf, sizeof(buf),
+				 "AT+CSSLCFG=\"SNI\",%d,\"%s\"", 0, (char *)optval);
+			ret = modem_cmd_send(&mctx.iface, &mctx.cmd_handler, NULL, 0, buf,
+						&mdata.sem_response, MDM_CMD_TIMEOUT);
+			if (ret < 0) {
+				LOG_ERR("Could not set certificate");
+				return ret;
+			}
+		case TLS_PEER_VERIFY:
+			ret = 0;
+			break;
+		default:
+			return -EINVAL;
+		}
+	} else {
+		return -EINVAL;
+	}
+
+	return ret;
+}
+
 static const struct socket_op_vtable offload_socket_fd_op_vtable = {
 	.fd_vtable = {
 		.read	= offload_read,
@@ -631,7 +872,7 @@ static const struct socket_op_vtable offload_socket_fd_op_vtable = {
 	.accept		= NULL,
 	.sendmsg	= offload_sendmsg,
 	.getsockopt	= NULL,
-	.setsockopt	= NULL,
+	.setsockopt	= offload_setsockopt,
 };
 
 /*
@@ -777,7 +1018,8 @@ static bool offload_is_supported(int family, int type, int proto)
 	}
 
 	if (proto != IPPROTO_TCP &&
-	    proto != IPPROTO_UDP) {
+	    proto != IPPROTO_UDP &&
+	    proto != IPPROTO_TLS_1_2) {
 		return false;
 	}
 
@@ -1126,6 +1368,7 @@ static const struct modem_cmd response_cmds[] = {
 	MODEM_CMD("OK", on_cmd_ok, 0U, ""),
 	MODEM_CMD("ERROR", on_cmd_error, 0U, ""),
 	MODEM_CMD("+CME ERROR: ", on_cmd_exterror, 1U, ""),
+	MODEM_CMD("DOWNLOAD", on_cmd_download, 0U, ""),
 	MODEM_CMD_DIRECT(">", on_cmd_tx_ready),
 };
 
