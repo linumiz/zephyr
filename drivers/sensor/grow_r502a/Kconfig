@@ -13,6 +13,12 @@ menuconfig GROW_R502A
 
 if GROW_R502A
 
+config GROW_R502A_DATA_PKT_SIZE
+	int "Template data packet size"
+	default 128
+	help
+	  Template data packet size for upload and download
+	  to the sensor device.
 choice
 	prompt "Trigger mode"
 	default GROW_R502A_TRIGGER_NONE

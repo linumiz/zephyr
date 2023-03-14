@@ -20,7 +20,7 @@
 LOG_MODULE_REGISTER(GROW_R502A, CONFIG_SENSOR_LOG_LEVEL);
 
 static void transceive_packet(const struct device *dev, union r502a_packet *tx_packet,
-				union r502a_packet *rx_packet, char const data_len)
+				uint8_t *buf, char const data_len)
 {
 	const struct grow_r502a_config *cfg = dev->config;
 	struct grow_r502a_data *drv_data = dev->data;
@@ -29,9 +29,10 @@ static void transceive_packet(const struct device *dev, union r502a_packet *tx_p
 	pkg_len = data_len + R502A_CHECKSUM_LEN;
 	check_sum = pkg_len + tx_packet->pid;
 
-	sys_put_be16(R502A_STARTCODE, tx_packet->start);
-	sys_put_be32(cfg->comm_addr, tx_packet->addr);
-	sys_put_be16(pkg_len, tx_packet->len);
+	tx_packet->start = sys_be16_to_cpu(R502A_STARTCODE);
+	tx_packet->addr = sys_be32_to_cpu(cfg->comm_addr);
+	tx_packet->len = sys_be16_to_cpu(pkg_len);
+
 	for (int i = 0; i < data_len; i++) {
 		check_sum += tx_packet->data[i];
 	}
@@ -40,7 +41,7 @@ static void transceive_packet(const struct device *dev, union r502a_packet *tx_p
 	drv_data->tx_buf.len = pkg_len + R502A_HEADER_LEN;
 	drv_data->tx_buf.data = tx_packet->buf;
 
-	drv_data->rx_buf.data = rx_packet->buf;
+	drv_data->rx_data_buf.data = buf;
 
 	LOG_HEXDUMP_DBG(drv_data->tx_buf.data, drv_data->tx_buf.len, "TX");
 
@@ -66,41 +67,152 @@ static void uart_cb_tx_handler(const struct device *dev)
 	while (retries--) {
 		if (uart_irq_tx_complete(config->dev)) {
 			uart_irq_tx_disable(config->dev);
-			drv_data->rx_buf.len = 0;
+			drv_data->rx_data_buf.len = 0;
+			if (drv_data->rx_data_buf.data == NULL) {
+				k_sem_give(&drv_data->uart_rx_sem);
+				break;
+			}
 			uart_irq_rx_enable(config->dev);
 			break;
 		}
 	}
 }
 
-static void uart_cb_handler(const struct device *dev, void *user_data)
+static int validate_header(union r502a_packet *rx_packet)
 {
-	const struct device *uart_dev = user_data;
-	struct grow_r502a_data *drv_data = uart_dev->data;
-	int len, pkt_sz = 0;
-	int offset = drv_data->rx_buf.len;
+	if (rx_packet->start == R502A_STARTCODE) {
+		LOG_DBG("startcode matched 0x%X", rx_packet->start);
+	} else {
+		LOG_DBG("startcode didn't match 0x%X", rx_packet->start);
+		return -EINVAL;
+	}
 
-	if ((uart_irq_update(dev) > 0) && (uart_irq_is_pending(dev) > 0)) {
-		if (uart_irq_tx_ready(dev)) {
-			uart_cb_tx_handler(uart_dev);
+	if (rx_packet->addr == R502A_DEFAULT_ADDRESS) {
+		LOG_DBG("Address matched 0x%X", rx_packet->addr);
+	} else {
+		LOG_DBG("Address didn't match 0x%X", rx_packet->addr);
+		return -EINVAL;
+	}
+
+	switch (rx_packet->pid) {
+	case 0x2:
+		LOG_DBG("Data Packet Received 0x%X", rx_packet->pid);
+		break;
+	case 0x8:
+		LOG_DBG("End of Data Packet Received 0x%X", rx_packet->pid);
+		break;
+	case 0x7:
+		LOG_DBG("Acknowledgment Packet Received 0x%X", rx_packet->pid);
+		break;
+	default:
+		LOG_ERR("Error Package ID 0x%X", rx_packet->pid);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static void r502a_verify_crc(uint16_t *crc_bytes, struct grow_r502a_data *drv_data)
+{
+	uint16_t calc_bytes = 0;
+	static int previous;
+
+	if (!drv_data->returns_data_pkt) {
+		previous = 0;
+	}
+
+	calc_bytes += drv_data->rx_hdr_pkt.pid + drv_data->rx_hdr_pkt.len;
+
+	for (int i = previous; i < drv_data->rx_data_buf.len; i++) {
+		calc_bytes += drv_data->rx_data_buf.data[i];
+	}
+
+	if (*crc_bytes == calc_bytes) {
+		LOG_DBG("calc 0x%x crc_bytes 0x%x", calc_bytes, *crc_bytes);
+	} else {
+		LOG_ERR("calc 0x%x crc_bytes 0x%x", calc_bytes, *crc_bytes);
+		return;
+	}
+
+	if (drv_data->returns_data_pkt) {
+		previous = drv_data->rx_data_buf.len;
+	}
+}
+
+static void uart_cb_rx_handler(const struct device *dev)
+{
+	const struct grow_r502a_config *config = dev->config;
+	struct grow_r502a_data *drv_data = dev->data;
+	int ret, len = 0;
+	int pkt_sz = drv_data->rx_hdr_pkt.len;
+	int offset = drv_data->rx_len;
+	uint16_t crc_bytes = 0;
+
+	if (!drv_data->rx_header) {
+		len = uart_fifo_read(config->dev, &drv_data->rx_hdr_pkt.buf[offset],
+								R502A_HEADER_LEN - offset);
+		offset += len;
+		drv_data->rx_len = offset;
+
+		if (offset < R502A_HEADER_LEN) {
+			return;
 		}
 
-		while (uart_irq_rx_ready(dev)) {
-			len = uart_fifo_read(dev, &drv_data->rx_buf.data[offset],
-						R502A_BUF_SIZE - offset);
-			offset += len;
-			drv_data->rx_buf.len = offset;
+		drv_data->rx_hdr_pkt.start = sys_be16_to_cpu(drv_data->rx_hdr_pkt.start);
+		drv_data->rx_hdr_pkt.addr = sys_be32_to_cpu(drv_data->rx_hdr_pkt.addr);
+		drv_data->rx_hdr_pkt.len = sys_be16_to_cpu(drv_data->rx_hdr_pkt.len);
 
-			if (offset >= R502A_HEADER_LEN) {
-				pkt_sz = R502A_HEADER_LEN +
-						drv_data->rx_buf.data[R502A_HEADER_LEN-1];
-			}
-			if (offset < pkt_sz) {
-				continue;
-			}
-			LOG_HEXDUMP_DBG(drv_data->rx_buf.data, offset, "RX");
+		ret = validate_header(&drv_data->rx_hdr_pkt);
+		if (ret != 0) {
+			return;
+		}
+
+		pkt_sz = drv_data->rx_hdr_pkt.len;
+		drv_data->rx_header = true;
+		drv_data->rx_len = 0;
+		offset = 0;
+	} else {
+		len = uart_fifo_read(config->dev,
+				     &drv_data->rx_data_buf.data[offset+drv_data->rx_data_buf.len],
+				     pkt_sz - offset);
+		offset += len;
+		drv_data->rx_len = offset;
+
+		if (offset < pkt_sz) {
+			return;
+		}
+
+		drv_data->rx_data_buf.len += offset - 2;
+
+		crc_bytes = sys_get_be16(&drv_data->rx_data_buf.data[drv_data->rx_data_buf.len]);
+		r502a_verify_crc(&crc_bytes, drv_data);
+
+		drv_data->rx_header = false;
+		drv_data->rx_len = 0;
+		offset = 0;
+
+		if (!uart_irq_rx_ready(config->dev)) {
 			k_sem_give(&drv_data->uart_rx_sem);
-			break;
+			return;
+		}
+	}
+}
+
+static void uart_cb_handler(const struct device *uart_dev, void *user_data)
+{
+	const struct device *dev = user_data;
+	struct grow_r502a_data *drv_data = dev->data;
+	int len = 0;
+	int pkt_sz = drv_data->rx_hdr_pkt.len;
+	int offset = drv_data->rx_len;
+
+	if ((uart_irq_update(uart_dev) > 0) && (uart_irq_is_pending(uart_dev) > 0)) {
+		if (uart_irq_tx_ready(uart_dev)) {
+			uart_cb_tx_handler(dev);
+		}
+
+		if (uart_irq_rx_ready(uart_dev)) {
+			uart_cb_rx_handler(dev);
 		}
 	}
 }
@@ -108,7 +220,7 @@ static void uart_cb_handler(const struct device *dev, void *user_data)
 static int fps_led_control(const struct device *dev, struct led_params *led_control)
 {
 	struct grow_r502a_data *drv_data = dev->data;
-	union r502a_packet rx_packet = {0};
+	uint8_t rx_buf;
 	char const led_ctrl_len = 5;
 
 	union r502a_packet tx_packet = {
@@ -117,18 +229,13 @@ static int fps_led_control(const struct device *dev, struct led_params *led_cont
 				led_control->speed, led_control->color_idx, led_control->cycle}
 	};
 
-	transceive_packet(dev, &tx_packet, &rx_packet, led_ctrl_len);
+	transceive_packet(dev, &tx_packet, &rx_buf, led_ctrl_len);
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
-	}
-
-	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+	if (rx_buf == R502A_OK) {
 		LOG_DBG("R502A LED ON");
 		k_sleep(K_MSEC(R502A_DELAY));
 	} else {
-		LOG_ERR("R502A LED control error %d", rx_packet.buf[R502A_CC_IDX]);
+		LOG_ERR("R502A LED control error %d", rx_buf);
 		return -EIO;
 	}
 
@@ -138,7 +245,7 @@ static int fps_led_control(const struct device *dev, struct led_params *led_cont
 static int fps_verify_password(const struct device *dev)
 {
 	struct grow_r502a_data *drv_data = dev->data;
-	union r502a_packet rx_packet = {0};
+	uint8_t rx_buf;
 	char const verify_pwd_len = 5;
 
 	union r502a_packet tx_packet = {
@@ -148,17 +255,12 @@ static int fps_verify_password(const struct device *dev)
 
 	sys_put_be32(R502A_DEFAULT_PASSWORD, &tx_packet.data[1]);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, verify_pwd_len);
+	transceive_packet(dev, &tx_packet, &rx_buf, verify_pwd_len);
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
-	}
-
-	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+	if (rx_buf == R502A_OK) {
 		LOG_DBG("Correct password, R502A verified");
 	} else {
-		LOG_ERR("Package receive error 0x%X", rx_packet.buf[R502A_CC_IDX]);
+		LOG_ERR("Package receive error 0x%X", rx_buf);
 		return -EIO;
 	}
 
@@ -168,7 +270,7 @@ static int fps_verify_password(const struct device *dev)
 static int fps_get_template_count(const struct device *dev)
 {
 	struct grow_r502a_data *drv_data = dev->data;
-	union r502a_packet rx_packet = {0};
+	uint8_t rx_buf[3] = {0};
 	char const get_temp_cnt_len = 1;
 
 	union r502a_packet tx_packet = {
@@ -176,16 +278,11 @@ static int fps_get_template_count(const struct device *dev)
 		.data = {R502A_TEMPLATECOUNT},
 	};
 
-	transceive_packet(dev, &tx_packet, &rx_packet, get_temp_cnt_len);
+	transceive_packet(dev, &tx_packet, rx_buf, get_temp_cnt_len);
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
-	}
-
-	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+	if (rx_buf[R502A_CC_IDX] == R502A_OK) {
 		LOG_DBG("Read success");
-		drv_data->template_count = sys_get_be16(&rx_packet.data[1]);
+		drv_data->template_count = sys_get_be16(&rx_buf[1]);
 		LOG_INF("Remaining templates count : %d", drv_data->template_count);
 	} else {
 		LOG_ERR("R502A template count get error");
@@ -198,7 +295,7 @@ static int fps_get_template_count(const struct device *dev)
 static int fps_read_template_table(const struct device *dev)
 {
 	struct grow_r502a_data *drv_data = dev->data;
-	union r502a_packet rx_packet = {0};
+	uint8_t rx_buf[33] = {0};
 	char const temp_table_len = 2;
 	int ret = 0;
 
@@ -209,16 +306,9 @@ static int fps_read_template_table(const struct device *dev)
 
 	k_mutex_lock(&drv_data->lock, K_FOREVER);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, temp_table_len);
+	transceive_packet(dev, &tx_packet, rx_buf, temp_table_len);
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
-		goto unlock;
-
-	}
-
-	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+	if (rx_buf[R502A_CC_IDX] == R502A_OK) {
 		LOG_DBG("Read success");
 	} else {
 		LOG_ERR("R502A template table get error");
@@ -227,7 +317,7 @@ static int fps_read_template_table(const struct device *dev)
 	}
 
 	for (int group_idx = 0; group_idx < R502A_TEMP_TABLE_BUF_SIZE; group_idx++) {
-		uint8_t group = rx_packet.data[group_idx + 1];
+		uint8_t group = rx_buf[group_idx + 1];
 
 		/* if group is all occupied */
 		if (group == 0xff) {
@@ -246,7 +336,7 @@ unlock:
 static int fps_get_image(const struct device *dev)
 {
 	struct grow_r502a_data *drv_data = dev->data;
-	union r502a_packet rx_packet = {0};
+	uint8_t rx_buf;
 	char const get_img_len = 1;
 
 	struct led_params led_ctrl = {
@@ -261,21 +351,16 @@ static int fps_get_image(const struct device *dev)
 		.data = {R502A_GENIMAGE},
 	};
 
-	transceive_packet(dev, &tx_packet, &rx_packet, get_img_len);
+	transceive_packet(dev, &tx_packet, &rx_buf, get_img_len);
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
-	}
-
-	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+	if (rx_buf == R502A_OK) {
 		fps_led_control(dev, &led_ctrl);
 		LOG_DBG("Image taken");
 	} else {
 		led_ctrl.ctrl_code = LED_CTRL_ON_ALWAYS;
 		led_ctrl.color_idx = LED_COLOR_RED;
 		fps_led_control(dev, &led_ctrl);
-		LOG_ERR("Error getting image 0x%X", rx_packet.buf[R502A_CC_IDX]);
+		LOG_ERR("Error getting image 0x%X", rx_buf);
 		return -EIO;
 	}
 
@@ -285,7 +370,7 @@ static int fps_get_image(const struct device *dev)
 static int fps_image_to_char(const struct device *dev, uint8_t char_buf_idx)
 {
 	struct grow_r502a_data *drv_data = dev->data;
-	union r502a_packet rx_packet = {0};
+	uint8_t rx_buf;
 	char const img_to_char_len = 2;
 
 	union r502a_packet tx_packet = {
@@ -293,17 +378,12 @@ static int fps_image_to_char(const struct device *dev, uint8_t char_buf_idx)
 		.data = {R502A_IMAGE2TZ, char_buf_idx}
 	};
 
-	transceive_packet(dev, &tx_packet, &rx_packet, img_to_char_len);
+	transceive_packet(dev, &tx_packet, &rx_buf, img_to_char_len);
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
-	}
-
-	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+	if (rx_buf == R502A_OK) {
 		LOG_DBG("Image converted");
 	} else {
-		LOG_ERR("Error converting image 0x%X", rx_packet.buf[R502A_CC_IDX]);
+		LOG_ERR("Error converting image 0x%X", rx_buf);
 		return -EIO;
 	}
 
@@ -313,7 +393,7 @@ static int fps_image_to_char(const struct device *dev, uint8_t char_buf_idx)
 static int fps_create_model(const struct device *dev)
 {
 	struct grow_r502a_data *drv_data = dev->data;
-	union r502a_packet rx_packet = {0};
+	uint8_t rx_buf;
 	char const create_model_len = 1;
 
 	union r502a_packet tx_packet = {
@@ -321,17 +401,12 @@ static int fps_create_model(const struct device *dev)
 		.data = {R502A_REGMODEL}
 	};
 
-	transceive_packet(dev, &tx_packet, &rx_packet, create_model_len);
+	transceive_packet(dev, &tx_packet, &rx_buf, create_model_len);
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
-	}
-
-	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+	if (rx_buf == R502A_OK) {
 		LOG_DBG("Model Created");
 	} else {
-		LOG_ERR("Error creating model 0x%X", rx_packet.buf[R502A_CC_IDX]);
+		LOG_ERR("Error creating model 0x%X", rx_buf);
 		return -EIO;
 	}
 
@@ -341,7 +416,7 @@ static int fps_create_model(const struct device *dev)
 static int fps_store_model(const struct device *dev, uint16_t id)
 {
 	struct grow_r502a_data *drv_data = dev->data;
-	union r502a_packet rx_packet = {0};
+	uint8_t rx_buf;
 	char const store_model_len = 4;
 
 	struct led_params led_ctrl = {
@@ -357,21 +432,16 @@ static int fps_store_model(const struct device *dev, uint16_t id)
 	};
 	sys_put_be16(id, &tx_packet.data[2]);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, store_model_len);
+	transceive_packet(dev, &tx_packet, &rx_buf, store_model_len);
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
-	}
-
-	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+	if (rx_buf == R502A_OK) {
 		led_ctrl.color_idx = LED_COLOR_BLUE;
 		led_ctrl.ctrl_code = LED_CTRL_FLASHING;
 		led_ctrl.cycle = 0x03;
 		fps_led_control(dev, &led_ctrl);
 		LOG_INF("Fingerprint stored! at ID #%d", id);
 	} else {
-		LOG_ERR("Error storing model 0x%X", rx_packet.buf[R502A_CC_IDX]);
+		LOG_ERR("Error storing model 0x%X", rx_buf);
 		return -EIO;
 	}
 
@@ -381,7 +451,7 @@ static int fps_store_model(const struct device *dev, uint16_t id)
 static int fps_delete_model(const struct device *dev, uint16_t id, uint16_t count)
 {
 	struct grow_r502a_data *drv_data = dev->data;
-	union r502a_packet rx_packet = {0};
+	uint8_t rx_buf;
 	char const delete_model_len = 5;
 
 	union r502a_packet tx_packet = {
@@ -391,17 +461,12 @@ static int fps_delete_model(const struct device *dev, uint16_t id, uint16_t coun
 	sys_put_be16(id, &tx_packet.data[1]);
 	sys_put_be16(count + R502A_DELETE_COUNT_OFFSET, &tx_packet.data[3]);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, delete_model_len);
+	transceive_packet(dev, &tx_packet, &rx_buf, delete_model_len);
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
-	}
-
-	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+	if (rx_buf == R502A_OK) {
 		LOG_INF("Fingerprint Deleted from ID #%d to #%d", id, (id + count));
 	} else {
-		LOG_ERR("Error deleting image 0x%X", rx_packet.buf[R502A_CC_IDX]);
+		LOG_ERR("Error deleting image 0x%X", rx_buf);
 		return -EIO;
 	}
 
@@ -411,7 +476,7 @@ static int fps_delete_model(const struct device *dev, uint16_t id, uint16_t coun
 static int fps_empty_db(const struct device *dev)
 {
 	struct grow_r502a_data *drv_data = dev->data;
-	union r502a_packet rx_packet = {0};
+	uint8_t rx_buf;
 	char const empty_db_len = 1;
 	int ret = 0;
 
@@ -422,19 +487,13 @@ static int fps_empty_db(const struct device *dev)
 
 	k_mutex_lock(&drv_data->lock, K_FOREVER);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, empty_db_len);
+	transceive_packet(dev, &tx_packet, &rx_buf, empty_db_len);
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
-		goto unlock;
-	}
-
-	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+	if (rx_buf == R502A_OK) {
 		LOG_INF("Emptied Fingerprint Library");
 	} else {
 		LOG_ERR("Error emptying fingerprint library 0x%X",
-					rx_packet.buf[R502A_CC_IDX]);
+					rx_buf);
 		ret = -EIO;
 		goto unlock;
 	}
@@ -447,7 +506,7 @@ unlock:
 static int fps_search(const struct device *dev, uint8_t char_buf_idx)
 {
 	struct grow_r502a_data *drv_data = dev->data;
-	union r502a_packet rx_packet = {0};
+	uint8_t rx_buf[5] = {0};
 	char const search_len = 6;
 
 	struct led_params led_ctrl = {
@@ -464,22 +523,17 @@ static int fps_search(const struct device *dev, uint8_t char_buf_idx)
 	sys_put_be16(R02A_LIBRARY_START_IDX, &tx_packet.data[1]);
 	sys_put_be16(R502A_DEFAULT_CAPACITY, &tx_packet.data[3]);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, search_len);
+	transceive_packet(dev, &tx_packet, rx_buf, search_len);
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
-	}
-
-	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+	if (rx_buf[R502A_CC_IDX] == R502A_OK) {
 		led_ctrl.ctrl_code = LED_CTRL_FLASHING;
 		led_ctrl.color_idx = LED_COLOR_PURPLE;
 		led_ctrl.cycle = 0x01;
 		fps_led_control(dev, &led_ctrl);
-		drv_data->finger_id = sys_get_be16(&rx_packet.data[1]);
-		drv_data->matching_score = sys_get_be16(&rx_packet.data[3]);
+		drv_data->finger_id = sys_get_be16(&rx_buf[1]);
+		drv_data->matching_score = sys_get_be16(&rx_buf[3]);
 		LOG_INF("Found a matching print! at ID #%d", drv_data->finger_id);
-	} else if (rx_packet.buf[R502A_CC_IDX] == R502A_NOT_FOUND) {
+	} else if (rx_buf[R502A_CC_IDX] == R502A_NOT_FOUND) {
 		led_ctrl.ctrl_code = LED_CTRL_BREATHING;
 		led_ctrl.color_idx = LED_COLOR_RED;
 		led_ctrl.cycle = 0x02;
@@ -490,7 +544,7 @@ static int fps_search(const struct device *dev, uint8_t char_buf_idx)
 		led_ctrl.ctrl_code = LED_CTRL_ON_ALWAYS;
 		led_ctrl.color_idx = LED_COLOR_RED;
 		fps_led_control(dev, &led_ctrl);
-		LOG_ERR("Error searching for image 0x%X", rx_packet.buf[R502A_CC_IDX]);
+		LOG_ERR("Error searching for image 0x%X", rx_buf[R502A_CC_IDX]);
 		return -EIO;
 	}
 

@@ -105,8 +105,8 @@
 #define R502A_STARTCODE_IDX 0
 #define R502A_ADDRESS_IDX 2
 #define R502A_PID_IDX 6 /* Package identifier index*/
-#define R502A_PKG_LEN_IDX 7
-#define R502A_CC_IDX 9 /* Confirmation code index*/
+#define R502A_PKG_LEN_IDX 8
+#define R502A_CC_IDX 0 /* Confirmation code index*/
 
 #define R502A_STARTCODE_LEN 2
 #define R502A_ADDRESS_LEN 4
@@ -116,16 +116,26 @@
 
 #define R502A_CHAR_BUF_1 1
 #define R502A_CHAR_BUF_2 2
+#define R502A_CHAR_BUF_TOTAL 2
+
 #define R502A_CHAR_BUF_SIZE 384 /* Maximum size of characteristic value buffer*/
 #define R502A_TEMPLATE_SIZE 768 /* Maximum size of template, twice of CHAR_BUF*/
-#define R502A_MAX_BUF_SIZE 779 /*sum of checksum, header and template sizes*/
-#define R502A_BUF_SIZE 64
+
+#define R502A_TEMPLATE_MAX_SIZE (R502A_CHAR_BUF_TOTAL * R502A_TEMPLATE_SIZE)
+
+#define R502A_DATA_PKT_RECV_COUNT (R502A_TEMPLATE_MAX_SIZE / CONFIG_GROW_R502A_DATA_PKT_SIZE)
+#define R502A_DATA_PKT_SZ (CONFIG_GROW_R502A_DATA_PKT_SIZE + R502A_HEADER_LEN + R502A_CHECKSUM_LEN)
+
+#define R502A_MAX_BUF_SIZE  ((R502A_DATA_PKT_SZ * R502A_DATA_PKT_RECV_COUNT) + R502A_COMMON_ACK_LEN)
+
 #define R502A_TEMPLATES_PER_PAGE 256
 #define R502A_TEMP_TABLE_BUF_SIZE 32
 #define R502A_DELETE_COUNT_OFFSET 1
 
 #define R502A_DELAY 200
 #define R502A_RETRY_DELAY 5
+
+#define R502A_COMMON_ACK_LEN 12
 
 #define LED_CTRL_BREATHING 0x01
 #define LED_CTRL_FLASHING 0x02
@@ -150,14 +160,14 @@ struct led_params {
 
 union r502a_packet {
 	struct {
-		uint8_t	start[R502A_STARTCODE_LEN];
-		uint8_t	addr[R502A_ADDRESS_LEN];
+		uint16_t start;
+		uint32_t addr;
 		uint8_t	pid;
-		uint8_t	len[R502A_PKG_LEN];
-		uint8_t data[R502A_BUF_SIZE];
-	};
+		uint16_t len;
+		uint8_t data[CONFIG_GROW_R502A_DATA_PKT_SIZE];
+	} __packed;
 
-	uint8_t buf[R502A_BUF_SIZE];
+	uint8_t buf[R502A_DATA_PKT_SZ];
 };
 
 struct r502a_buf {
@@ -182,7 +192,12 @@ struct grow_r502a_data {
 #endif /* CONFIG_GROW_R502A_TRIGGER */
 
 	struct r502a_buf tx_buf;
-	struct r502a_buf rx_buf;
+
+	struct r502a_buf rx_data_buf;
+	union r502a_packet rx_hdr_pkt;
+	int rx_len;
+	bool rx_header;
+	bool returns_data_pkt;
 
 	struct k_mutex lock;
 	struct k_sem uart_rx_sem;
