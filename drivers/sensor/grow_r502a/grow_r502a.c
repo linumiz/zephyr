@@ -217,7 +217,7 @@ static void uart_cb_handler(const struct device *uart_dev, void *user_data)
 	}
 }
 
-static int fps_led_control(const struct device *dev, struct led_params *led_control)
+static int fps_led_control(const struct device *dev, struct r502a_led_params *led_control)
 {
 	struct grow_r502a_data *drv_data = dev->data;
 	uint8_t rx_buf;
@@ -425,7 +425,7 @@ static int fps_get_image(const struct device *dev)
 	uint8_t rx_buf;
 	char const get_img_len = 1;
 
-	struct led_params led_ctrl = {
+	struct r502a_led_params led_ctrl = {
 		.ctrl_code = LED_CTRL_BREATHING,
 		.color_idx = LED_COLOR_BLUE,
 		.speed = LED_SPEED_HALF,
@@ -505,7 +505,7 @@ static int fps_store_model(const struct device *dev, uint16_t id)
 	uint8_t rx_buf;
 	char const store_model_len = 4;
 
-	struct led_params led_ctrl = {
+	struct r502a_led_params led_ctrl = {
 		.ctrl_code = LED_CTRL_BREATHING,
 		.color_idx = LED_COLOR_BLUE,
 		.speed = LED_SPEED_HALF,
@@ -595,7 +595,7 @@ static int fps_search(const struct device *dev, uint8_t char_buf_idx)
 	uint8_t rx_buf[5] = {0};
 	char const search_len = 6;
 
-	struct led_params led_ctrl = {
+	struct r502a_led_params led_ctrl = {
 		.ctrl_code = LED_CTRL_BREATHING,
 		.color_idx = LED_COLOR_BLUE,
 		.speed = LED_SPEED_HALF,
@@ -827,7 +827,7 @@ static int fps_init(const struct device *dev)
 	struct grow_r502a_data *drv_data = dev->data;
 	int ret;
 
-	struct led_params led_ctrl = {
+	struct r502a_led_params led_ctrl = {
 		.ctrl_code = LED_CTRL_FLASHING,
 		.color_idx = LED_COLOR_PURPLE,
 		.speed = LED_SPEED_HALF,
@@ -898,6 +898,14 @@ static int grow_r502a_attr_set(const struct device *dev, enum sensor_channel cha
 		return fps_store_model(dev, val->val1);
 	case SENSOR_ATTR_R502A_CAPTURE:
 		return fps_capture(dev, val->val1);
+	case SENSOR_ATTR_R502A_DEVICE_LED:
+		struct r502a_led_params led_ctrl = {
+			.ctrl_code = val[0].val1,
+			.color_idx = val[0].val2,
+			.speed = val[1].val1,
+			.cycle = val[1].val2,
+		};
+		return fps_led_control(dev, &led_ctrl);
 	default:
 		LOG_ERR("Sensor attribute not supported");
 		return -ENOTSUP;
