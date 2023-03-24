@@ -1,0 +1,82 @@
+# Simcom Y7080 driver options
+
+# Copyright (C) 2023 Linumiz GmbH
+# SPDX-License-Identifier: Apache-2.0
+
+config MODEM_SIMCOM_Y7080
+	bool "Simcom Y7080 Driver"
+	select MODEM_CONTEXT
+	select MODEM_CMD_HANDLER
+	select MODEM_IFACE_UART
+	select MODEM_SOCKET
+	select NET_OFFLOAD
+	select NET_SOCKETS_OFFLOAD
+	imply GPIO
+	help
+	  Enables the driver for the Y7080 modem.
+
+if MODEM_SIMCOM_Y7080
+
+config MODEM_SIMCOM_Y7080_RX_STACK_SIZE
+	int "Stack size for the simcom Y7080 modem driver rx thread"
+	default 1028
+	help
+	  This stack is used by the simcom Y7080 RX thread.
+
+config MODEM_SIMCOM_Y7080_RX_WORKQ_STACK_SIZE
+	int "Stack size for the simcom Y7080 modem driver work queue"
+	default 2048
+	help
+		This stack is used by the work queue.
+
+config MODEM_SIMCOM_Y7080_INIT_PRIORITY
+	int "simcom Y7080 driver init priority"
+	default 80
+	help
+	  simcom Y7080 driver initialization priority.
+
+config MODEM_SIMCOM_Y7080_LTE_BANDS
+	string "LTE bands the driver can use"
+	default "3,5,8,20"
+	help
+		Comma separated list of usable lte bands.
+
+config MODEM_SIMCOM_Y7080_APN
+	string "APN for establishing a network connection"
+	default "internet"
+	help
+	  This setting is used to set the APN name for the network connection
+	  context. This value is specific to the network provider and may
+	  need to be changed.
+
+choice MODEM_SIMCOM_Y7080_GNSS
+	bool "Enable GNSS"
+	default MODEM_SIMCOM_Y7080_GNSS_COLD_START
+	help
+	 This helps in enable GNSS in simcom Y7080 module.
+
+config MODEM_SIMCOM_Y7080_GNSS_COLD_START
+	bool "Enable cold start"
+	help
+	 This helps in cold start of GNSS.
+
+config MODEM_SIMCOM_Y7080_GNSS_WARM_START
+	bool "Enable warm start"
+	help
+	 This helps in wam start of GNSS.
+
+config MODEM_SIMCOM_Y7080_GNSS_HOT_START
+	bool "Enable hot start"
+	help
+	 This helps in hot start of GNSS.
+endchoice
+
+config SIMCOM_Y7080_GNSS_INFO_TIME
+	int "Set time for gnss info"
+	range 0 255
+	default 20
+	help
+	 This helps to set the GNSS info time in seconds
+
+endif # MODEM_SIMCOM_Y7080
+
