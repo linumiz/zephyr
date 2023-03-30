@@ -441,7 +441,7 @@ static int fps_empty_db(const struct device *dev)
 
 unlock:
 	k_mutex_unlock(&drv_data->lock);
-	return 0;
+	return ret;
 }
 
 static int fps_search(const struct device *dev, uint8_t char_buf_idx)
@@ -485,6 +485,7 @@ static int fps_search(const struct device *dev, uint8_t char_buf_idx)
 		led_ctrl.cycle = 0x02;
 		fps_led_control(dev, &led_ctrl);
 		LOG_ERR("Did not find a match");
+		return -ENOENT;
 	} else {
 		led_ctrl.ctrl_code = LED_CTRL_ON_ALWAYS;
 		led_ctrl.color_idx = LED_COLOR_RED;
