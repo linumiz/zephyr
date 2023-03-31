@@ -28,6 +28,19 @@ extern "C" {
 #endif
 
 /**
+ * @brief Representation of a sensor readout value extended
+ *
+ * To hold value of more than 8 bytes from the sensor
+ *
+ */
+struct sensor_value_ex {
+	/** @brief Pointer to value buffer. */
+	uint8_t *data;
+	/** @brief length of value buffer. */
+	size_t len;
+};
+
+/**
  * @brief Representation of a sensor readout value.
  *
  * The value is represented as having an integer and a fractional part,
@@ -45,6 +58,8 @@ struct sensor_value {
 	int32_t val1;
 	/** Fractional part of the value (in one-millionth parts). */
 	int32_t val2;
+	/** buffer part of the value*/
+	struct sensor_value_ex ex;
 };
 
 /**
