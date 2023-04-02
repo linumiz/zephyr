@@ -34,6 +34,10 @@ enum sensor_attribute_grow_r502a {
 	SENSOR_ATTR_R502A_RECORD_FREE_IDX,
 	/** To empty the storage record*/
 	SENSOR_ATTR_R502A_RECORD_EMPTY,
+	/** To upload template data out of sensor */
+	SENSOR_ATTR_R502A_UPLOAD,
+	/** To download template data into the sensor */
+	SENSOR_ATTR_R502A_DOWNLOAD,
 };
 
 #ifdef __cplusplus

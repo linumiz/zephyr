@@ -267,6 +267,92 @@ static int fps_verify_password(const struct device *dev)
 	return 0;
 }
 
+static int fps_upload_char_buf(const struct device *dev, uint8_t char_buf_id,
+						struct sensor_value_ex *temp)
+{
+	struct grow_r502a_data *drv_data = dev->data;
+	uint8_t *rx_buf = NULL;
+	char const upload_temp_len = 2;
+	int ret, data_idx = 0;
+
+	char_buf_id = (char_buf_id > R502A_CHAR_BUF_2) ? R502A_CHAR_BUF_2 : R502A_CHAR_BUF_1;
+
+	union r502a_packet tx_packet = {
+		.pid = R502A_COMMAND_PACKET,
+		.data = {R502A_UPCHAR, char_buf_id}
+	};
+
+	drv_data->returns_data_pkt = true;
+
+	rx_buf = k_malloc(R502A_MAX_BUF_SIZE);
+	if (!rx_buf) {
+		LOG_ERR("memory allocation failure!");
+		return -ENOMEM;
+	}
+
+	k_mutex_lock(&drv_data->lock, K_FOREVER);
+
+	transceive_packet(dev, &tx_packet, rx_buf, upload_temp_len);
+
+	if (rx_buf[R502A_CC_IDX] == R502A_OK) {
+		LOG_DBG("Upload to host controller");
+	} else {
+		LOG_ERR("Error uploading template 0x%X", rx_buf[R502A_CC_IDX]);
+		ret = -EIO;
+		goto unlock;
+	}
+
+	temp->data = &drv_data->rx_data_buf.data[1];
+	temp->len = drv_data->rx_data_buf.len - 1;
+	drv_data->returns_data_pkt = false;
+
+unlock:
+	k_mutex_unlock(&drv_data->lock);
+	return ret;
+}
+
+static int fps_download_char_buf(const struct device *dev, struct sensor_value_ex *temp,
+						uint8_t char_buf_idx)
+{
+	struct grow_r502a_data *drv_data = dev->data;
+	char const down_temp_len = 2;
+	uint8_t rx_buf;
+	int ret, i = 0;
+
+	union r502a_packet tx_packet = {
+		.pid = R502A_COMMAND_PACKET,
+		.data = {R502A_DOWNCHAR, char_buf_idx}
+	};
+
+	k_mutex_lock(&drv_data->lock, K_FOREVER);
+
+	transceive_packet(dev, &tx_packet, &rx_buf, down_temp_len);
+
+	if (rx_buf == R502A_OK) {
+		LOG_DBG("Download to R502A sensor");
+	} else {
+		LOG_ERR("Error downloading template 0x%X", rx_buf);
+		ret = -EIO;
+		goto unlock;
+	}
+
+	while (i < (R502A_TEMPLATE_MAX_SIZE - CONFIG_GROW_R502A_DATA_PKT_SIZE)) {
+		tx_packet.pid = R502A_DATA_PACKET;
+		memcpy(tx_packet.data, &temp->data[i], (char const)CONFIG_GROW_R502A_DATA_PKT_SIZE);
+		transceive_packet(dev, &tx_packet, NULL,
+						(char const)CONFIG_GROW_R502A_DATA_PKT_SIZE);
+		i += CONFIG_GROW_R502A_DATA_PKT_SIZE;
+	}
+
+	memcpy(tx_packet.data, &temp->data[i], (char const)CONFIG_GROW_R502A_DATA_PKT_SIZE);
+	tx_packet.pid = R502A_END_DATA_PACKET;
+	transceive_packet(dev, &tx_packet, NULL, (char const)CONFIG_GROW_R502A_DATA_PKT_SIZE);
+
+unlock:
+	k_mutex_unlock(&drv_data->lock);
+	return ret;
+}
+
 static int fps_get_template_count(const struct device *dev)
 {
 	struct grow_r502a_data *drv_data = dev->data;
@@ -710,6 +796,8 @@ static int grow_r502a_attr_set(const struct device *dev, enum sensor_channel cha
 		return fps_delete(dev, val);
 	case SENSOR_ATTR_R502A_RECORD_EMPTY:
 		return fps_empty_db(dev);
+	case SENSOR_ATTR_R502A_DOWNLOAD:
+		return fps_download_char_buf(dev, val->ex, val->val1);
 	default:
 		LOG_ERR("Sensor attribute not supported");
 		return -ENOTSUP;
@@ -735,6 +823,9 @@ static int grow_r502a_attr_get(const struct device *dev, enum sensor_channel cha
 	case SENSOR_ATTR_R502A_RECORD_FREE_IDX:
 		ret = fps_read_template_table(dev);
 		val->val1 = drv_data->free_idx;
+		break;
+	case SENSOR_ATTR_R502A_UPLOAD:
+		ret = fps_upload_char_buf(dev, val->val1, val->ex);
 		break;
 	default:
 		LOG_ERR("Sensor attribute not supported");
