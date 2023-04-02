@@ -38,6 +38,14 @@ enum sensor_attribute_grow_r502a {
 	SENSOR_ATTR_R502A_UPLOAD,
 	/** To download template data into the sensor */
 	SENSOR_ATTR_R502A_DOWNLOAD,
+	/** To load template from storage to RAM buffer of sensor*/
+	SENSOR_ATTR_R502A_RECORD_LOAD,
+	/** To store template to a record storage*/
+	SENSOR_ATTR_R502A_RECORD_STORE,
+	/** To capture finger data and put in sensor's RAM buffer */
+	SENSOR_ATTR_R502A_CAPTURE,
+	/** To template data stored in sensor's RAM buffer*/
+	SENSOR_ATTR_R502A_COMPARE,
 };
 
 #ifdef __cplusplus
