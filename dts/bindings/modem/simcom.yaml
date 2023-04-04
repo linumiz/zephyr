@@ -1,9 +1,9 @@
-# Copyright (C) 2021 metraTec GmbH
+# Copyright (C) 2023 Linumiz 
 # SPDX-License-Identifier: Apache-2.0
 
-description: Simcom Sim7080 modem
+description: Simcom modem
 
-compatible: "simcom,sim7080"
+compatible: "simcom"
 
 include: uart-device.yaml
 
