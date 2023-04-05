@@ -19,35 +19,52 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(GROW_R502A, CONFIG_SENSOR_LOG_LEVEL);
 
-static void transceive_packet(const struct device *dev, union r502a_packet *tx_packet,
+static int transceive_packet(const struct device *dev, union r502a_packet *tx_packet,
 				union r502a_packet *rx_packet, char const data_len)
 {
 	const struct grow_r502a_config *cfg = dev->config;
 	struct grow_r502a_data *drv_data = dev->data;
-	uint16_t check_sum, pkg_len;
 
-	pkg_len = data_len + R502A_CHECKSUM_LEN;
-	check_sum = pkg_len + tx_packet->pid;
+	if (tx_packet) {
+		uint16_t check_sum, pkg_len;
 
-	sys_put_be16(R502A_STARTCODE, tx_packet->start);
-	sys_put_be32(cfg->comm_addr, tx_packet->addr);
-	sys_put_be16(pkg_len, tx_packet->len);
-	for (int i = 0; i < data_len; i++) {
-		check_sum += tx_packet->data[i];
+		pkg_len = data_len + R502A_CHECKSUM_LEN;
+		check_sum = pkg_len + tx_packet->pid;
+
+		tx_packet->start = sys_be16_to_cpu(R502A_STARTCODE);
+		tx_packet->addr = sys_be32_to_cpu(cfg->comm_addr);
+		tx_packet->len = sys_be16_to_cpu(pkg_len);
+
+		for (int i = 0; i < data_len; i++) {
+			check_sum += tx_packet->data[i];
+		}
+		sys_put_be16(check_sum, &tx_packet->buf[data_len + R502A_HEADER_LEN]);
+
+		drv_data->tx_buf.len = pkg_len + R502A_HEADER_LEN;
+		drv_data->tx_buf.data = tx_packet->buf;
+
+		LOG_HEXDUMP_DBG(drv_data->tx_buf.data, drv_data->tx_buf.len, "TX");
+
+		uart_irq_tx_enable(cfg->dev);
+
+		if (k_sem_take(&drv_data->uart_tx_sem, K_MSEC(1500)) != 0) {
+			LOG_ERR("Tx data timeout");
+			return -ETIMEDOUT;
+		}
 	}
-	sys_put_be16(check_sum, &tx_packet->buf[data_len + R502A_HEADER_LEN]);
 
-	drv_data->tx_buf.len = pkg_len + R502A_HEADER_LEN;
-	drv_data->tx_buf.data = tx_packet->buf;
+	if (rx_packet) {
+		drv_data->rx_buf.data = rx_packet->buf;
+		drv_data->rx_buf.len = 0;
+		drv_data->pkt_len = R502A_HEADER_LEN;
+		uart_irq_rx_enable(cfg->dev);
+		if (k_sem_take(&drv_data->uart_rx_sem, K_MSEC(1500)) != 0) {
+			LOG_ERR("Rx data timeout");
+			return -ETIMEDOUT;
+		}
+	}
 
-	drv_data->rx_buf.data = rx_packet->buf;
-
-	LOG_HEXDUMP_DBG(drv_data->tx_buf.data, drv_data->tx_buf.len, "TX");
-
-	uart_irq_rx_disable(cfg->dev);
-	uart_irq_tx_enable(cfg->dev);
-
-	k_sem_take(&drv_data->uart_rx_sem, K_FOREVER);
+	return 0;
 }
 
 static void uart_cb_tx_handler(const struct device *dev)
@@ -66,8 +83,7 @@ static void uart_cb_tx_handler(const struct device *dev)
 	while (retries--) {
 		if (uart_irq_tx_complete(config->dev)) {
 			uart_irq_tx_disable(config->dev);
-			drv_data->rx_buf.len = 0;
-			uart_irq_rx_enable(config->dev);
+			k_sem_give(&drv_data->uart_tx_sem);
 			break;
 		}
 	}
@@ -77,7 +93,7 @@ static void uart_cb_handler(const struct device *dev, void *user_data)
 {
 	const struct device *uart_dev = user_data;
 	struct grow_r502a_data *drv_data = uart_dev->data;
-	int len, pkt_sz = 0;
+	int len = 0;
 	int offset = drv_data->rx_buf.len;
 
 	if ((uart_irq_update(dev) > 0) && (uart_irq_is_pending(dev) > 0)) {
@@ -87,18 +103,24 @@ static void uart_cb_handler(const struct device *dev, void *user_data)
 
 		while (uart_irq_rx_ready(dev)) {
 			len = uart_fifo_read(dev, &drv_data->rx_buf.data[offset],
-						R502A_BUF_SIZE - offset);
+								drv_data->pkt_len);
 			offset += len;
 			drv_data->rx_buf.len = offset;
 
-			if (offset >= R502A_HEADER_LEN) {
-				pkt_sz = R502A_HEADER_LEN +
-						drv_data->rx_buf.data[R502A_HEADER_LEN-1];
-			}
-			if (offset < pkt_sz) {
+			if (drv_data->pkt_len != len) {
+				drv_data->pkt_len -= len;
 				continue;
 			}
+
+			if (offset == R502A_HEADER_LEN) {
+				drv_data->pkt_len = sys_get_be16(
+							&drv_data->rx_buf.data[R502A_PKG_LEN_IDX]
+							);
+				continue;
+			}
+
 			LOG_HEXDUMP_DBG(drv_data->rx_buf.data, offset, "RX");
+			uart_irq_rx_disable(dev);
 			k_sem_give(&drv_data->uart_rx_sem);
 			break;
 		}
@@ -110,6 +132,7 @@ static int fps_led_control(const struct device *dev, struct r502a_led_params *le
 	struct grow_r502a_data *drv_data = dev->data;
 	union r502a_packet rx_packet = {0};
 	char const led_ctrl_len = 5;
+	int ret = 0;
 
 	union r502a_packet tx_packet = {
 		.pid = R502A_COMMAND_PACKET,
@@ -117,7 +140,10 @@ static int fps_led_control(const struct device *dev, struct r502a_led_params *le
 				led_control->speed, led_control->color_idx, led_control->cycle}
 	};
 
-	transceive_packet(dev, &tx_packet, &rx_packet, led_ctrl_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, led_ctrl_len);
+	if (ret != 0) {
+		return ret;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -140,6 +166,7 @@ static int fps_verify_password(const struct device *dev)
 	struct grow_r502a_data *drv_data = dev->data;
 	union r502a_packet rx_packet = {0};
 	char const verify_pwd_len = 5;
+	int ret = 0;
 
 	union r502a_packet tx_packet = {
 		.pid = R502A_COMMAND_PACKET,
@@ -148,7 +175,10 @@ static int fps_verify_password(const struct device *dev)
 
 	sys_put_be32(R502A_DEFAULT_PASSWORD, &tx_packet.data[1]);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, verify_pwd_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, verify_pwd_len);
+	if (ret != 0) {
+		return ret;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -170,13 +200,17 @@ static int fps_get_template_count(const struct device *dev)
 	struct grow_r502a_data *drv_data = dev->data;
 	union r502a_packet rx_packet = {0};
 	char const get_temp_cnt_len = 1;
+	int ret = 0;
 
 	union r502a_packet tx_packet = {
 		.pid = R502A_COMMAND_PACKET,
 		.data = {R502A_TEMPLATECOUNT},
 	};
 
-	transceive_packet(dev, &tx_packet, &rx_packet, get_temp_cnt_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, get_temp_cnt_len);
+	if (ret != 0) {
+		return ret;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -209,7 +243,10 @@ static int fps_read_template_table(const struct device *dev, struct sensor_value
 
 	k_mutex_lock(&drv_data->lock, K_FOREVER);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, temp_table_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, temp_table_len);
+	if (ret != 0) {
+		goto unlock;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -262,7 +299,10 @@ static int fps_get_image(const struct device *dev)
 		.data = {R502A_GENIMAGE},
 	};
 
-	transceive_packet(dev, &tx_packet, &rx_packet, get_img_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, get_img_len);
+	if (ret != 0) {
+		return ret;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -295,7 +335,10 @@ static int fps_image_to_char(const struct device *dev, uint8_t char_buf_idx)
 		.data = {R502A_IMAGE2TZ, char_buf_idx}
 	};
 
-	transceive_packet(dev, &tx_packet, &rx_packet, img_to_char_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, img_to_char_len);
+	if (ret != 0) {
+		return ret;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -324,7 +367,10 @@ static int fps_create_model(const struct device *dev)
 		.data = {R502A_REGMODEL}
 	};
 
-	transceive_packet(dev, &tx_packet, &rx_packet, create_model_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, create_model_len);
+	if (ret != 0) {
+		return ret;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -363,7 +409,10 @@ static int fps_store_model(const struct device *dev, uint16_t id)
 
 	k_mutex_lock(&drv_data->lock, K_FOREVER);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, store_model_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, store_model_len);
+	if (ret != 0) {
+		goto unlock;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -402,7 +451,10 @@ static int fps_delete_model(const struct device *dev, uint16_t id, uint16_t coun
 
 	k_mutex_lock(&drv_data->lock, K_FOREVER);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, delete_model_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, delete_model_len);
+	if (ret != 0) {
+		goto unlock;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -435,7 +487,10 @@ static int fps_empty_db(const struct device *dev)
 
 	k_mutex_lock(&drv_data->lock, K_FOREVER);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, empty_db_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, empty_db_len);
+	if (ret != 0) {
+		goto unlock;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -479,7 +534,10 @@ static int fps_search(const struct device *dev, struct sensor_value *val)
 
 	k_mutex_lock(&drv_data->lock, K_FOREVER);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, search_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, search_len);
+	if (ret != 0) {
+		goto unlock;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -529,7 +587,10 @@ static int fps_load_template(const struct device *dev, uint16_t id)
 
 	k_mutex_lock(&drv_data->lock, K_FOREVER);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, load_tmp_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, load_tmp_len);
+	if (ret != 0) {
+		goto unlock;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -571,7 +632,10 @@ static int fps_match_templates(const struct device *dev, struct sensor_value *va
 
 	k_mutex_lock(&drv_data->lock, K_FOREVER);
 
-	transceive_packet(dev, &tx_packet, &rx_packet, match_templates_len);
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, match_templates_len);
+	if (ret != 0) {
+		goto unlock;
+	}
 
 	if (rx_packet.pid != R502A_ACK_PACKET) {
 		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
@@ -810,8 +874,12 @@ static int grow_r502a_init(const struct device *dev)
 
 	k_mutex_init(&drv_data->lock);
 	k_sem_init(&drv_data->uart_rx_sem, 0, 1);
+	k_sem_init(&drv_data->uart_tx_sem, 0, 1);
 
 	uart_irq_callback_user_data_set(cfg->dev, uart_cb_handler, (void *)dev);
+
+	uart_irq_rx_disable(cfg->dev);
+	uart_irq_tx_disable(cfg->dev);
 
 #ifdef CONFIG_GROW_R502A_TRIGGER
 	ret = grow_r502a_init_interrupt(dev);
