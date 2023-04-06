@@ -8,6 +8,10 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(net_sntp_client_sample, LOG_LEVEL_DBG);
 
+#include <zephyr/posix/time.h>
+#include <zephyr/posix/sys/time.h>
+#include <zephyr/posix/unistd.h>
+
 #include <zephyr/net/sntp.h>
 #ifdef CONFIG_POSIX_API
 #include <arpa/inet.h>
@@ -26,6 +30,8 @@ void main(void)
 #endif
 	struct sntp_time sntp_time;
 	int rv;
+	struct timespec rts, nts;
+	int ret;
 
 	/* ipv4 */
 	memset(&addr, 0, sizeof(addr));
@@ -51,6 +57,22 @@ void main(void)
 	LOG_INF("time since Epoch: high word: %u, low word: %u",
 		(uint32_t)(sntp_time.seconds >> 32), (uint32_t)sntp_time.seconds);
 
+	nts.tv_sec = (uint32_t)sntp_time.seconds;
+	nts.tv_nsec = NSEC_PER_SEC / 2U;
+	ret = clock_settime(CLOCK_REALTIME, &nts);
+	if (ret != 0) {
+		LOG_ERR("Unable to set time: %d", ret);
+		return;
+	}
+
+	while (1) {
+		ret = clock_gettime(CLOCK_REALTIME, &rts);
+		if (ret != 0)
+			continue;
+
+		LOG_INF("Time now: %lld", rts.tv_sec);
+		k_sleep(K_SECONDS(1));
+	}
 #if defined(CONFIG_NET_IPV6)
 	sntp_close(&ctx);
 
