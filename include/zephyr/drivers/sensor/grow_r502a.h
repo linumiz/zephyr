@@ -24,16 +24,26 @@ enum sensor_trigger_type_grow_r502a {
 };
 
 enum sensor_attribute_grow_r502a {
-	/** Add values to the sensor which are having record storage facility */
-	SENSOR_ATTR_R502A_RECORD_ADD = SENSOR_ATTR_PRIV_START,
+	/** To capture finger data */
+	SENSOR_ATTR_R502A_CAPTURE = SENSOR_ATTR_PRIV_START,
+	/** To convert captured data to image and store in RAM buffer*/
+	SENSOR_ATTR_R502A_CONVERT,
+	/** To create template from RAM buffers during capture*/
+	SENSOR_ATTR_R502A_RECORD_CREATE,
+	/** Add template to the sensor record storage */
+	SENSOR_ATTR_R502A_RECORD_ADD,
 	/** To find requested data in record storage */
 	SENSOR_ATTR_R502A_RECORD_FIND,
 	/** To delete mentioned data from record storage */
 	SENSOR_ATTR_R502A_RECORD_DEL,
-	/** To get available position to store data on record storage */
-	SENSOR_ATTR_R502A_RECORD_FREE_IDX,
 	/** To empty the storage record*/
 	SENSOR_ATTR_R502A_RECORD_EMPTY,
+	/** To get available position to store data on record storage */
+	SENSOR_ATTR_R502A_RECORD_FREE_IDX,
+	/** To load template from storage to RAM buffer of sensor*/
+	SENSOR_ATTR_R502A_RECORD_LOAD,
+	/** To template data stored in sensor's RAM buffer*/
+	SENSOR_ATTR_R502A_COMPARE,
 };
 
 #ifdef __cplusplus
