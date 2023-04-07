@@ -72,6 +72,21 @@ static void template_count_get(const struct device *dev)
 	printk("template count : %d\n", count.val1);
 }
 
+static void r502a_led_ctrl(const struct device *dev)
+{
+	int ret;
+	struct sensor_value led;
+
+	led.val1 = R502A_LED_PARAMS(R502A_LED_CTRL_FLASHING, R502A_LED_COLOR_RED,
+				R502A_LED_SPEED_HALF, R502A_LED_CYCLE_3);
+	ret = sensor_attr_set(dev, SENSOR_CHAN_FINGERPRINT, SENSOR_ATTR_R502A_DEVICE_LED, &led);
+	if (ret != 0) {
+		printk("Sensor attr set failed %d\n", ret);
+		return;
+	}
+
+}
+
 static void trigger_handler(const struct device *dev,
 			    const struct sensor_trigger *trigger)
 {
@@ -98,6 +113,8 @@ int main(void)
 		printk("Error: Device %s is not ready\n", dev->name);
 		return 0;
 	}
+
+	r502a_led_ctrl(dev);
 
 	template_count_get(dev);
 

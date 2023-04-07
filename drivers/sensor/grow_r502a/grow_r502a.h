@@ -131,26 +131,13 @@
 #define R502A_DELAY 200
 #define R502A_RETRY_DELAY 5
 
-#define LED_CTRL_BREATHING 0x01
-#define LED_CTRL_FLASHING 0x02
-#define LED_CTRL_ON_ALWAYS 0x03
-#define LED_CTRL_OFF_ALWAYS 0x04
-#define LED_CTRL_ON_GRADUALLY 0x05
-#define LED_CTRL_OFF_GRADUALLY 0x06
-
-#define LED_SPEED_HALF 0x50
-#define LED_SPEED_FULL 0xFF
-
-#define LED_COLOR_RED 0x01
-#define LED_COLOR_BLUE 0x02
-#define LED_COLOR_PURPLE 0x03
-
-struct led_params {
+struct r502a_led_params {
 	uint8_t ctrl_code;
 	uint8_t color_idx;
 	uint8_t speed; /* Speed 0x00-0xff */
 	uint8_t cycle; /* Number of cycles | 0-infinite, 1-255 */
 };
+
 
 union r502a_packet {
 	struct {

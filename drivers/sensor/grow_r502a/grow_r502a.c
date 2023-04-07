@@ -105,7 +105,7 @@ static void uart_cb_handler(const struct device *dev, void *user_data)
 	}
 }
 
-static int fps_led_control(const struct device *dev, struct led_params *led_control)
+static int fps_led_control(const struct device *dev, struct r502a_led_params *led_control)
 {
 	struct grow_r502a_data *drv_data = dev->data;
 	union r502a_packet rx_packet = {0};
@@ -250,10 +250,10 @@ static int fps_get_image(const struct device *dev)
 	char const get_img_len = 1;
 	int ret = 0;
 
-	struct led_params led_ctrl = {
-		.ctrl_code = LED_CTRL_BREATHING,
-		.color_idx = LED_COLOR_BLUE,
-		.speed = LED_SPEED_HALF,
+	struct r502a_led_params led_ctrl = {
+		.ctrl_code = R502A_LED_CTRL_BREATHING,
+		.color_idx = R502A_LED_COLOR_BLUE,
+		.speed = R502A_LED_SPEED_HALF,
 		.cycle = 0x01,
 	};
 
@@ -273,8 +273,8 @@ static int fps_get_image(const struct device *dev)
 		fps_led_control(dev, &led_ctrl);
 		LOG_DBG("Image taken");
 	} else {
-		led_ctrl.ctrl_code = LED_CTRL_ON_ALWAYS;
-		led_ctrl.color_idx = LED_COLOR_RED;
+		led_ctrl.ctrl_code = R502A_LED_CTRL_ON_ALWAYS;
+		led_ctrl.color_idx = R502A_LED_COLOR_RED;
 		fps_led_control(dev, &led_ctrl);
 		LOG_ERR("Error getting image 0x%X", rx_packet.buf[R502A_CC_IDX]);
 		return -EIO;
@@ -348,10 +348,10 @@ static int fps_store_model(const struct device *dev, uint16_t id)
 	char const store_model_len = 4;
 	int ret = 0;
 
-	struct led_params led_ctrl = {
-		.ctrl_code = LED_CTRL_BREATHING,
-		.color_idx = LED_COLOR_BLUE,
-		.speed = LED_SPEED_HALF,
+	struct r502a_led_params led_ctrl = {
+		.ctrl_code = R502A_LED_CTRL_BREATHING,
+		.color_idx = R502A_LED_COLOR_BLUE,
+		.speed = R502A_LED_SPEED_HALF,
 		.cycle = 0x01,
 	};
 
@@ -372,8 +372,8 @@ static int fps_store_model(const struct device *dev, uint16_t id)
 	}
 
 	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
-		led_ctrl.color_idx = LED_COLOR_BLUE;
-		led_ctrl.ctrl_code = LED_CTRL_FLASHING;
+		led_ctrl.color_idx = R502A_LED_COLOR_BLUE;
+		led_ctrl.ctrl_code = R502A_LED_CTRL_FLASHING;
 		led_ctrl.cycle = 0x03;
 		fps_led_control(dev, &led_ctrl);
 		LOG_INF("Fingerprint stored! at ID #%d", id);
@@ -463,10 +463,10 @@ static int fps_search(const struct device *dev, struct sensor_value *val)
 	char const search_len = 6;
 	int ret = 0;
 
-	struct led_params led_ctrl = {
-		.ctrl_code = LED_CTRL_BREATHING,
-		.color_idx = LED_COLOR_BLUE,
-		.speed = LED_SPEED_HALF,
+	struct r502a_led_params led_ctrl = {
+		.ctrl_code = R502A_LED_CTRL_BREATHING,
+		.color_idx = R502A_LED_COLOR_BLUE,
+		.speed = R502A_LED_SPEED_HALF,
 		.cycle = 0x01,
 	};
 
@@ -488,23 +488,23 @@ static int fps_search(const struct device *dev, struct sensor_value *val)
 	}
 
 	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
-		led_ctrl.ctrl_code = LED_CTRL_FLASHING;
-		led_ctrl.color_idx = LED_COLOR_PURPLE;
+		led_ctrl.ctrl_code = R502A_LED_CTRL_FLASHING;
+		led_ctrl.color_idx = R502A_LED_COLOR_PURPLE;
 		led_ctrl.cycle = 0x01;
 		fps_led_control(dev, &led_ctrl);
 		val->val1 = sys_get_be16(&rx_packet.data[1]);
 		val->val2 = sys_get_be16(&rx_packet.data[3]);
 		LOG_INF("Found a matching print! at ID #%d", val->val1);
 	} else if (rx_packet.buf[R502A_CC_IDX] == R502A_NOT_FOUND_CC) {
-		led_ctrl.ctrl_code = LED_CTRL_BREATHING;
-		led_ctrl.color_idx = LED_COLOR_RED;
+		led_ctrl.ctrl_code = R502A_LED_CTRL_BREATHING;
+		led_ctrl.color_idx = R502A_LED_COLOR_RED;
 		led_ctrl.cycle = 0x02;
 		fps_led_control(dev, &led_ctrl);
 		LOG_ERR("Did not find a match");
 		ret = -ENOENT;
 	} else {
-		led_ctrl.ctrl_code = LED_CTRL_ON_ALWAYS;
-		led_ctrl.color_idx = LED_COLOR_RED;
+		led_ctrl.ctrl_code = R502A_LED_CTRL_ON_ALWAYS;
+		led_ctrl.color_idx = R502A_LED_COLOR_RED;
 		fps_led_control(dev, &led_ctrl);
 		LOG_ERR("Error searching for image 0x%X", rx_packet.buf[R502A_CC_IDX]);
 		ret = -EIO;
@@ -557,10 +557,10 @@ static int fps_match_templates(const struct device *dev, struct sensor_value *va
 	char const match_templates_len = 1;
 	int ret = 0;
 
-	struct led_params led_ctrl = {
-		.ctrl_code = LED_CTRL_BREATHING,
-		.color_idx = LED_COLOR_BLUE,
-		.speed = LED_SPEED_HALF,
+	struct r502a_led_params led_ctrl = {
+		.ctrl_code = R502A_LED_CTRL_BREATHING,
+		.color_idx = R502A_LED_COLOR_BLUE,
+		.speed = R502A_LED_SPEED_HALF,
 		.cycle = 0x01,
 	};
 
@@ -589,8 +589,8 @@ static int fps_match_templates(const struct device *dev, struct sensor_value *va
 		LOG_ERR("Fingerprint not matched with a score %d", val->val1);
 		ret = -ENOENT;
 	} else {
-		led_ctrl.ctrl_code = LED_CTRL_ON_ALWAYS;
-		led_ctrl.color_idx = LED_COLOR_RED;
+		led_ctrl.ctrl_code = R502A_LED_CTRL_ON_ALWAYS;
+		led_ctrl.color_idx = R502A_LED_COLOR_RED;
 		fps_led_control(dev, &led_ctrl);
 		LOG_ERR("Error Matching templates 0x%X",
 					rx_packet.buf[R502A_CC_IDX]);
@@ -640,10 +640,10 @@ static int fps_init(const struct device *dev)
 	struct grow_r502a_data *drv_data = dev->data;
 	int ret;
 
-	struct led_params led_ctrl = {
-		.ctrl_code = LED_CTRL_FLASHING,
-		.color_idx = LED_COLOR_PURPLE,
-		.speed = LED_SPEED_HALF,
+	struct r502a_led_params led_ctrl = {
+		.ctrl_code = R502A_LED_CTRL_FLASHING,
+		.color_idx = R502A_LED_COLOR_PURPLE,
+		.speed = R502A_LED_SPEED_HALF,
 		.cycle = 0x02,
 	};
 
@@ -691,6 +691,8 @@ static int grow_r502a_channel_get(const struct device *dev, enum sensor_channel 
 static int grow_r502a_attr_set(const struct device *dev, enum sensor_channel chan,
 			       enum sensor_attribute attr, const struct sensor_value *val)
 {
+	struct grow_r502a_data *drv_data = dev->data;
+
 	if ((enum sensor_channel_grow_r502a)chan != SENSOR_CHAN_FINGERPRINT) {
 		LOG_ERR("Channel not supported");
 		return -ENOTSUP;
@@ -707,6 +709,19 @@ static int grow_r502a_attr_set(const struct device *dev, enum sensor_channel cha
 		return fps_empty_db(dev);
 	case SENSOR_ATTR_R502A_RECORD_LOAD:
 		return fps_load_template(dev, val->val1);
+	case SENSOR_ATTR_R502A_DEVICE_LED: {
+		int ret = 0;
+		struct r502a_led_params led_ctrl;
+		sys_put_be32(val->val1, (uint8_t *)&led_ctrl);
+		k_mutex_lock(&drv_data->lock, K_FOREVER);
+		ret = fps_led_control(dev, &led_ctrl);
+		if (ret != 0) {
+			k_mutex_unlock(&drv_data->lock);
+			return -EIO;
+		}
+		k_mutex_unlock(&drv_data->lock);
+		return 0;
+	}
 	default:
 		LOG_ERR("Sensor attribute not supported");
 		return -ENOTSUP;
