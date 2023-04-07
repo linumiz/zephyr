@@ -105,7 +105,7 @@ static void uart_cb_handler(const struct device *dev, void *user_data)
 	}
 }
 
-static int fps_led_control(const struct device *dev, struct led_params *led_control)
+static int fps_led_control(const struct device *dev, struct r502a_led_params *led_control)
 {
 	struct grow_r502a_data *drv_data = dev->data;
 	union r502a_packet rx_packet = {0};
@@ -250,7 +250,7 @@ static int fps_get_image(const struct device *dev)
 	char const get_img_len = 1;
 	int ret = 0;
 
-	struct led_params led_ctrl = {
+	struct r502a_led_params led_ctrl = {
 		.ctrl_code = LED_CTRL_BREATHING,
 		.color_idx = LED_COLOR_BLUE,
 		.speed = LED_SPEED_HALF,
@@ -364,7 +364,7 @@ static int fps_store_model(const struct device *dev, uint8_t char_buf_idx,
 	char const store_model_len = 4;
 	int ret = 0;
 
-	struct led_params led_ctrl = {
+	struct r502a_led_params led_ctrl = {
 		.ctrl_code = LED_CTRL_BREATHING,
 		.color_idx = LED_COLOR_BLUE,
 		.speed = LED_SPEED_HALF,
@@ -482,7 +482,7 @@ static int fps_search(const struct device *dev, uint8_t char_buf_idx)
 	char const search_len = 6;
 	int ret = 0;
 
-	struct led_params led_ctrl = {
+	struct r502a_led_params led_ctrl = {
 		.ctrl_code = LED_CTRL_BREATHING,
 		.color_idx = LED_COLOR_BLUE,
 		.speed = LED_SPEED_HALF,
@@ -582,7 +582,7 @@ static int fps_match_templates(const struct device *dev)
 	char const match_templates_len = 1;
 	int ret = 0;
 
-	struct led_params led_ctrl = {
+	struct r502a_led_params led_ctrl = {
 		.ctrl_code = LED_CTRL_BREATHING,
 		.color_idx = LED_COLOR_BLUE,
 		.speed = LED_SPEED_HALF,
@@ -627,7 +627,7 @@ static int fps_init(const struct device *dev)
 	struct grow_r502a_data *drv_data = dev->data;
 	int ret;
 
-	struct led_params led_ctrl = {
+	struct r502a_led_params led_ctrl = {
 		.ctrl_code = LED_CTRL_FLASHING,
 		.color_idx = LED_COLOR_PURPLE,
 		.speed = LED_SPEED_HALF,
@@ -678,6 +678,8 @@ static int grow_r502a_channel_get(const struct device *dev, enum sensor_channel 
 static int grow_r502a_attr_set(const struct device *dev, enum sensor_channel chan,
 			       enum sensor_attribute attr, const struct sensor_value *val)
 {
+	struct grow_r502a_data *drv_data = dev->data;
+
 	if ((enum sensor_channel_grow_r502a)chan != SENSOR_CHAN_FINGERPRINT) {
 		LOG_ERR("Channel not supported");
 		return -ENOTSUP;
@@ -698,6 +700,16 @@ static int grow_r502a_attr_set(const struct device *dev, enum sensor_channel cha
 		return fps_empty_db(dev);
 	case SENSOR_ATTR_R502A_RECORD_LOAD:
 		return fps_load_template(dev, val->val1, val->val2);
+	case SENSOR_ATTR_R502A_DEVICE_LED:
+		struct r502a_led_params led_ctrl = {
+			.ctrl_code = val[0].val1,
+			.color_idx = val[0].val2,
+			.speed = val[1].val1,
+			.cycle = val[1].val2,
+		};
+		k_mutex_lock(&drv_data->lock, K_FOREVER);
+		return fps_led_control(dev, &led_ctrl);
+		k_mutex_unlock(&drv_data->lock);
 	default:
 		LOG_ERR("Sensor attribute not supported");
 		return -ENOTSUP;
