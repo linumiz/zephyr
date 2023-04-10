@@ -71,6 +71,10 @@ enum sensor_attribute_grow_r502a {
 	SENSOR_ATTR_R502A_COMPARE,
 	/** To control device LED */
 	SENSOR_ATTR_R502A_DEVICE_LED,
+	/** To upload template data out of sensor */
+	SENSOR_ATTR_R502A_UPLOAD,
+	/** To download template data into the sensor */
+	SENSOR_ATTR_R502A_DOWNLOAD,
 };
 
 #ifdef __cplusplus
