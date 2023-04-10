@@ -11,7 +11,7 @@
 #include <zephyr/drivers/sensor/grow_r502a.h>
 
 static bool enroll;
-static struct sensor_value fid_get, count, find, del;
+static struct sensor_value fid_get, count, find, del, param;
 
 static void finger_find(const struct device *dev)
 {
@@ -98,6 +98,25 @@ static void trigger_handler(const struct device *dev,
 	}
 }
 
+static void read_fps_param(const struct device *dev)
+{
+	int ret = 0;
+	struct r502a_sys_param res;
+
+	param.ex.data = (uint8_t *)&res;
+
+	ret = sensor_attr_get(dev, SENSOR_CHAN_FINGERPRINT, SENSOR_ATTR_R502A_SYS_PARAM, &param);
+	if (ret != 0) {
+		printk("Sensor attr set failed %d\n", ret);
+		return;
+	}
+
+	printk("baud %d\n", res.baud);
+	printk("addr 0x%x\n", res.addr);
+	printk("lib_size %d\n", res.lib_size);
+	printk("data_pkt_size %d\n", res.data_pkt_size);
+}
+
 int main(void)
 {
 	int ret;
@@ -117,6 +136,8 @@ int main(void)
 	r502a_led_ctrl(dev);
 
 	template_count_get(dev);
+
+	read_fps_param(dev);
 
 	del.val1 = 3;
 	ret = sensor_attr_set(dev, SENSOR_CHAN_FINGERPRINT, SENSOR_ATTR_R502A_RECORD_DEL, &del);
