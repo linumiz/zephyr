@@ -803,6 +803,135 @@ unlock:
 	return ret;
 }
 
+/**
+ * @brief	upload template from sensor device's RAM buffer 1 to controller.
+ *
+ * @result	temp->data	holds the template to be uploaded to controller.
+ *		temp->len	holds the length of the template.
+ */
+static int fps_upload_char_buf(const struct device *dev, struct sensor_value_ex *temp)
+{
+	struct grow_r502a_data *drv_data = dev->data;
+	union r502a_packet rx_packet = {0};
+	char const upload_temp_len = 2;
+	int ret = 0, idx = 0;
+
+	if (!temp->data) {
+		LOG_ERR("Invalid temp data");
+		return -EINVAL;
+	}
+
+	union r502a_packet tx_packet = {
+		.pid = R502A_COMMAND_PACKET,
+		.data = {R502A_UPCHAR, R502A_CHAR_BUF_1}
+	};
+
+	k_mutex_lock(&drv_data->lock, K_FOREVER);
+
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, upload_temp_len);
+	if (ret != 0) {
+		goto unlock;
+	}
+
+	if (rx_packet.pid != R502A_ACK_PACKET) {
+		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
+		ret = -EIO;
+		goto unlock;
+	}
+
+	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+		LOG_DBG("Upload to host controller");
+	} else {
+		LOG_ERR("Error uploading template 0x%X",
+					rx_packet.buf[R502A_CC_IDX]);
+		ret = -EIO;
+		goto unlock;
+	}
+
+	do {
+		ret = transceive_packet(dev, NULL, &rx_packet, 0);
+		if (ret != 0) {
+			goto unlock;
+		}
+
+		memcpy(&temp->data[idx], &rx_packet.data,
+				sys_be16_to_cpu(rx_packet.len) - R502A_CHECKSUM_LEN);
+		idx += sys_be16_to_cpu(rx_packet.len) - R502A_CHECKSUM_LEN;
+	} while (rx_packet.pid != R502A_END_DATA_PACKET);
+
+	temp->len = idx;
+
+unlock:
+	k_mutex_unlock(&drv_data->lock);
+	return ret;
+}
+
+/**
+ * @brief	download template from controller to sensor device's RAM buffer.
+ */
+static int fps_download_char_buf(const struct device *dev, uint8_t char_buf_id,
+						const struct sensor_value_ex *temp)
+{
+	struct grow_r502a_data *drv_data = dev->data;
+	union r502a_packet rx_packet = {0};
+	char const down_temp_len = 2;
+	int ret = 0, i = 0;
+
+	char_buf_id = (char_buf_id > R502A_CHAR_BUF_2) ? R502A_CHAR_BUF_2 : R502A_CHAR_BUF_1;
+
+	if (!temp->data || (temp->len < R502A_TEMPLATE_MAX_SIZE)) {
+		LOG_ERR("Invalid temp data");
+		return -EINVAL;
+	}
+
+	union r502a_packet tx_packet = {
+		.pid = R502A_COMMAND_PACKET,
+		.data = {R502A_DOWNCHAR, char_buf_id}
+	};
+
+	k_mutex_lock(&drv_data->lock, K_FOREVER);
+
+	ret = transceive_packet(dev, &tx_packet, &rx_packet, down_temp_len);
+	if (ret != 0) {
+		goto unlock;
+	}
+
+	if (rx_packet.pid != R502A_ACK_PACKET) {
+		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
+		ret = -EIO;
+		goto unlock;
+	}
+
+	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
+		LOG_DBG("Download to R502A sensor");
+	} else {
+		LOG_ERR("Error downloading template 0x%X",
+					rx_packet.buf[R502A_CC_IDX]);
+		ret = -EIO;
+		goto unlock;
+	}
+
+	while (i < (R502A_TEMPLATE_MAX_SIZE - R502A_DOWNLOADABLE_LEN)) {
+		tx_packet.pid = R502A_DATA_PACKET;
+		memcpy(tx_packet.data, &temp->data[i], R502A_DOWNLOADABLE_LEN);
+
+		ret = transceive_packet(dev, &tx_packet, NULL, R502A_DOWNLOADABLE_LEN);
+		if (ret != 0) {
+			goto unlock;
+		}
+
+		i += R502A_DOWNLOADABLE_LEN;
+	}
+
+	memcpy(tx_packet.data, &temp->data[i], (R502A_TEMPLATE_MAX_SIZE - i));
+	tx_packet.pid = R502A_END_DATA_PACKET;
+	ret = transceive_packet(dev, &tx_packet, NULL, (R502A_TEMPLATE_MAX_SIZE - i));
+
+unlock:
+	k_mutex_unlock(&drv_data->lock);
+	return ret;
+}
+
 static int fps_init(const struct device *dev)
 {
 	struct grow_r502a_data *drv_data = dev->data;
@@ -892,6 +1021,8 @@ static int grow_r502a_attr_set(const struct device *dev, enum sensor_channel cha
 	}
 	case SENSOR_ATTR_R502A_SYS_PARAM:
 		return fps_set_sys_param(dev, val);
+	case SENSOR_ATTR_R502A_DOWNLOAD:
+		return fps_download_char_buf(dev, val->val1, &val->ex);
 	default:
 		LOG_ERR("Sensor attribute not supported");
 		return -ENOTSUP;
@@ -922,6 +1053,9 @@ static int grow_r502a_attr_get(const struct device *dev, enum sensor_channel cha
 		break;
 	case SENSOR_ATTR_R502A_SYS_PARAM:
 		ret = fps_read_sys_param(dev, (struct r502a_sys_param *)val->ex.data);
+		break;
+	case SENSOR_ATTR_R502A_UPLOAD:
+		ret = fps_upload_char_buf(dev, &val->ex);
 		break;
 	default:
 		LOG_ERR("Sensor attribute not supported");

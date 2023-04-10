@@ -171,6 +171,20 @@ enum sensor_attribute_grow_r502a {
 	 * @result val->ex.data buffer holds the system parameter values.
 	 */
 	SENSOR_ATTR_R502A_SYS_PARAM,
+	/** To upload template data out of sensor */
+	/**
+	 *
+	 * @result val->ex.data	buffer having collected template data.
+	 *	   val->ex.len	length of the collected template data.
+	 */
+	SENSOR_ATTR_R502A_UPLOAD,
+	/** To download template data into the sensor */
+	/* @param val->val1	RAM buffer index either 1 or 2
+	 *			index values other than these
+	 *			considered as 2.
+	 * @param val->ex	buffer holding template data.
+	 */
+	SENSOR_ATTR_R502A_DOWNLOAD,
 };
 
 #ifdef __cplusplus
