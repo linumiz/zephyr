@@ -13,6 +13,12 @@ extern "C" {
 
 #include <zephyr/drivers/sensor.h>
 
+#define R502A_BAUD_9600 1
+#define R502A_BAUD_19200 2
+#define R502A_BAUD_38400 4
+#define R502A_BAUD_57600 6
+#define R502A_BAUD_115200 12
+
 /*LED glow control code*/
 #define LED_CTRL_BREATHING 0x01
 #define LED_CTRL_FLASHING 0x02
@@ -36,6 +42,37 @@ struct r502a_led_params {
 	uint8_t color_idx;
 	uint8_t speed; /* Speed 0x00-0xff */
 	uint8_t cycle; /* Number of cycles | 0-infinite, 1-255 */
+};
+
+enum r502a_sec_level {
+	R502A_SEC_LEVEL_1 = 1,
+	R502A_SEC_LEVEL_2,
+	R502A_SEC_LEVEL_3,
+	R502A_SEC_LEVEL_4,
+	R502A_SEC_LEVEL_5
+};
+
+enum r502a_data_len {
+	R502A_PKG_LEN_32,
+	R502A_PKG_LEN_64,
+	R502A_PKG_LEN_128,
+	R502A_PKG_LEN_256
+};
+
+enum r502a_sys_param_set {
+	R502A_BAUD_RATE = 4,
+	R502A_SECURITY_LEVEL,
+	R502A_DATA_PKG_LEN
+};
+
+struct r502a_sys_param {
+	uint16_t status_reg;
+	uint16_t system_id;
+	uint16_t lib_size;
+	uint16_t sec_level;
+	uint32_t addr;
+	uint16_t data_pkt_size;
+	uint32_t baud;
 };
 
 enum sensor_channel_grow_r502a {
@@ -75,6 +112,8 @@ enum sensor_attribute_grow_r502a {
 	SENSOR_ATTR_R502A_UPLOAD,
 	/** To download template data into the sensor */
 	SENSOR_ATTR_R502A_DOWNLOAD,
+	/** To read and write device's system parameters */
+	SENSOR_ATTR_R502A_SYS_PARAM,
 };
 
 #ifdef __cplusplus
