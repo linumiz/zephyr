@@ -67,6 +67,60 @@ static int transceive_packet(const struct device *dev, union r502a_packet *tx_pa
 	return 0;
 }
 
+static int r502a_validate_rx_packet(union r502a_packet *rx_packet)
+{
+	uint16_t recv_cks = 0, calc_cks = 0;
+	uint8_t cks_start_idx;
+
+	if (sys_be16_to_cpu(rx_packet->start) == R502A_STARTCODE) {
+		LOG_DBG("startcode matched 0x%X", sys_be16_to_cpu(rx_packet->start));
+	} else {
+		LOG_ERR("startcode didn't match 0x%X", sys_be16_to_cpu(rx_packet->start));
+		return -EINVAL;
+	}
+
+	if (sys_be32_to_cpu(rx_packet->addr) == R502A_DEFAULT_ADDRESS) {
+		LOG_DBG("Address matched 0x%X", sys_be32_to_cpu(rx_packet->addr));
+	} else {
+		LOG_ERR("Address didn't match 0x%X", sys_be32_to_cpu(rx_packet->addr));
+		return -EINVAL;
+	}
+
+	switch (rx_packet->pid) {
+	case R502A_DATA_PACKET:
+		LOG_DBG("Data Packet Received 0x%X", rx_packet->pid);
+		break;
+	case R502A_END_DATA_PACKET:
+		LOG_DBG("End of Data Packet Received 0x%X", rx_packet->pid);
+		break;
+	case R502A_ACK_PACKET:
+		LOG_DBG("Acknowledgment Packet Received 0x%X", rx_packet->pid);
+		break;
+	default:
+		LOG_ERR("Error Package ID 0x%X", rx_packet->pid);
+		return -EINVAL;
+	}
+
+	cks_start_idx = sys_be16_to_cpu(rx_packet->len) - R502A_CHECKSUM_LEN;
+
+	recv_cks = sys_get_be16(&rx_packet->data[cks_start_idx]);
+
+	calc_cks += rx_packet->pid + sys_be16_to_cpu(rx_packet->len);
+
+	for (int i = 0; i < cks_start_idx; i++) {
+		calc_cks += rx_packet->data[i];
+	}
+
+	if (recv_cks == calc_cks) {
+		LOG_DBG("Checksum matched calculated 0x%x received 0x%x", calc_cks, recv_cks);
+	} else {
+		LOG_ERR("Checksum mismatch calculated 0x%x received 0x%x", calc_cks, recv_cks);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static void uart_cb_tx_handler(const struct device *dev)
 {
 	const struct grow_r502a_config *config = dev->config;
@@ -150,9 +204,8 @@ static int fps_set_sys_param(const struct device *dev, const struct sensor_value
 		goto unlock;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
 		goto unlock;
 	}
 
@@ -189,9 +242,8 @@ static int fps_read_sys_param(const struct device *dev, struct r502a_sys_param *
 		goto unlock;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
 		goto unlock;
 	}
 
@@ -249,9 +301,9 @@ static int fps_led_control(const struct device *dev, struct r502a_led_params *le
 		return ret;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
+		return ret;
 	}
 
 	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
@@ -284,15 +336,15 @@ static int fps_verify_password(const struct device *dev)
 		return ret;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
+		return ret;
 	}
 
 	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
 		LOG_DBG("Correct password, R502A verified");
 	} else {
-		LOG_ERR("Package receive error 0x%X", rx_packet.buf[R502A_CC_IDX]);
+		LOG_ERR("Password verification error 0x%X", rx_packet.buf[R502A_CC_IDX]);
 		return -EIO;
 	}
 
@@ -316,9 +368,9 @@ static int fps_get_template_count(const struct device *dev)
 		return ret;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
+		return ret;
 	}
 
 	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
@@ -352,11 +404,9 @@ static int fps_read_template_table(const struct device *dev, struct sensor_value
 		goto unlock;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
 		goto unlock;
-
 	}
 
 	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
@@ -408,9 +458,9 @@ static int fps_get_image(const struct device *dev)
 		return ret;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
+		return ret;
 	}
 
 	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
@@ -444,9 +494,9 @@ static int fps_image_to_char(const struct device *dev, uint8_t char_buf_idx)
 		return ret;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
+		return ret;
 	}
 
 	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
@@ -476,9 +526,9 @@ static int fps_create_model(const struct device *dev)
 		return ret;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		return -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
+		return ret;
 	}
 
 	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
@@ -518,9 +568,8 @@ static int fps_store_model(const struct device *dev, uint16_t id)
 		goto unlock;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
 		goto unlock;
 	}
 
@@ -560,9 +609,8 @@ static int fps_delete_model(const struct device *dev, uint16_t id, uint16_t coun
 		goto unlock;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
 		goto unlock;
 	}
 
@@ -596,9 +644,8 @@ static int fps_empty_db(const struct device *dev)
 		goto unlock;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
 		goto unlock;
 	}
 
@@ -643,9 +690,8 @@ static int fps_search(const struct device *dev, struct sensor_value *val)
 		goto unlock;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
 		goto unlock;
 	}
 
@@ -696,9 +742,8 @@ static int fps_load_template(const struct device *dev, uint16_t id)
 		goto unlock;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
 		goto unlock;
 	}
 
@@ -741,9 +786,8 @@ static int fps_match_templates(const struct device *dev, struct sensor_value *va
 		goto unlock;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
 		goto unlock;
 	}
 
@@ -833,9 +877,8 @@ static int fps_upload_char_buf(const struct device *dev, struct sensor_value_ex 
 		goto unlock;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
 		goto unlock;
 	}
 
@@ -850,6 +893,11 @@ static int fps_upload_char_buf(const struct device *dev, struct sensor_value_ex 
 
 	do {
 		ret = transceive_packet(dev, NULL, &rx_packet, 0);
+		if (ret != 0) {
+			goto unlock;
+		}
+
+		ret = r502a_validate_rx_packet(&rx_packet);
 		if (ret != 0) {
 			goto unlock;
 		}
@@ -896,9 +944,8 @@ static int fps_download_char_buf(const struct device *dev, uint8_t char_buf_id,
 		goto unlock;
 	}
 
-	if (rx_packet.pid != R502A_ACK_PACKET) {
-		LOG_ERR("Error receiving ack packet 0x%X", rx_packet.pid);
-		ret = -EIO;
+	ret = r502a_validate_rx_packet(&rx_packet);
+	if (ret != 0) {
 		goto unlock;
 	}
 
