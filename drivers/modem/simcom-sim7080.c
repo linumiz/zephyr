@@ -2419,12 +2419,7 @@ static int modem_init(const struct device *dev)
 	/* Init RSSI query */
 	k_work_init_delayable(&mdata.rssi_query_work, modem_rssi_query_work);
 
-#if defined(CONFIG_MODEM_SIMCOM_SIM7080_GPS_ONLY)
-	return mdm_sim7080_start_gnss();
-#else
 	return modem_setup();
-#endif
-
 error:
 	return ret;
 }
