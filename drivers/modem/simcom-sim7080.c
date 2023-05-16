@@ -397,7 +397,7 @@ static ssize_t offload_recvfrom(void *obj, void *buf, size_t max_len, int flags,
 		errno = ENOTSUP;
 		return -1;
 	}
-/*
+
 	packet_size = modem_socket_next_packet_size(&mdata.socket_config, sock);
 	if (!packet_size) {
 		if (flags & ZSOCK_MSG_DONTWAIT) {
@@ -410,7 +410,6 @@ static ssize_t offload_recvfrom(void *obj, void *buf, size_t max_len, int flags,
 	}
 
 	max_len = (max_len > MDM_MAX_DATA_LENGTH) ? MDM_MAX_DATA_LENGTH : max_len;
-*/
 	snprintk(sendbuf, sizeof(sendbuf), "AT+CARECV=%d,%zd", sock->id, max_len);
 
 	memset(&sock_data, 0, sizeof(sock_data));
