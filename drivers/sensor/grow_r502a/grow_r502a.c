@@ -20,7 +20,7 @@
 LOG_MODULE_REGISTER(GROW_R502A, CONFIG_SENSOR_LOG_LEVEL);
 
 static int transceive_packet(const struct device *dev, union r502a_packet *tx_packet,
-				union r502a_packet *rx_packet, char const data_len)
+				union r502a_packet *rx_packet, uint16_t const data_len)
 {
 	const struct grow_r502a_config *cfg = dev->config;
 	struct grow_r502a_data *drv_data = dev->data;
@@ -28,12 +28,12 @@ static int transceive_packet(const struct device *dev, union r502a_packet *tx_pa
 	if (tx_packet) {
 		uint16_t check_sum, pkg_len;
 
-		pkg_len = data_len + R502A_CHECKSUM_LEN;
+		pkg_len = (data_len >> 8) + (data_len & 0xff) + R502A_CHECKSUM_LEN;
 		check_sum = pkg_len + tx_packet->pid;
 
-		tx_packet->start = sys_be16_to_cpu(R502A_STARTCODE);
-		tx_packet->addr = sys_be32_to_cpu(cfg->comm_addr);
-		tx_packet->len = sys_be16_to_cpu(pkg_len);
+		tx_packet->start = sys_cpu_to_be16(R502A_STARTCODE);
+		tx_packet->addr = sys_cpu_to_be32(cfg->comm_addr);
+		tx_packet->len = sys_cpu_to_be16(pkg_len);
 
 		for (int i = 0; i < data_len; i++) {
 			check_sum += tx_packet->data[i];
@@ -105,7 +105,8 @@ static int r502a_validate_rx_packet(union r502a_packet *rx_packet)
 
 	recv_cks = sys_get_be16(&rx_packet->data[cks_start_idx]);
 
-	calc_cks += rx_packet->pid + sys_be16_to_cpu(rx_packet->len);
+	calc_cks += rx_packet->pid + (sys_be16_to_cpu(rx_packet->len) >> 8) +
+			 (sys_be16_to_cpu(rx_packet->len) & 0xff);
 
 	for (int i = 0; i < cks_start_idx; i++) {
 		calc_cks += rx_packet->data[i];
@@ -680,8 +681,8 @@ static int fps_search(const struct device *dev, struct sensor_value *val)
 		.pid = R502A_COMMAND_PACKET,
 		.data = {R502A_SEARCH, R502A_CHAR_BUF_1}
 	};
-	sys_put_be16(R02A_LIBRARY_START_IDX, &tx_packet.data[1]);
-	sys_put_be16(R502A_DEFAULT_CAPACITY, &tx_packet.data[3]);
+	sys_put_be16(R02A_LIBRARY_START_IDX, &tx_packet.data[2]);
+	sys_put_be16(R502A_DEFAULT_CAPACITY, &tx_packet.data[4]);
 
 	k_mutex_lock(&drv_data->lock, K_FOREVER);
 
@@ -797,10 +798,10 @@ static int fps_match_templates(const struct device *dev, struct sensor_value *va
 		fps_led_control(dev, &led_ctrl);
 		val->val1 = R502A_FINGER_MATCH_FOUND;
 		val->val2 = sys_get_be16(&rx_packet.data[1]);
-		LOG_INF("Fingerprint matched with a score %d", val->val1);
+		LOG_INF("Fingerprint matched with a score %d", val->val2);
 	} else if (rx_packet.buf[R502A_CC_IDX] == R502A_NOT_MATCH_CC) {
 		val->val1 = R502A_FINGER_MATCH_NOT_FOUND;
-		LOG_ERR("Fingerprint not matched with a score %d", val->val1);
+		LOG_ERR("Fingerprint match not found");
 		ret = -ENOENT;
 	} else {
 		led_ctrl.ctrl_code = R502A_LED_CTRL_ON_ALWAYS;
