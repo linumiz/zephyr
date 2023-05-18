@@ -119,6 +119,7 @@ enum sensor_attribute_grow_r502a {
 	  * RAM buffer 1.
 	  */
 	SENSOR_ATTR_R502A_CAPTURE = SENSOR_ATTR_PRIV_START,
+	SENSOR_ATTR_R502A_TEMPLATE_CREATE,
 	/** Add template to the sensor record storage */
 	/**
 	 * @param val->val1	record index for template to be

@@ -840,8 +840,6 @@ static int fps_capture(const struct device *dev)
 		goto unlock;
 	}
 
-	ret = fps_create_model(dev);
-
 unlock:
 	k_mutex_unlock(&drv_data->lock);
 	return ret;
@@ -1045,6 +1043,8 @@ static int grow_r502a_attr_set(const struct device *dev, enum sensor_channel cha
 	switch ((enum sensor_attribute_grow_r502a)attr) {
 	case SENSOR_ATTR_R502A_CAPTURE:
 		return fps_capture(dev);
+	case SENSOR_ATTR_R502A_TEMPLATE_CREATE:
+		return fps_create_model(dev);
 	case SENSOR_ATTR_R502A_RECORD_ADD:
 		return fps_store_model(dev, val->val1);
 	case SENSOR_ATTR_R502A_RECORD_DEL:
