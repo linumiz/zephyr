@@ -749,6 +749,8 @@ static int fps_load_template(const struct device *dev, uint16_t id)
 
 	if (rx_packet.buf[R502A_CC_IDX] == R502A_OK) {
 		LOG_DBG("Load template data from id #%d to Char_buffer2", id);
+	} else if (rx_packet.buf[R502A_CC_IDX] == R502A_INVALID_TEMPLATE) {
+		ret = -EINVAL;
 	} else {
 		LOG_ERR("Error Loading template 0x%X",
 					rx_packet.buf[R502A_CC_IDX]);

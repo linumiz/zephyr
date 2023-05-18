@@ -61,6 +61,7 @@
  */
 
 #define R502A_OK 0x00 /*commad execution complete*/
+#define R502A_INVALID_TEMPLATE 0x0c /* template is invalid */
 
 /*Package Identifier's definition*/
 #define R502A_COMMAND_PACKET 0x1 /*Command packet*/
