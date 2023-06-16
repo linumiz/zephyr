@@ -83,7 +83,7 @@ static ocpp_cfg_info_t cached_key_cfg[OCPP_CFG_END] = {
 	FILL_KEY_TABLE(KEY_TYPE_INT,	0, CFG_MTR_VAL_SAMPLED_DATA_MAXLEN,
 			   "MeterValuesSampledDataMaxLength", 1),
 	FILL_KEY_TABLE(KEY_TYPE_INT,	1, CFG_MTR_VAL_SAMPLE_INTERVAL,
-			   "MeterValueSampleInterval", 0),
+			   "MeterValueSampleInterval", 5),
 	FILL_KEY_TABLE(KEY_TYPE_INT,	1, CFG_MIN_STATUS_DURATION,
 			   "MinimumStatusDuration", 0),
 	FILL_KEY_TABLE(KEY_TYPE_INT,	0, CFG_NO_OF_CONNECTORS,
