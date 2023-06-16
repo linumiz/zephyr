@@ -264,6 +264,7 @@ int ocpp_start_transaction(ocpp_session_handle_t hndl,
 	char buf[350]; // fix me stack
 	ocpp_wamp_rpc_msg_t rmsg = {0};
 	ocpp_msg_fp_t fn;
+	char utc[CISTR25] = {0};
 	int ret;
  
 	if (!ocpp_session_is_valid(sh) ||
@@ -271,6 +272,7 @@ int ocpp_start_transaction(ocpp_session_handle_t hndl,
 		return -EINVAL;
 	}
 	ctx = sh->ctx;
+	sh->idcon = conn_id;
 	if (ctx->state < CP_STATE_READY) {
 		return -EAGAIN;
 	}
@@ -281,7 +283,8 @@ int ocpp_start_transaction(ocpp_session_handle_t hndl,
 	}
 
 	fn = ctx->cfn[StartTransaction];
-	sh->uid = fn(buf, sizeof(buf), sh, Wh, -1);
+	ocpp_get_utc_now(utc);
+	sh->uid = fn(buf, sizeof(buf), sh, Wh, -1, utc);
 
 	// server online, send st txn msg.
 	ui = ctx->ui;
@@ -295,6 +298,15 @@ int ocpp_start_transaction(ocpp_session_handle_t hndl,
 	if (sh->resp_status != AUTH_ACCEPTED) {
 		//notif user about unauthorised !!
 		ret = -EACCES;
+	} else {
+		ocpp_keyval_t *keyval;
+
+		keyval = ocpp_get_key_val(CFG_MTR_VAL_SAMPLE_INTERVAL);
+		if (! atomic_inc(&ctx->mtr_timer_ref_cnt)) {
+			k_timer_start(&ctx->mtr_timer,
+				      K_SECONDS(keyval->ival),
+				      K_SECONDS(keyval->ival));
+		}
 	}
 
 	return ret;
@@ -309,6 +321,7 @@ int ocpp_stop_transaction(ocpp_session_handle_t hndl,
 	ocpp_upstream_info_t *ui;
 	int uid;
 	char buf[350]; // fix me stack
+	char utc[CISTR25] = {0};
 	ocpp_wamp_rpc_msg_t rmsg = {0};
 	ocpp_msg_fp_t fn;
 	int ret;
@@ -329,7 +342,8 @@ int ocpp_stop_transaction(ocpp_session_handle_t hndl,
 	}
 
 	fn = ctx->cfn[StopTransaction];
-	sh->uid = fn(buf, sizeof(buf), sh, Wh, NULL, "timestamp");
+	ocpp_get_utc_now(utc);
+	sh->uid = fn(buf, sizeof(buf), sh, Wh, NULL, utc);
 
 	// on response check idtag & update cache !!
 	ui = ctx->ui;
@@ -339,6 +353,12 @@ int ocpp_stop_transaction(ocpp_session_handle_t hndl,
 	rmsg.sndlock = &ui->ws_sndlock;
 	rmsg.rspsig = &ui->ws_rspsig;
 	ret = ocpp_send_to_server(&rmsg, K_MSEC(timeout_ms));
+
+	if (!ret) {
+		if (atomic_dec(&ctx->mtr_timer_ref_cnt) <= 1) {
+			k_timer_stop(&ctx->mtr_timer);
+		}
+	}
 
 	return ret;
 }
@@ -444,6 +464,7 @@ int ocpp_meter_values(ocpp_session_handle_t hndl,
 	ocpp_info_t *ctx = sh->ctx;
 	ocpp_upstream_info_t *ui = ctx->ui;
 	char buf[350]; // fix me stack
+	char utc[CISTR25] = {0};
 	ocpp_wamp_rpc_msg_t rmsg = {0};
 	ocpp_msg_fp_t fn;
 	int ret;
@@ -455,7 +476,8 @@ int ocpp_meter_values(ocpp_session_handle_t hndl,
 	}
 
 	fn = ctx->cfn[MeterValues];
-	sh->uid = fn(buf, sizeof(buf), sh, "timestamp", sval,
+	ocpp_get_utc_now(utc);
+	sh->uid = fn(buf, sizeof(buf), sh, utc, sval,
 			mtr_ref_table[mes].smes, 
 			mtr_ref_table[mes].unit);
 

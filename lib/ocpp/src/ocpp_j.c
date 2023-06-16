@@ -36,7 +36,6 @@ static int frame_rpc_call_req(char *rpcbuf, int len, int pdu, uint32_t ses,
 	json_object_array_put_idx(rpc, 3, pdumsg);
 	to_send = json_object_to_json_string_ext(rpc, JSON_C_TO_STRING_PLAIN);
 
-	printf("json str final %s\n", to_send);
 	strncpy(rpcbuf, to_send, len);
 
 	json_object_put(rpc);
@@ -62,7 +61,6 @@ static int frame_rpc_call_res(char *rpcbuf, int len, char* uid,
 	json_object_array_put_idx(rpc, 2, pdumsg);
 	to_send = json_object_to_json_string_ext(rpc, JSON_C_TO_STRING_PLAIN);
 
-	printf("json str final %s\n", to_send);
 	strncpy(rpcbuf, to_send, len);
 
 	json_object_put(rpc);
@@ -230,6 +228,9 @@ static int frame_meter_val_msg(char *buf, int len, ocpp_session_t *ses,
 	struct json_object *tmp;
 	struct json_object *persample;
 	struct json_object *sampleval;
+	struct json_object *smplarr;
+	struct json_object *mtrarr;
+
 
 	mtr = json_object_new_object();
 	if (!mtr) {
@@ -286,8 +287,20 @@ static int frame_meter_val_msg(char *buf, int len, ocpp_session_t *ses,
 	}
 
 	json_object_object_add(sampleval, "unit", tmp);
-	json_object_object_add(persample, "sampledValue", sampleval);
-	json_object_object_add(mtr, "metervalue", persample);
+	smplarr = json_object_new_array();
+	if (!smplarr) {
+		goto out_sampleval;
+	}
+
+	mtrarr = json_object_new_array();
+	if (!mtrarr) {
+		goto out_smplarr;
+	}
+
+	json_object_array_put_idx(smplarr, 0, sampleval);
+	json_object_object_add(persample, "sampledValue", smplarr);
+	json_object_array_put_idx(mtrarr, 0, persample);
+	json_object_object_add(mtr, "meterValue", mtrarr);
 
 	ret = frame_rpc_call_req(buf, len, MeterValues,
 				 (uint32_t)ses, mtr);
@@ -296,6 +309,9 @@ static int frame_meter_val_msg(char *buf, int len, ocpp_session_t *ses,
 	}
 
 	return 0;
+
+out_smplarr:
+	json_object_put(smplarr);
 
 out_sampleval:
 	json_object_put(sampleval);
@@ -572,16 +588,16 @@ int parse_rpc_msg(char *msg, int msglen, char *uid, int uidlen,
 static int parse_idtag_info(struct json_object *root,
 			    ocpp_idtag_info_t *idtag_info)
 {
-        
+	struct json_object *idinfo;
 	struct json_object *tmp;
 	char *str;
 	int ret = 0;
 
-	if (!json_object_object_get_ex(root, "idTagInfo", &tmp)) {
+	if (!json_object_object_get_ex(root, "idTagInfo", &idinfo)) {
 		return -EINVAL;
 	}
 
-	if (!json_object_object_get_ex(root, "status", &tmp)) {
+	if (!json_object_object_get_ex(idinfo, "status", &tmp)) {
 		return -EINVAL;
 	}
 
@@ -611,14 +627,14 @@ static int parse_idtag_info(struct json_object *root,
 		return -EINVAL;
 	}
 
-	if (json_object_object_get_ex(root, "parentIdTag", &tmp)) {
+	if (json_object_object_get_ex(idinfo, "parentIdTag", &tmp)) {
 		strncpy(idtag_info->p_idtag, json_object_get_string(tmp),
 			sizeof(idtag_info->p_idtag));
 	}
 
-        if (json_object_object_get_ex(root, "date", &tmp)) {
-		/* convert civil time to epoch */
-		idtag_info->exptime;
+        if (json_object_object_get_ex(idinfo, "date", &tmp)) {
+		strncpy(idtag_info->exptime, json_object_get_string(tmp),
+			sizeof(idtag_info->exptime));
 	}
 
 	return 0;
@@ -729,17 +745,13 @@ static int parse_start_txn_msg(char *buf,
 		return -EINVAL;
 	}
 
-	ret = parse_idtag_info(root, idtag_info);
-	if (ret) {
-		goto out;
-	}
-
         if (!json_object_object_get_ex(root, "transactionId", &tmp)) {
 		ret = -EINVAL;
 		goto out;
 	}
 
 	*idtxn = json_object_get_int(tmp);
+	ret = parse_idtag_info(root, idtag_info);
 
 out:
 	json_object_put(root);
