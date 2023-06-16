@@ -6,6 +6,7 @@
 
 #include "ocpp.h"
 #include "ocpp_i.h"
+#include <zephyr/posix/time.h>
 
 LOG_MODULE_REGISTER(ocpp, LOG_LEVEL_INF);
 #define OCPP_UPSTREAM_PRIORITY          7
@@ -53,6 +54,23 @@ int ocpp_find_pdu_from_literal(char *msg)
 	}
 
 	return i;
+}
+
+void ocpp_get_utc_now(char *utc)
+{
+	struct timespec tv;
+	struct tm htime = {0};
+
+	gettimeofday(&tv, NULL);
+	gmtime_r(&tv.tv_sec, &htime);
+
+	sprintf(utc, "%04d-%02d-%02dT%02d:%02d:%02dZ",
+		htime.tm_year + 1900,
+		htime.tm_mon + 1,
+		htime.tm_mday,
+		htime.tm_hour,
+		htime.tm_min,
+		htime.tm_sec);
 }
 
 bool ocpp_session_is_valid(ocpp_session_t *sh)
@@ -123,6 +141,10 @@ static int ocpp_connect_to_cs(ocpp_info_t *ctx)
 		return ret;
 	}
 
+	if (ui->wssock >= 0) {
+		websocket_disconnect(ui->wssock);
+	}
+
 	if (ui->wssock < 0) {
 		char buf[128];
 		char *optional_hdr[] = {
@@ -145,7 +167,7 @@ static int ocpp_connect_to_cs(ocpp_info_t *ctx)
 		ui->wssock = ret;
 	}
 
-	LOG_DBG("WS connect success");
+	LOG_DBG("WS connect success %d", ui->wssock);
 	return 0;
 }
 
@@ -213,10 +235,10 @@ static void ocpp_internal_handler(void *p1, void *p2, void *p3)
 					io.meter_val.mes = i;
 					ret = ctx->cb(OCPP_USR_GET_METER_VALUE,
 						      &io, ctx->user_data);
-					if (!ret) {
+					if (ret) {
 						continue;
 					}
-					ocpp_meter_values(sh, i,
+					ocpp_meter_values(lsh, i,
 							  io.meter_val.val);
 				}
 			}
@@ -429,7 +451,6 @@ static void ocpp_wsreader(void *p1, void *p2, void *p3)
 		if (ctx->is_cs_offline &&
 		    !(retry_cnt++ % TCP_CONNECT_AFTER)) {
 
-			ui->wssock = -1;
 			k_mutex_lock(&ctx->ilock, K_FOREVER);
 			ocpp_connect_to_cs(ctx);
 			k_mutex_unlock(&ctx->ilock);
@@ -674,6 +695,7 @@ int ocpp_init(ocpp_cp_info_t *cpi,
 	k_timer_user_data_set(&ctx->hb_timer, ctx);
 	k_timer_init(&ctx->mtr_timer, timer_meter_cb, NULL);
 	k_timer_user_data_set(&ctx->mtr_timer, ctx);
+	atomic_set(&ctx->mtr_timer_ref_cnt, 0);
 
 	ctx->user_data = user_data;
 	ctx->cb = cb;

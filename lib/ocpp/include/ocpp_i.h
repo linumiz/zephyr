@@ -127,7 +127,7 @@ typedef struct {
 	char idtag[CISTR20];
 	char p_idtag[CISTR20];
 	auth_status_t auth_status;
-	struct timeval exptime;
+	char exptime[CISTR25];
 }ocpp_idtag_info_t;
 
 typedef struct {
@@ -150,6 +150,7 @@ typedef struct {
 	bool is_cs_offline;
 	struct k_timer hb_timer;
 	struct k_timer mtr_timer;
+	atomic_t mtr_timer_ref_cnt;
 	int hb_sec; //heartbeat interval
 	struct k_msgq *msgq;
 	struct k_thread tinfo;
