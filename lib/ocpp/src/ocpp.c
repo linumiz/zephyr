@@ -259,8 +259,17 @@ static void ocpp_internal_handler(void *p1, void *p2, void *p3)
 			break;
 
 		case RemoteStartTransaction:
+			msg.msgtype = OCPP_USR_START_CHARGING;
+			ctx->cb(msg.msgtype, &msg.usr, ctx->user_data);
+			break;
+
 		case RemoteStopTransaction:
+			msg.msgtype = OCPP_USR_STOP_CHARGING;
+			ctx->cb(msg.msgtype, &msg.usr, ctx->user_data);
+			break;
+
 		case UnlockConnector:
+			msg.msgtype = OCPP_USR_UNLOCK_CONNECTOR;
 			ctx->cb(msg.msgtype, &msg.usr, ctx->user_data);
 			break;
 
