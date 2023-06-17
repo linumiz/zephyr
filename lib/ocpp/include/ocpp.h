@@ -26,10 +26,10 @@ typedef enum {
 	OCPP_USR_GET_METER_VALUE,
 
 	/* start process as idtag received from local e.g authorize etc */
-	OCPP_USR_START_CHARING,
+	OCPP_USR_START_CHARGING,
 
 	/* follow stop charging process */
-	OCPP_USR_STOP_CHARING,
+	OCPP_USR_STOP_CHARGING,
 
 	/* unlock mechanical connector */
 	OCPP_USR_UNLOCK_CONNECTOR,
@@ -152,7 +152,9 @@ int ocpp_authorize(ocpp_session_handle_t hndl,
  * in: Wh - Energy meter reading of connector
  * in: conn_id - connector id should be > 0 and sequential number
  * in: timeout_ms - timeout in msec
- * result: 0 - success, otherwise - fail and charging should be terminated
+ * result: 0 - success
+ * 	   EACCES - should follow stop charging process
+ *         otherwise - fail no action
  */
 int ocpp_start_transaction(ocpp_session_handle_t hndl,
 			   int Wh,

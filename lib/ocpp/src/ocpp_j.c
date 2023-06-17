@@ -254,7 +254,7 @@ static int frame_meter_val_msg(char *buf, int len, ocpp_session_t *ses,
 
 	persample = json_object_new_object();
 	if (!persample) {
-		goto out_persample;
+		goto out;
 	}
 
 	tmp = json_object_new_string(timestamp);
@@ -315,8 +315,10 @@ out_smplarr:
 
 out_sampleval:
 	json_object_put(sampleval);
+
 out_persample:
 	json_object_put(persample);
+
 out:
 	json_object_put(mtr);
 	return ret;

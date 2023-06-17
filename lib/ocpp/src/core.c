@@ -294,8 +294,12 @@ int ocpp_start_transaction(ocpp_session_handle_t hndl,
 	rmsg.sndlock = &ui->ws_sndlock;
 	rmsg.rspsig = &ui->ws_rspsig;
 	ret = ocpp_send_to_server(&rmsg, K_MSEC(timeout_ms));
+	if (ret < 0) {
+		return ret;
+	}
 
 	if (sh->resp_status != AUTH_ACCEPTED) {
+		sh->is_active = false;
 		//notif user about unauthorised !!
 		ret = -EACCES;
 	} else {
@@ -335,7 +339,10 @@ int ocpp_stop_transaction(ocpp_session_handle_t hndl,
 		return -EAGAIN;
 	}
 
-	sh->is_active = true;
+	sh->is_active = false;
+	if (atomic_dec(&ctx->mtr_timer_ref_cnt) <= 1) {
+		k_timer_stop(&ctx->mtr_timer);
+	}
 
 	// server offline, accept stop txn and save it in Q.
 	if (ctx->is_cs_offline) {
@@ -353,13 +360,6 @@ int ocpp_stop_transaction(ocpp_session_handle_t hndl,
 	rmsg.sndlock = &ui->ws_sndlock;
 	rmsg.rspsig = &ui->ws_rspsig;
 	ret = ocpp_send_to_server(&rmsg, K_MSEC(timeout_ms));
-
-	if (!ret) {
-		if (atomic_dec(&ctx->mtr_timer_ref_cnt) <= 1) {
-			k_timer_stop(&ctx->mtr_timer);
-		}
-	}
-
 	return ret;
 }
 
