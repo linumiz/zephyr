@@ -634,7 +634,7 @@ static int parse_idtag_info(struct json_object *root,
 			sizeof(idtag_info->p_idtag));
 	}
 
-        if (json_object_object_get_ex(idinfo, "date", &tmp)) {
+        if (json_object_object_get_ex(idinfo, "expiryDate", &tmp)) {
 		strncpy(idtag_info->exptime, json_object_get_string(tmp),
 			sizeof(idtag_info->exptime));
 	}
