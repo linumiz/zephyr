@@ -122,7 +122,7 @@ int ocpp_get_configuration(ocpp_key_t key, ocpp_info_t *ctx, char *uid)
 int ocpp_change_configuration(char *skey, ocpp_info_t *ctx,
 			      char *sval, char *uid)
 {
-	int ret;
+	int ret = -EINVAL;
 	char buf[250];
 	ocpp_wamp_rpc_msg_t rmsg = {0};
 	ocpp_keyval_t kval;
@@ -141,11 +141,29 @@ int ocpp_change_configuration(char *skey, ocpp_info_t *ctx,
 			kval.str = sval;
 		}
 		ret = ocpp_update_cfg_val(key, &kval);
+
 		if (ret) {
 			res = "Rejected";
 		}
 	} else {
 		res = "NotSupported";
+	}
+
+	if (!ret) {
+		switch (key) {
+		case CFG_MTR_VAL_SAMPLE_INTERVAL:
+			if (atomic_get(&ctx->mtr_timer_ref_cnt) <= 0) {
+				break;
+			}
+
+			k_timer_start(&ctx->mtr_timer,
+				      K_SECONDS(kval.ival),
+				      K_SECONDS(kval.ival));
+			break;
+
+		default :
+			break;
+		}
 	}
 
 	fn = ctx->cfn[ChangeConfiguration];
@@ -205,7 +223,7 @@ int ocpp_authorize(ocpp_session_handle_t hndl, char *idtag,
 	strncpy(sh->idtag, idtag, sizeof(sh->idtag));
 	ui = ctx->ui;
 	fn = ctx->cfn[Authorize];
-	sh->uid = fn(buf, sizeof(buf), idtag);
+	sh->uid = fn(buf, sizeof(buf), sh);
 
 	rmsg.ctx = ctx;
 	rmsg.msg = buf;
@@ -419,7 +437,7 @@ int ocpp_remote_stop_transaction(ocpp_info_t *ctx, internal_msg_t *msg,
 		}
 	}
 
-	fn = ctx->cfn[RemoteStartTransaction];
+	fn = ctx->cfn[RemoteStopTransaction];
 	fn(buf, sizeof(buf), resp, uid);
 
 	rmsg.ctx = ctx;
