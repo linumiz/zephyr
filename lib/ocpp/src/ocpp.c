@@ -419,15 +419,14 @@ static int ocpp_process_server_msg(ocpp_info_t *ctx)
 
 	case UnlockConnector:
 		memset(&msg, 0, sizeof(internal_msg_t));
-		msg.msgtype = RemoteStopTransaction;
+		msg.msgtype = UnlockConnector;
 
 		ret = fn(ui->recv_buf, &msg.usr.unlock_con.id_con);
 		if (ret) {
 			break;
 		}
 
-		ocpp_remote_stop_transaction(ctx, &msg, uid);
-
+		ocpp_unlock_connector(ctx, &msg, uid);
 		break;
 
 	case MeterValues: //do nothing
