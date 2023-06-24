@@ -1,11 +1,12 @@
 /*
  * Copyright (C) 2021 metraTec GmbH
+ * Copyright (C) 2023 Linumiz
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_INCLUDE_DRIVERS_MODEM_SIMCOM_SIM7080_H
-#define ZEPHYR_INCLUDE_DRIVERS_MODEM_SIMCOM_SIM7080_H
+#ifndef ZEPHYR_INCLUDE_DRIVERS_MODEM_SIMCOM_XXXX_H
+#define ZEPHYR_INCLUDE_DRIVERS_MODEM_SIMCOM_XXXX_H
 
 #include <zephyr/types.h>
 
@@ -15,10 +16,11 @@
 extern "C" {
 #endif
 
-#define SIM7080_GNSS_DATA_UTC_LEN 20
-#define SIM7080_SMS_MAX_LEN 160
+#define SIMCOM_GNSS_DATA_UTC_LEN	20
+#define SIMCOM_GNSS_DATA_DATE_LEN	20
+#define SIMCOM_SMS_MAX_LEN 160
 
-struct sim7080_gnss_data {
+struct simcom_gnss_data {
 	/**
 	 * Whether gnss is powered or not.
 	 */
@@ -28,82 +30,94 @@ struct sim7080_gnss_data {
 	 */
 	bool fix_status;
 	/**
-	 * UTC in format yyyyMMddhhmmss.sss
+	 * Time
 	 */
-	char utc[SIM7080_GNSS_DATA_UTC_LEN];
+	char utc[SIMCOM_GNSS_DATA_UTC_LEN];
+	/**
+	 * Date
+	 */
+	char date[SIMCOM_GNSS_DATA_DATE_LEN];
 	/**
 	 * Latitude in 10^-7 degree.
 	 */
-	int32_t lat;
+	float lat;
+	/**
+	 * Latitude direction Indicator N/S (North/South)
+	 */
+	char lat_dir;
 	/**
 	 * Longitude in 10^-7 degree.
 	 */
-	int32_t lon;
+	float lon;
 	/**
-	 * Altitude in mm.
+	 * Longitude direction Indicator E/W (East/West)
 	 */
-	int32_t alt;
+	char lon_dir;
 	/**
-	 * Horizontal dilution of precision in 10^-2.
+	 * Altitude
+	 */
+	float alt;
+	/**
+	 * Horizontal dilution of precision
 	 */
 	uint16_t hdop;
 	/**
-	 * Course over ground un 10^-2 degree.
+	 * Course over ground
 	 */
 	uint16_t cog;
 	/**
-	 * Speed in 10^-1 km/h.
+	 * Speed
 	 */
-	uint16_t kmh;
+	float speed;
 };
 
 /**
  * Possible sms states in memory.
  */
-enum sim7080_sms_stat {
-	SIM7080_SMS_STAT_REC_UNREAD = 0,
-	SIM7080_SMS_STAT_REC_READ,
-	SIM7080_SMS_STAT_STO_UNSENT,
-	SIM7080_SMS_STAT_STO_SENT,
-	SIM7080_SMS_STAT_ALL,
+enum simcom_sms_stat {
+	SIMCOM_SMS_STAT_REC_UNREAD = 0,
+	SIMCOM_SMS_STAT_REC_READ,
+	SIMCOM_SMS_STAT_STO_UNSENT,
+	SIMCOM_SMS_STAT_STO_SENT,
+	SIMCOM_SMS_STAT_ALL,
 };
 
 /**
  * Possible ftp return codes.
  */
-enum sim7080_ftp_rc {
+enum simcom_ftp_rc {
 	/* Operation finished correctly. */
-	SIM7080_FTP_RC_OK = 0,
+	SIMCOM_FTP_RC_OK = 0,
 	/* Session finished. */
-	SIM7080_FTP_RC_FINISHED,
+	SIMCOM_FTP_RC_FINISHED,
 	/* An error occurred. */
-	SIM7080_FTP_RC_ERROR,
+	SIMCOM_FTP_RC_ERROR,
 };
 
 /**
  * Buffer structure for sms.
  */
-struct sim7080_sms {
+struct simcom_sms {
 	/* First octet of the sms. */
 	uint8_t first_octet;
 	/* Message protocol identifier. */
 	uint8_t tp_pid;
 	/* Status of the sms in memory. */
-	enum sim7080_sms_stat stat;
+	enum simcom_sms_stat stat;
 	/* Index of the sms in memory. */
 	uint16_t index;
 	/* Time the sms was received. */
 	struct {
-		uint8_t year;
-		uint8_t month;
-		uint8_t day;
-		uint8_t hour;
-		uint8_t minute;
-		uint8_t second;
-		uint8_t timezone;
+	uint8_t year;
+	uint8_t month;
+	uint8_t day;
+	uint8_t hour;
+	uint8_t minute;
+	uint8_t second;
+	uint8_t timezone;
 	} time;
 	/* Buffered sms. */
-	char data[SIM7080_SMS_MAX_LEN + 1];
+	char data[SIMCOM_SMS_MAX_LEN + 1];
 	/* Length of the sms in buffer. */
 	uint8_t data_len;
 };
@@ -111,40 +125,58 @@ struct sim7080_sms {
 /**
  * Buffer structure for sms reads.
  */
-struct sim7080_sms_buffer {
+struct simcom_sms_buffer {
 	/* sms structures to read to. */
-	struct sim7080_sms *sms;
+	struct simcom_sms *sms;
 	/* Number of sms structures. */
 	uint8_t nsms;
 };
 
 /**
- * @brief Power on the Sim7080.
- *
- * @return 0 on success. Otherwise -1 is returned.
+ * Get the modem manufacturer.
  */
-int mdm_sim7080_power_on(void);
+const char *mdm_get_manufacturer(void);
+/**
+ * Get the modem model information.
+ */
+const char *mdm_get_model(void);
+/**
+ * Get the modem revision.
+ */
+const char *mdm_get_revision(void);
+/**
+ * Get the modem imei number.
+ */
+const char *mdm_get_imei(void);
 
 /**
- * @brief Power off the Sim7080.
+ * @brief Power on the Simcom modem.
  *
  * @return 0 on success. Otherwise -1 is returned.
  */
-int mdm_sim7080_power_off(void);
+int mdm_simcom_power_on(void);
+
+/**
+ * @brief Power off the Simcom modem.
+ *
+ * @return 0 on success. Otherwise -1 is returned.
+ */
+int mdm_simcom_power_off(void);
+
 
 /**
  * @brief Starts the modem in network operation mode.
  *
  * @return 0 on success. Otherwise <0 is returned.
  */
-int mdm_sim7080_start_network(void);
+int mdm_simcom_start_network(void);
 
 /**
- * @brief Starts the modem in gnss operation mode.
+ * @brief Starts gnss operation.
  *
  * @return 0 on success. Otherwise <0 is returned.
  */
-int mdm_sim7080_start_gnss(void);
+int mdm_simcom_start_gnss(void);
 
 /**
  * @brief Query gnss position form the modem.
@@ -152,27 +184,14 @@ int mdm_sim7080_start_gnss(void);
  * @return 0 on success. If no fix is acquired yet -EAGAIN is returned.
  *         Otherwise <0 is returned.
  */
-int mdm_sim7080_query_gnss(struct sim7080_gnss_data *data);
+int mdm_simcom_query_gnss(struct simcom_gnss_data *data);
 
 /**
- * Get the sim7080 manufacturer.
+ * @brief Stops gnss operation.
+ *
+ * @return 0 on success. Otherwise <0 is returned.
  */
-const char *mdm_sim7080_get_manufacturer(void);
-
-/**
- * Get the sim7080 model information.
- */
-const char *mdm_sim7080_get_model(void);
-
-/**
- * Get the sim7080 revision.
- */
-const char *mdm_sim7080_get_revision(void);
-
-/**
- * Get the sim7080 imei number.
- */
-const char *mdm_sim7080_get_imei(void);
+int mdm_simcom_stop_gnss(void);
 
 /**
  * Read sms from sim module.
@@ -186,7 +205,7 @@ const char *mdm_sim7080_get_imei(void);
  * If the whole structure is filled a subsequent read may
  * be needed.
  */
-int mdm_sim7080_read_sms(struct sim7080_sms_buffer *buffer);
+int mdm_simcom_read_sms(struct simcom_sms_buffer *buffer);
 
 /**
  * Delete a sms at a given index.
@@ -194,7 +213,7 @@ int mdm_sim7080_read_sms(struct sim7080_sms_buffer *buffer);
  * @param index The index of the sms in memory.
  * @return 0 on success. Otherwise -1 is returned.
  */
-int mdm_sim7080_delete_sms(uint16_t index);
+int mdm_simcom_delete_sms(uint16_t index);
 
 /**
  * Start a ftp get session.
@@ -206,8 +225,8 @@ int mdm_sim7080_delete_sms(uint16_t index);
  * @param path Path to the file on the server.
  * @return 0 if the session was started. Otherwise -1 is returned.
  */
-int mdm_sim7080_ftp_get_start(const char *server, const char *user, const char *passwd,
-				  const char *file, const char *path);
+int mdm_simcom_ftp_get_start(const char *server, const char *user, const char *passwd,
+						const char *file, const char *path);
 
 /**
  * Read data from a ftp get session.
@@ -215,12 +234,7 @@ int mdm_sim7080_ftp_get_start(const char *server, const char *user, const char *
  * @param dst The destination buffer.
  * @param size Initialize to the size of dst. Gets set to the number
  *             of bytes actually read.
- * @return According sim7080_ftp_rc.
+ * @return According simcom_ftp_rc.
  */
-int mdm_sim7080_ftp_get_read(char *dst, size_t *size);
-
-#ifdef __cplusplus
-}
+int mdm_simcom_ftp_get_read(char *dst, size_t *size);
 #endif
-
-#endif /* ZEPHYR_INCLUDE_DRIVERS_MODEM_SIMCOM_SIM7080_H */

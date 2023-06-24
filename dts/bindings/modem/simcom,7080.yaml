@@ -1,0 +1,12 @@
+# Copyright (C) 2023 Linumiz
+# Copyright (C) 2023 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+description: Simcom modem 7080 series
+
+include: uart-device.yaml
+
+properties:
+  mdm-power-gpios:
+    type: phandle-array
+    required: true
