@@ -64,6 +64,8 @@ static int frame_rpc_call_res(char *rpcbuf, int len, char* uid,
 	strncpy(rpcbuf, to_send, len);
 
 	json_object_put(rpc);
+
+	return 0;
 }
 
 static int frame_authorize_msg(char *buf, int len,
