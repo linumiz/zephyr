@@ -230,6 +230,8 @@ static void ocpp_internal_handler(void *p1, void *p2, void *p3)
 					continue;
 				}
 
+				k_mutex_lock(&lsh->slock, K_FOREVER);
+				k_mutex_unlock(&ctx->ilock);
 				io.meter_val.id_con = lsh->idcon;
 				for (i = 0; i < OMM_END; i++) {
 					io.meter_val.mes = i;
@@ -241,6 +243,8 @@ static void ocpp_internal_handler(void *p1, void *p2, void *p3)
 					ocpp_meter_values(lsh, i,
 							  io.meter_val.val);
 				}
+				k_mutex_lock(&ctx->ilock, K_FOREVER);
+				k_mutex_unlock(&lsh->slock);
 			}
 			k_mutex_unlock(&ctx->ilock);
 			break;
@@ -635,6 +639,7 @@ int ocpp_session_open(ocpp_session_handle_t *hndl)
 	sh->idcon = INVALID_CONN_ID;
 	sh->idtxn = INVALID_TXN_ID;
 	sh->ctx = gctx;
+	k_mutex_init(&sh->slock);
 
 	k_mutex_lock(&gctx->ilock, K_FOREVER);
 	sys_slist_append(&gctx->slist, &sh->node);
@@ -658,8 +663,10 @@ void ocpp_session_close(ocpp_session_handle_t hndl)
 	is_removed = sys_slist_find_and_remove(&gctx->slist, &sh->node);
 	k_mutex_unlock(&gctx->ilock);
 
-	if (is_removed)
+	if (is_removed) {
+		k_mutex_lock(&sh->slock, K_FOREVER); // FIXME
 		k_free(sh);
+	}
 }
 
 K_MSGQ_DEFINE(ocpp_iq, sizeof(internal_msg_t), 		\

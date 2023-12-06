@@ -163,6 +163,7 @@ typedef struct {
 }ocpp_info_t;
 
 typedef struct {
+	struct k_mutex slock; // session lock
 	char idtag[CISTR20];
 	bool is_active;
 	uint8_t idcon;

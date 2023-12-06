@@ -283,12 +283,14 @@ static int frame_meter_val_msg(char *buf, int len, ocpp_session_t *ses,
 	}
 
 	json_object_object_add(sampleval, "value", tmp);
-	tmp = json_object_new_string(unit);
-	if (!tmp) {
-		goto out_sampleval;
-	}
+	if (unit) {
+		tmp = json_object_new_string(unit);
+		if (!tmp) {
+			goto out_sampleval;
+		}
 
-	json_object_object_add(sampleval, "unit", tmp);
+		json_object_object_add(sampleval, "unit", tmp);
+	}
 	smplarr = json_object_new_array();
 	if (!smplarr) {
 		goto out_sampleval;
