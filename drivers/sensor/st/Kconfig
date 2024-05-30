@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # zephyr-keep-sorted-start
+source "drivers/sensor/st/ais2dw12/Kconfig"
 source "drivers/sensor/st/hts221/Kconfig"
 source "drivers/sensor/st/i3g4250d/Kconfig"
 source "drivers/sensor/st/iis2dh/Kconfig"

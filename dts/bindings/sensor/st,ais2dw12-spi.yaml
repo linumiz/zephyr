@@ -1,0 +1,9 @@
+# Copyright (c) 2024 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+    STMicroelectronics AIS2DW12 3-axis accelerometer accessed through SPI bus
+
+compatible: "st,ais2dw12"
+
+include: ["spi-device.yaml", "st,ais2dw12-common.yaml"]

@@ -1,0 +1,8 @@
+# Copyright (c) 2024 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+description: STMicroelectronics AIS2DW12 3-axis accelerometer
+
+compatible: "st,ais2dw12"
+
+include: ["i2c-device.yaml", "st,ais2dw12-common.yaml"]

@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (c) 2024 Linumiz
+
+menuconfig AIS2DW12
+	bool "AIS2DW12 acclerometer driver"
+	default y
+	depends on DT_HAS_ST_AIS2DW12_ENABLED
+	select I2C if $(dt_compat_on_bus,$(DT_COMPAT_ST_AIS2DW12),i2c)
+	select spi if $(dt_compat_on_bus,$(DT_COMPAT_ST_AIS2DW12),spi)
+	help
+	 Enable driver for ST AIS2DW12 acclerometer.
+
+if AIS2DW12
+
+config AIS2DW12_TRIGGER
+	bool "Trigger mode"
+
+if AIS2DW12_TRIGGER
+
+config AIS2DW12_TRIGGER_OWN_THREAD
+	bool "Use own thread"
+	help
+	 Enable trigger to run in own thread. By
+	 default it is global thread mode.
+
+config AIS2DW12_THREAD_PRIORITY
+	int "Own thread priority"
+	depends on AIS2DW12_TRIGGER_OWN_THREAD
+	default 10
+
+config AIS2DW12_THREAD_STACK_SIZE
+	int "Own thread stask size"
+	depends on AIS2DW12_TRIGGER_OWN_THREAD
+	default 1024
+
+endif # AIS2DW12_TRIGGER
+
+config AIS2DW12_ENABLE_TEMP
+	bool "Temperature"
+	help
+	  Enable/disable temperature
+
+endif # AIS2DW12

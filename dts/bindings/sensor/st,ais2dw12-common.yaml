@@ -1,0 +1,31 @@
+# Copyright (c) 2024 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+    When setting the odr, power-mode, and range properties in a .dts or .dtsi
+    file you may include st_AIS2DW12.h and use the macros defined there.
+    AIS2DW12: AIS2DW12@0 {
+      ...
+    };
+
+include: sensor-device.yaml
+
+properties:
+  int-gpios:
+    type: phandle-array
+    description: |
+      INT pin
+
+      This pin defaults to active high when produced by the sensor.
+      The property value should ensure the flags properly describe
+      the signal that is presented to the driver.
+
+  int-cfg:
+    type: int
+    enum: [1, 2]
+    default: 1
+    description: |
+      This property is used for interrupt routing.The sensor
+      has two interrupt pins.By default the interrupt are routed
+      to interrupt pin 1, if the value is 2, then all th interrupt
+      routed to interrupt pin 2.

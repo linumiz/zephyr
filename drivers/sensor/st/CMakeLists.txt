@@ -3,6 +3,7 @@
 
 # zephyr-keep-sorted-start
 add_subdirectory_ifdef(CONFIG_HAS_STMEMSC stmemsc)
+add_subdirectory_ifdef(CONFIG_AIS2DW12 ais2dw12)
 add_subdirectory_ifdef(CONFIG_HTS221 hts221)
 add_subdirectory_ifdef(CONFIG_I3G4250D i3g4250d)
 add_subdirectory_ifdef(CONFIG_IIS2DH iis2dh)
