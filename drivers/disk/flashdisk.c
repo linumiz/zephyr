@@ -435,6 +435,7 @@ static int disk_flash_access_ioctl(struct disk_info *disk, uint8_t cmd, void *bu
 	ctx = CONTAINER_OF(disk, struct flashdisk_data, info);
 
 	switch (cmd) {
+	case DISK_IOCTL_CTRL_DEINIT:
 	case DISK_IOCTL_CTRL_SYNC:
 		k_mutex_lock(&ctx->lock, K_FOREVER);
 		rc = flashdisk_cache_commit(ctx);
@@ -451,6 +452,8 @@ static int disk_flash_access_ioctl(struct disk_info *disk, uint8_t cmd, void *bu
 		*(uint32_t *)buff = ctx->page_size / ctx->sector_size;
 		k_mutex_unlock(&ctx->lock);
 		return 0;
+	case DISK_IOCTL_CTRL_INIT:
+		return disk_flash_access_init(disk);
 	default:
 		break;
 	}

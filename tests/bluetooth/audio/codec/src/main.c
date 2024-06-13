@@ -515,36 +515,40 @@ ZTEST(audio_codec_test_suite, test_bt_audio_codec_cfg_meta_set_program_info)
 	zassert_mem_equal(new_expected_data, program_data, ARRAY_SIZE(new_expected_data));
 }
 
-ZTEST(audio_codec_test_suite, test_bt_audio_codec_cfg_meta_get_stream_lang)
+ZTEST(audio_codec_test_suite, test_bt_audio_codec_cfg_meta_get_lang)
 {
-	const uint32_t expected_data = sys_get_le24((uint8_t[]){'e', 'n', 'g'});
 	const struct bt_audio_codec_cfg codec_cfg = BT_AUDIO_CODEC_CFG(
 		BT_HCI_CODING_FORMAT_LC3, 0x0000, 0x0000, {},
-		{BT_AUDIO_CODEC_DATA(BT_AUDIO_METADATA_TYPE_STREAM_LANG, 'e', 'n', 'g')});
+		{BT_AUDIO_CODEC_DATA(BT_AUDIO_METADATA_TYPE_LANG, 'e', 'n', 'g')});
+	char expected_data[] = "eng";
+	const uint8_t *lang;
 	int ret;
 
-	ret = bt_audio_codec_cfg_meta_get_stream_lang(&codec_cfg);
-	zassert_equal(ret, expected_data, "Unexpected return value %d", ret);
+	ret = bt_audio_codec_cfg_meta_get_lang(&codec_cfg, &lang);
+	zassert_equal(ret, 0, "Unexpected return value %d", ret);
+	zassert_mem_equal(expected_data, lang, BT_AUDIO_LANG_SIZE);
 }
 
-ZTEST(audio_codec_test_suite, test_bt_audio_codec_cfg_meta_set_stream_lang)
+ZTEST(audio_codec_test_suite, test_bt_audio_codec_cfg_meta_set_lang)
 {
-	const uint32_t expected_data = sys_get_le24((uint8_t[]){'e', 'n', 'g'});
-	const uint32_t new_expected_data = sys_get_le24((uint8_t[]){'d', 'e', 'u'});
 	struct bt_audio_codec_cfg codec_cfg = BT_AUDIO_CODEC_CFG(
 		BT_HCI_CODING_FORMAT_LC3, 0x0000, 0x0000, {},
-		{BT_AUDIO_CODEC_DATA(BT_AUDIO_METADATA_TYPE_STREAM_LANG, 'e', 'n', 'g')});
-	const uint32_t new_stream_lang = sys_le32_to_cpu(new_expected_data);
+		{BT_AUDIO_CODEC_DATA(BT_AUDIO_METADATA_TYPE_LANG, 'e', 'n', 'g')});
+	char new_expected_data[] = "deu";
+	char expected_data[] = "eng";
+	const uint8_t *lang;
 	int ret;
 
-	ret = bt_audio_codec_cfg_meta_get_stream_lang(&codec_cfg);
-	zassert_equal(ret, expected_data, "Unexpected return value %d", ret);
+	ret = bt_audio_codec_cfg_meta_get_lang(&codec_cfg, &lang);
+	zassert_equal(ret, 0, "Unexpected return value %d", ret);
+	zassert_mem_equal(expected_data, lang, BT_AUDIO_LANG_SIZE);
 
-	ret = bt_audio_codec_cfg_meta_set_stream_lang(&codec_cfg, new_stream_lang);
+	ret = bt_audio_codec_cfg_meta_set_lang(&codec_cfg, new_expected_data);
 	zassert_true(ret > 0, "Unexpected return value %d", ret);
 
-	ret = bt_audio_codec_cfg_meta_get_stream_lang(&codec_cfg);
-	zassert_equal(ret, new_expected_data, "Unexpected return value %d", ret);
+	ret = bt_audio_codec_cfg_meta_get_lang(&codec_cfg, &lang);
+	zassert_equal(ret, 0, "Unexpected return value %d", ret);
+	zassert_mem_equal(new_expected_data, lang, BT_AUDIO_LANG_SIZE);
 }
 
 ZTEST(audio_codec_test_suite, test_bt_audio_codec_cfg_meta_get_ccid_list)
@@ -1408,36 +1412,40 @@ ZTEST(audio_codec_test_suite, test_bt_audio_codec_cap_meta_set_program_info)
 	zassert_mem_equal(new_expected_data, program_data, ARRAY_SIZE(new_expected_data));
 }
 
-ZTEST(audio_codec_test_suite, test_bt_audio_codec_cap_meta_get_stream_lang)
+ZTEST(audio_codec_test_suite, test_bt_audio_codec_cap_meta_get_lang)
 {
-	const uint32_t expected_data = sys_get_le24((uint8_t[]){'e', 'n', 'g'});
 	const struct bt_audio_codec_cap codec_cap = BT_AUDIO_CODEC_CAP(
 		BT_HCI_CODING_FORMAT_LC3, 0x0000, 0x0000, {},
-		{BT_AUDIO_CODEC_DATA(BT_AUDIO_METADATA_TYPE_STREAM_LANG, 'e', 'n', 'g')});
+		{BT_AUDIO_CODEC_DATA(BT_AUDIO_METADATA_TYPE_LANG, 'e', 'n', 'g')});
+	char expected_data[] = "eng";
+	const uint8_t *lang;
 	int ret;
 
-	ret = bt_audio_codec_cap_meta_get_stream_lang(&codec_cap);
-	zassert_equal(ret, expected_data, "Unexpected return value %d", ret);
+	ret = bt_audio_codec_cap_meta_get_lang(&codec_cap, &lang);
+	zassert_equal(ret, 0, "Unexpected return value %d", ret);
+	zassert_mem_equal(expected_data, lang, BT_AUDIO_LANG_SIZE);
 }
 
-ZTEST(audio_codec_test_suite, test_bt_audio_codec_cap_meta_set_stream_lang)
+ZTEST(audio_codec_test_suite, test_bt_audio_codec_cap_meta_set_lang)
 {
-	const uint32_t expected_data = sys_get_le24((uint8_t[]){'e', 'n', 'g'});
-	const uint32_t new_expected_data = sys_get_le24((uint8_t[]){'d', 'e', 'u'});
 	struct bt_audio_codec_cap codec_cap = BT_AUDIO_CODEC_CAP(
 		BT_HCI_CODING_FORMAT_LC3, 0x0000, 0x0000, {},
-		{BT_AUDIO_CODEC_DATA(BT_AUDIO_METADATA_TYPE_STREAM_LANG, 'e', 'n', 'g')});
-	const uint32_t new_stream_lang = sys_le32_to_cpu(new_expected_data);
+		{BT_AUDIO_CODEC_DATA(BT_AUDIO_METADATA_TYPE_LANG, 'e', 'n', 'g')});
+	char new_expected_data[] = "deu";
+	char expected_data[] = "eng";
+	const uint8_t *lang;
 	int ret;
 
-	ret = bt_audio_codec_cap_meta_get_stream_lang(&codec_cap);
-	zassert_equal(ret, expected_data, "Unexpected return value %d", ret);
+	ret = bt_audio_codec_cap_meta_get_lang(&codec_cap, &lang);
+	zassert_equal(ret, 0, "Unexpected return value %d", ret);
+	zassert_mem_equal(expected_data, lang, BT_AUDIO_LANG_SIZE);
 
-	ret = bt_audio_codec_cap_meta_set_stream_lang(&codec_cap, new_stream_lang);
+	ret = bt_audio_codec_cap_meta_set_lang(&codec_cap, new_expected_data);
 	zassert_true(ret > 0, "Unexpected return value %d", ret);
 
-	ret = bt_audio_codec_cap_meta_get_stream_lang(&codec_cap);
-	zassert_equal(ret, new_expected_data, "Unexpected return value %d", ret);
+	ret = bt_audio_codec_cap_meta_get_lang(&codec_cap, &lang);
+	zassert_equal(ret, 0, "Unexpected return value %d", ret);
+	zassert_mem_equal(new_expected_data, lang, BT_AUDIO_LANG_SIZE);
 }
 
 ZTEST(audio_codec_test_suite, test_bt_audio_codec_cap_meta_get_ccid_list)

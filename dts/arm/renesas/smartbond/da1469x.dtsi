@@ -386,12 +386,17 @@
 			status = "disabled";
 			dma-channels = <8>;
 			block-count = <1>;
-			#dma-cells = <0>;
+			#dma-cells = <2>;
 		};
 
 		memc: qspic2@34000000 {
 			compatible = "renesas,smartbond-nor-psram";
 			reg = <0x34000000 0x48>;
+			status = "disabled";
+		};
+
+		bt_hci_da1469x: bt_hci_da1469x {
+			compatible = "renesas,bt-hci-da1469x";
 			status = "disabled";
 		};
 	};

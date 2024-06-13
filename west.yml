@@ -30,11 +30,11 @@ manifest:
   # Please add items below based on alphabetical order
   projects:
     - name: acpica
-      revision: da5f2721e1c7f188fe04aa50af76f4b94f3c3ea3
+      revision: 8d24867bc9c9d81c81eeac59391cda59333affd4
       path: modules/lib/acpica
     - name: bsim
       repo-path: babblesim-manifest
-      revision: 68f6282c6a7f54641b75f5f9fc953c85e272a983
+      revision: 9351ae1ad44864a49c351f9704f65f43046abeb0
       path: tools/bsim
       groups:
         - babblesim
@@ -56,7 +56,7 @@ manifest:
       remote: babblesim
       repo-path: ext_2G4_phy_v1
       path: tools/bsim/components/ext_2G4_phy_v1
-      revision: d8302b8d51409b9e717a1a0ba6b443d3b5552a6c
+      revision: 04eeb3c3794444122fbeeb3715f4233b0b50cfbb
       groups:
         - babblesim
     - name: babblesim_ext_2G4_channel_NtNcable
@@ -127,7 +127,7 @@ manifest:
       revision: 0c8669d81381ccf3b1a01d699f3b68b50134a99f
       path: modules/lib/cmsis-nn
     - name: edtt
-      revision: 64e5105ad82390164fb73fc654be3f73a608209a
+      revision: 8d7b543d4d2f2be0f78481e4e1d8d73a88024803
       path: tools/edtt
       groups:
         - tools
@@ -183,22 +183,22 @@ manifest:
       groups:
         - hal
     - name: hal_microchip
-      revision: 1279561ea9b71c5f572d3d52708b7b445a383662
+      revision: 71eba057c0cb7fc11b6f33eb40a82f1ebe2c571c
       path: modules/hal/microchip
       groups:
         - hal
     - name: hal_nordic
-      revision: f311735c1a16169ef228f1c50fefb4c8632ae69c
+      revision: ab5cb2e2faeb1edfad7a25286dcb513929ae55da
       path: modules/hal/nordic
       groups:
         - hal
     - name: hal_nuvoton
-      revision: ab342e6915bf7bff2203a20985754f6dbdb5343d
+      revision: 466c3eed9c98453fb23953bf0e0427fea01924be
       path: modules/hal/nuvoton
       groups:
         - hal
     - name: hal_nxp
-      revision: 88a7d079eed470ecc94010784931823a85ac3b39
+      revision: 5db52e3e3bd6a7ada1f4983e037555d3ff9af028
       path: modules/hal/nxp
       groups:
         - hal
@@ -224,7 +224,7 @@ manifest:
       groups:
         - hal
     - name: hal_silabs
-      revision: 0c39ee28be31c59a98ed490c3811f68caa1fcbd3
+      revision: a09dd1b82b24aa3060e162c0dfa40026c0dba450
       path: modules/hal/silabs
       groups:
         - hal
@@ -234,7 +234,7 @@ manifest:
       groups:
         - hal
     - name: hal_stm32
-      revision: 54724a815d23b7f518fa88eb5fb7e991109e191b
+      revision: 6443e5c4d391c3e9e283c5728cd07d855e663965
       path: modules/hal/stm32
       groups:
         - hal
@@ -300,13 +300,13 @@ manifest:
       groups:
         - tools
     - name: nrf_hw_models
-      revision: 4447a22aea5e791c9bd18e7d71cc092623ddd2bb
+      revision: 6c389b9b5fa0a079cd4502e69d375da4c0c289b7
       path: modules/bsim_hw_models/nrf_hw_models
     - name: open-amp
       revision: da78aea63159771956fe0c9263f2e6985b66e9d5
       path: modules/lib/open-amp
     - name: openthread
-      revision: 49c59ec519cc8b49dd58978d1bc80b7ae7ba88d0
+      revision: 3873c6fcd5a8a9dd01b71e8efe32ef5dc7923bb1
       path: modules/lib/openthread
     - name: percepio
       path: modules/debug/percepio
@@ -337,7 +337,7 @@ manifest:
       groups:
         - tee
     - name: uoscore-uedhoc
-      revision: 150f4eb2955eaf36ac0f9519d4f4f58d5ade5740
+      revision: 84ef879a46d7bfd9a423fbfb502b04289861f9ea
       path: modules/lib/uoscore-uedhoc
     - name: zcbor
       revision: 75d088037eb237b18e7ec1f47c9ce494b9b95aab

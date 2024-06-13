@@ -804,7 +804,7 @@ static int codec_meta_set_program_info(uint8_t meta[], size_t meta_len, size_t m
 				  program_info, program_info_len);
 }
 
-static int codec_meta_get_stream_lang(const uint8_t meta[], size_t meta_len)
+static int codec_meta_get_lang(const uint8_t meta[], size_t meta_len, const uint8_t **lang)
 {
 	const uint8_t *data;
 	int ret;
@@ -814,37 +814,40 @@ static int codec_meta_get_stream_lang(const uint8_t meta[], size_t meta_len)
 		return -EINVAL;
 	}
 
-	ret = codec_meta_get_val(meta, meta_len, BT_AUDIO_METADATA_TYPE_STREAM_LANG, &data);
+	CHECKIF(lang == NULL) {
+		LOG_DBG("lang is NULL");
+		return -EINVAL;
+	}
+
+	ret = codec_meta_get_val(meta, meta_len, BT_AUDIO_METADATA_TYPE_LANG, &data);
 	if (data == NULL) {
 		return -ENODATA;
 	}
 
-	if (ret != 3) { /* Stream language is 3 octets */
+	if (ret != BT_AUDIO_LANG_SIZE) {
 		return -EBADMSG;
 	}
 
-	return sys_get_le24(data);
+	*lang = data;
+
+	return 0;
 }
 
-static int codec_meta_set_stream_lang(uint8_t meta[], size_t meta_len, size_t meta_size,
-				      uint32_t stream_lang)
+static int codec_meta_set_lang(uint8_t meta[], size_t meta_len, size_t meta_size,
+			       const uint8_t lang[BT_AUDIO_LANG_SIZE])
 {
-	uint8_t stream_lang_le[3];
-
 	CHECKIF(meta == NULL) {
 		LOG_DBG("meta is NULL");
 		return -EINVAL;
 	}
 
-	if ((stream_lang & 0xFFFFFFU) != stream_lang) {
-		LOG_DBG("Invalid stream_lang value: %d", stream_lang);
+	CHECKIF(lang == NULL) {
+		LOG_DBG("lang is NULL");
 		return -EINVAL;
 	}
 
-	sys_put_le24(stream_lang, stream_lang_le);
-
-	return codec_meta_set_val(meta, meta_len, meta_size, BT_AUDIO_METADATA_TYPE_STREAM_LANG,
-				  stream_lang_le, sizeof(stream_lang_le));
+	return codec_meta_set_val(meta, meta_len, meta_size, BT_AUDIO_METADATA_TYPE_LANG, lang,
+				  BT_AUDIO_LANG_SIZE);
 }
 
 static int codec_meta_get_ccid_list(const uint8_t meta[], size_t meta_len,
@@ -1256,23 +1259,24 @@ int bt_audio_codec_cfg_meta_set_program_info(struct bt_audio_codec_cfg *codec_cf
 	return ret;
 }
 
-int bt_audio_codec_cfg_meta_get_stream_lang(const struct bt_audio_codec_cfg *codec_cfg)
+int bt_audio_codec_cfg_meta_get_lang(const struct bt_audio_codec_cfg *codec_cfg,
+				     const uint8_t **lang)
 {
 	CHECKIF(codec_cfg == NULL) {
 		LOG_DBG("codec_cfg is NULL");
 		return -EINVAL;
 	}
 
-	return codec_meta_get_stream_lang(codec_cfg->meta, codec_cfg->meta_len);
+	return codec_meta_get_lang(codec_cfg->meta, codec_cfg->meta_len, lang);
 }
 
-int bt_audio_codec_cfg_meta_set_stream_lang(struct bt_audio_codec_cfg *codec_cfg,
-					    uint32_t stream_lang)
+int bt_audio_codec_cfg_meta_set_lang(struct bt_audio_codec_cfg *codec_cfg,
+				     const uint8_t lang[BT_AUDIO_LANG_SIZE])
 {
 	int ret;
 
-	ret = codec_meta_set_stream_lang(codec_cfg->meta, codec_cfg->meta_len,
-					 ARRAY_SIZE(codec_cfg->meta), stream_lang);
+	ret = codec_meta_set_lang(codec_cfg->meta, codec_cfg->meta_len, ARRAY_SIZE(codec_cfg->meta),
+				  lang);
 	if (ret >= 0) {
 		codec_cfg->meta_len = ret;
 	}
@@ -1583,23 +1587,24 @@ int bt_audio_codec_cap_meta_set_program_info(struct bt_audio_codec_cap *codec_ca
 	return ret;
 }
 
-int bt_audio_codec_cap_meta_get_stream_lang(const struct bt_audio_codec_cap *codec_cap)
+int bt_audio_codec_cap_meta_get_lang(const struct bt_audio_codec_cap *codec_cap,
+				     const uint8_t **lang)
 {
 	CHECKIF(codec_cap == NULL) {
 		LOG_DBG("codec_cap is NULL");
 		return -EINVAL;
 	}
 
-	return codec_meta_get_stream_lang(codec_cap->meta, codec_cap->meta_len);
+	return codec_meta_get_lang(codec_cap->meta, codec_cap->meta_len, lang);
 }
 
-int bt_audio_codec_cap_meta_set_stream_lang(struct bt_audio_codec_cap *codec_cap,
-					    uint32_t stream_lang)
+int bt_audio_codec_cap_meta_set_lang(struct bt_audio_codec_cap *codec_cap,
+				     const uint8_t lang[BT_AUDIO_LANG_SIZE])
 {
 	int ret;
 
-	ret = codec_meta_set_stream_lang(codec_cap->meta, codec_cap->meta_len,
-					 ARRAY_SIZE(codec_cap->meta), stream_lang);
+	ret = codec_meta_set_lang(codec_cap->meta, codec_cap->meta_len, ARRAY_SIZE(codec_cap->meta),
+				  lang);
 	if (ret >= 0) {
 		codec_cap->meta_len = ret;
 	}

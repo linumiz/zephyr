@@ -35,6 +35,10 @@ https://docs.zephyrproject.org/latest/security/vulnerabilities.html
 
 * CVE-2024-4785: Under embargo until 2024-08-07
 
+* CVE-2024-5754: Under embargo until 2024-09-04
+
+* CVE-2024-5931: Under embargo until 2024-09-10
+
 API Changes
 ***********
 
@@ -116,6 +120,9 @@ Deprecated in this release
  * SPI
 
   * Deprecated :c:func:`spi_is_ready` API function has been removed.
+  * Deprecated :c:func:`spi_transceive_async` API function has been removed.
+  * Deprecated :c:func:`spi_read_async` API function has been removed.
+  * Deprecated :c:func:`spi_write_async` API function has been removed.
 
 Architectures
 *************
@@ -187,16 +194,24 @@ Bluetooth
     or speakers. The audio data is compressed in a proper format for efficient use of the limited
     bandwidth.
 
+* HCI Driver
+
+  * Added support for Ambiq Apollo3 Blue series.
+
 Boards & SoC Support
 ********************
 
 * Added support for these SoC series:
+
+  * Added support for Ambiq Apollo3 Blue and Apollo3 Blue Plus SoC series.
 
 * Made these changes in other SoC series:
 
   * ITE: Rename the Kconfig symbol for all ITE SoC variants.
 
 * Added support for these ARM boards:
+
+  * Added support for Ambiq Apollo3 boards: ``apollo3_evb``, ``apollo3p_evb``.
 
 * Added support for these Xtensa boards:
 
@@ -279,6 +294,8 @@ Drivers and Sensors
 
 * Counter
 
+  * Added support for Ambiq Apollo3 series.
+
 * Crypto
 
 * Display
@@ -289,8 +306,8 @@ Drivers and Sensors
 
 * eSPI
 
-  * Renamed eSPI virtual wire direction macros and enum values to match the new terminology in
-    eSPI 1.5 specification.
+  * Renamed eSPI virtual wire direction macros, enum values and KConfig to match the new
+    terminology in eSPI 1.5 specification.
 
 * Ethernet
 
@@ -301,11 +318,17 @@ Drivers and Sensors
 
 * Flash
 
+  * Added support for Ambiq Apollo3 series.
+
 * GNSS
 
 * GPIO
 
+  * Added support for Ambiq Apollo3 series.
+
 * I2C
+
+  * Added support for Ambiq Apollo3 series.
 
 * I2S
 
@@ -369,6 +392,9 @@ Drivers and Sensors
 
 * SPI
 
+  * Added support for Ambiq Apollo3 series general IOM based SPI.
+  * Added support for Ambiq Apollo3 BLEIF based SPI, which is specific for internal HCI.
+
 * USB
 
 * W1
@@ -377,6 +403,7 @@ Drivers and Sensors
 
   * Added :kconfig:option:`CONFIG_WDT_NPCX_WARNING_LEADING_TIME_MS` to set the leading warning time
     in milliseconds. Removed no longer used :kconfig:option:`CONFIG_WDT_NPCX_DELAY_CYCLES`.
+  * Added support for Ambiq Apollo3 series.
 
 * Wi-Fi
 
@@ -426,6 +453,11 @@ Networking
 
   * Removed IPSP support. ``CONFIG_NET_L2_BT`` does not exist anymore.
 
+* TCP:
+
+  * ISN generation now uses SHA-256 instead of MD5. Moreover it now relies on PSA APIs
+    instead of legacy Mbed TLS functions for hash computation.
+
 USB
 ***
 
@@ -465,6 +497,11 @@ Libraries / Subsystems
       registered to set the device attributes that are sent to the hawkBit server. Use the
       :c:func:`hawkbit_set_custom_data_cb` function to register the callback.
 
+  * MCUmgr
+
+    * Instructions for the deprecated mcumgr go tool have been removed, a list of alternative,
+      supported clients can be found on :ref:`mcumgr_tools_libraries`.
+
 * Logging
 
   * By enabling :kconfig:option:`CONFIG_LOG_BACKEND_NET_USE_DHCPV4_OPTION`, the IP address of the
@@ -480,6 +517,17 @@ Libraries / Subsystems
 
   * Mbed TLS was updated to 3.6.0. Release notes can be found at:
     https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.6.0
+  * When any PSA crypto provider is available in the system
+    (:kconfig:option:`CONFIG_MBEDTLS_PSA_CRYPTO_CLIENT` is enabled), desired PSA features
+    must now be explicitly selected through ``CONFIG_PSA_WANT_xxx`` symbols.
+  * Choice symbols :kconfig:option:`CONFIG_MBEDTLS_PSA_CRYPTO_LEGACY_RNG` and
+    :kconfig:option:`CONFIG_MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG` were added in order
+    to allow the user to specify how Mbed TLS PSA crypto core should generate random numbers.
+    The former option, which is the default, relies on legacy entropy and CTR_DRBG/HMAC_DRBG
+    modules, while the latter relies on CSPRNG drivers.
+  * :kconfig:option:`CONFIG_MBEDTLS_PSA_P256M_DRIVER_ENABLED` enables support
+    for the Mbed TLS's p256-m driver PSA crypto library. This is a Cortex-M SW
+    optimized implementation of secp256r1 curve.
 
 * Random
 

@@ -111,11 +111,6 @@ zephyr_library_named(zephyr)
 
 if(CONFIG_LEGACY_GENERATED_INCLUDE_PATH)
   zephyr_include_directories(${PROJECT_BINARY_DIR}/include/generated/zephyr)
-  message(WARNING "
-    Warning: CONFIG_LEGACY_GENERATED_INCLUDE_PATH is currently enabled by default
-    so that user applications can continue to use the legacy include paths for the
-    generated headers. This Kconfig will be deprecated and eventually removed in
-    the future releases.")
 endif()
 
 zephyr_include_directories(
@@ -2144,9 +2139,8 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND}
         -DPROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}
         -DAPPLICATION_SOURCE_DIR=${APPLICATION_SOURCE_DIR}
-        -DINTERFACE_INCLUDE_DIRECTORIES="$<JOIN:$<TARGET_PROPERTY:zephyr_interface,INTERFACE_INCLUDE_DIRECTORIES>,:>"
+        -DINTERFACE_INCLUDE_DIRECTORIES="$<TARGET_PROPERTY:zephyr_interface,INTERFACE_INCLUDE_DIRECTORIES>"
         -Dllext_edk_file=${llext_edk_file}
-        -DAUTOCONF_H=${AUTOCONF_H}
         -Dllext_cflags="${llext_edk_cflags}"
         -Dllext_edk_name=${CONFIG_LLEXT_EDK_NAME}
         -DWEST_TOPDIR=${WEST_TOPDIR}

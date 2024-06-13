@@ -374,14 +374,10 @@ static inline void print_codec_meta_program_info(const struct shell *sh, size_t 
 }
 
 static inline void print_codec_meta_language(const struct shell *sh, size_t indent,
-					     uint32_t stream_lang)
+					     const uint8_t lang[BT_AUDIO_LANG_SIZE])
 {
-	uint8_t lang_array[3];
-
-	sys_put_be24(stream_lang, lang_array);
-
-	shell_print(sh, "%*sLanguage: %c%c%c", indent, "", (char)lang_array[0], (char)lang_array[1],
-		    (char)lang_array[2]);
+	shell_print(sh, "%*sLanguage: %c%c%c", indent, "", (char)lang[0], (char)lang[1],
+		    (char)lang[2]);
 }
 
 static inline void print_codec_meta_ccid_list(const struct shell *sh, size_t indent,
@@ -733,9 +729,9 @@ static inline void print_codec_cap(const struct shell *sh, size_t indent,
 			print_codec_meta_program_info(sh, indent, data, (uint8_t)ret);
 		}
 
-		ret = bt_audio_codec_cap_meta_get_stream_lang(codec_cap);
+		ret = bt_audio_codec_cap_meta_get_lang(codec_cap, &data);
 		if (ret >= 0) {
-			print_codec_meta_language(sh, indent, (uint32_t)ret);
+			print_codec_meta_language(sh, indent, data);
 		}
 
 		ret = bt_audio_codec_cap_meta_get_ccid_list(codec_cap, &data);
@@ -969,9 +965,9 @@ static inline void print_codec_cfg(const struct shell *sh, size_t indent,
 			print_codec_meta_program_info(sh, indent, data, (uint8_t)ret);
 		}
 
-		ret = bt_audio_codec_cfg_meta_get_stream_lang(codec_cfg);
+		ret = bt_audio_codec_cfg_meta_get_lang(codec_cfg, &data);
 		if (ret >= 0) {
-			print_codec_meta_language(sh, indent, (uint32_t)ret);
+			print_codec_meta_language(sh, indent, data);
 		}
 
 		ret = bt_audio_codec_cfg_meta_get_ccid_list(codec_cfg, &data);

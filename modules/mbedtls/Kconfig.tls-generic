@@ -502,6 +502,24 @@ config MBEDTLS_LMS
 	depends on MBEDTLS_SHA256
 	select PSA_WANT_ALG_SHA_256
 
+config MBEDTLS_PSA_P256M_DRIVER_ENABLED
+	bool "P256-M driver"
+	depends on MBEDTLS_PSA_CRYPTO_C
+	imply PSA_WANT_ALG_SHA_256
+	help
+	  Enable support for the optimized sofware implementation of the secp256r1
+	  curve through the standard PSA API interface.
+
+config MBEDTLS_PSA_P256M_DRIVER_RAW
+	bool "Access p256-m driver directly (without PSA interface)"
+	select MBEDTLS_PSA_P256M_DRIVER_ENABLED
+	help
+	  Allow access to p256-m driver directly without using the PSA interface.
+	  Warning: usage of this kconfig is prohibited in Zephyr's code base. Users
+			   can make optionally enable it in case very memory constrained
+			   devices, but please be aware that the p256-m interface is
+			   absolutely not guaranted to remain stable over time.
+
 config MBEDTLS_SSL_DTLS_CONNECTION_ID
 	bool "DTLS Connection ID extension"
 	depends on MBEDTLS_DTLS
@@ -510,4 +528,32 @@ config MBEDTLS_SSL_DTLS_CONNECTION_ID
 	  which allows to identify DTLS connections across changes
 	  in the underlying transport.
 
+
+config MBEDTLS_NIST_KW_C
+	bool "NIST key wrap"
+	depends on MBEDTLS_CIPHER_AES_ENABLED
+	help
+	  Key Wrapping mode for 128-bit block ciphers,
+	  as defined in NIST SP 800-38F.
+
+config MBEDTLS_DHM_C
+	bool "Diffie-Hellman-Merkle mode"
+	help
+	  Used by the following key exchanges,
+	  DHE-RSA, DHE-PSK
+
+config MBEDTLS_X509_CRL_PARSE_C
+	bool "X509 CRL parsing"
+	help
+	  Used by X509 CRL parsing
+
+config MBEDTLS_X509_CSR_WRITE_C
+	bool "X509 Certificate Signing Requests writing"
+	help
+	  For X.509 certificate request writing.
+
+config MBEDTLS_X509_CSR_PARSE_C
+	bool "X509 Certificate Signing Request parsing"
+	help
+	  For reading X.509 certificate request.
 endmenu

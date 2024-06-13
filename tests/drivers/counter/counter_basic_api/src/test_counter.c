@@ -112,6 +112,9 @@ static const struct device *const devices[] = {
 #ifdef CONFIG_COUNTER_AMBIQ
 	DEVS_FOR_DT_COMPAT(ambiq_counter)
 #endif
+#ifdef CONFIG_COUNTER_MCUX_LPTMR
+	DEVS_FOR_DT_COMPAT(nxp_lptmr)
+#endif
 };
 
 static const struct device *const period_devs[] = {
@@ -890,7 +893,7 @@ static void test_cancelled_alarm_does_not_expire_instance(const struct device *d
 {
 	int err;
 	uint32_t cnt;
-	uint32_t us = 1000;
+	uint32_t us = 1500;
 	uint32_t ticks = counter_us_to_ticks(dev, us);
 	uint32_t top = counter_get_top_value(dev);
 

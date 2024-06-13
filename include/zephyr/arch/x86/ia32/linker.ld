@@ -44,7 +44,7 @@
 
 #include <zephyr/linker/linker-tool.h>
 
-#if defined(CONFIG_XIP) || defined(Z_VM_KERNEL)
+#if defined(CONFIG_XIP) || defined(K_MEM_IS_VM_KERNEL)
 	#define ROMABLE_REGION ROM
 	#define RAMABLE_REGION RAM
 #else
@@ -68,7 +68,7 @@
 	#define MMU_PAGE_ALIGN_PERM
 #endif
 
-epoint = Z_MEM_PHYS_ADDR(CONFIG_KERNEL_ENTRY);
+epoint = K_MEM_PHYS_ADDR(CONFIG_KERNEL_ENTRY);
 ENTRY(epoint)
 
 /* SECTIONS definitions */

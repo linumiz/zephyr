@@ -81,6 +81,8 @@ Boards
 * LiteX: Renamed the ``compatible`` of the LiteX VexRiscV interrupt controller node from
   ``vexriscv-intc0`` to :dtcompatible:`litex,vexriscv-intc0`. (:github:`73211`)
 
+* `lairdconnect` boards are now `ezurio` boards. Laird Connectivity has rebranded to `Ezurio <https://www.ezurio.com/laird-connectivity>`_.
+
 Modules
 *******
 
@@ -90,17 +92,26 @@ Mbed TLS
 * TLS 1.2, RSA, AES, DES, and all the hash algorithms except SHA-256
   (SHA-224, SHA-384, SHA-512, MD5 and SHA-1) are not enabled by default anymore.
   Their respective Kconfig options now need to be explicitly enabled to be able to use them.
-* The Kconfig options previously named `CONFIG_MBEDTLS_MAC_*_ENABLED` have been renamed.
-  The `_MAC` and `_ENABLED` parts have been removed from their names.
+  (:github:`72078`)
+* The Kconfig options previously named ``CONFIG_MBEDTLS_MAC_*_ENABLED`` have been renamed.
+  The ``_MAC`` and ``_ENABLED`` parts have been removed from their names. (:github:`73267`)
 * The :kconfig:option:`CONFIG_MBEDTLS_HASH_ALL_ENABLED` Kconfig option has been fixed to actually
   enable all the available hash algorithms. Previously, it used to only enable the SHA-2 ones.
-* The `CONFIG_MBEDTLS_HASH_SHA*_ENABLED` Kconfig options have been removed. They were duplicates
-  of other Kconfig options which are now named `CONFIG_MBEDTLS_SHA*`.
-* The `CONFIG_MBEDTLS_MAC_ALL_ENABLED` Kconfig option has been removed. Its equivalent is the
+  (:github:`73267`)
+* The ``CONFIG_MBEDTLS_HASH_SHA*_ENABLED`` Kconfig options have been removed. They were duplicates
+  of other Kconfig options which are now named ``CONFIG_MBEDTLS_SHA*``. (:github:`73267`)
+* The ``CONFIG_MBEDTLS_MAC_ALL_ENABLED`` Kconfig option has been removed. Its equivalent is the
   combination of :kconfig:option:`CONFIG_MBEDTLS_HASH_ALL_ENABLED` and :kconfig:option:`CONFIG_MBEDTLS_CMAC`.
+  (:github:`73267`)
 * The Kconfig options ``CONFIG_MBEDTLS_MAC_MD4_ENABLED``, ``CONFIG_MBEDTLS_CIPHER_ARC4_ENABLED``
   and ``CONFIG_MBEDTLS_CIPHER_BLOWFISH_ENABLED`` were removed because they are no more supported
   in Mbed TLS. (:github:`73222`)
+* When there is any PSA crypto provider available in the system
+  (i.e. :kconfig:option:`CONFIG_MBEDTLS_PSA_CRYPTO_CLIENT` is set), desired PSA crypto
+  features must be explicitly enabled using proper ``CONFIG_PSA_WANT_*``. (:github:`72243`)
+* TLS/X509/PK/MD modules will use PSA crypto APIs instead of legacy ones as soon
+  as there is any PSA crypto provider available in the system
+  (i.e. :kconfig:option:`CONFIG_MBEDTLS_PSA_CRYPTO_CLIENT` is set). (:github:`72243`)
 
 MCUboot
 =======
@@ -225,6 +236,17 @@ Analog-to-Digital Converter (ADC)
 Bluetooth HCI
 =============
 
+ * A new HCI driver API was introduced (:github:`72323`) and the old one deprecated. The new API
+   follows the normal Zephyr driver model, with devicetree nodes, etc. The host now
+   selects which driver instance to use as the controller by looking for a ``zephyr,bt-hci``
+   chosen property. The devicetree bindings for all HCI drivers derive from a common
+   ``bt-hci.yaml`` base binding.
+ * As part of the new HCI driver API, the ``zephyr,bt-uart`` chosen property is no longer used,
+   rather the UART HCI drivers select their UART by looking for the parent devicetree node of the
+   HCI driver instance node.
+ * As part of the new HCI driver API, the ``zephyr,bt-hci-ipc`` chosen property is only used for
+   the controller side, whereas the HCI driver now relies on nodes with the compatible string
+   ``zephyr,bt-hci-ipc``.
  * The ``BT_HCI_VS_EXT`` Kconfig option was deleted and the feature is now included in the
    :kconfig:option:`BT_HCI_VS` Kconfig option.
  * The ``BT_HCI_VS_EVT`` Kconfig option was removed, since vendor event support is implicit if
@@ -340,6 +362,8 @@ Enhanced Serial Peripheral Interface (eSPI)
   ``ESPI_VWIRE_SIGNAL_TARGET_BOOT_STS``, ``ESPI_VWIRE_SIGNAL_TARGET_BOOT_DONE`` and
   ``ESPI_VWIRE_SIGNAL_TARGET_GPIO_<NUMBER>`` respectively to reflect the new terminology
   in eSPI 1.5 specification. (:github:`68492`)
+  The KConfig ``CONFIG_ESPI_SLAVE`` was renamed to ``CONFIG_ESPI_TARGET``, similarly
+  ``CONFIG_ESPI_SAF`` was renamed as ``CONFIG_ESPI_TAF`` (:github:`73887`)
 
 Flash
 =====
@@ -402,6 +426,23 @@ LED Strip
 Sensors
 =======
 
+* The ``chip`` devicetree property from the :dtcompatible:`sensirion,shtcx` sensor driver has been
+  removed. Chip variants are now selected using the matching compatible property (:github:`74033`).
+  For an example of the new shtc3 configuration, see below:
+
+  .. code-block:: devicetree
+
+    &i2c0 {
+        status = "okay";
+
+        shtc3: shtc3@70 {
+            compatible = "sensirion,shtc3", "sensirion,shtcx";
+            reg = <0x70>;
+            measure-mode = "normal";
+            clock-stretching;
+        };
+    };
+
 Serial
 ======
 
@@ -462,6 +503,26 @@ Bluetooth Audio
 * :c:func:`bt_bap_stream_start` no longer connects the CIS. To connect the CIS,
   the :c:func:`bt_bap_stream_connect` shall now be called before :c:func:`bt_bap_stream_start`.
   (:github:`73032`)
+
+* Renamed ``stream_lang`` to just ``lang`` to better fit with the assigned numbers document.
+  This affects the ``BT_AUDIO_METADATA_TYPE_LANG`` macro and the following functions:
+
+  * :c:func:`bt_audio_codec_cap_meta_set_lang`
+  * :c:func:`bt_audio_codec_cap_meta_get_lang`
+  * :c:func:`bt_audio_codec_cfg_meta_set_lang`
+  * :c:func:`bt_audio_codec_cfg_meta_get_lang`
+
+  (:github:`72584`)
+
+* Changed ``lang`` from ``uint32_t`` to ``uint8_t [3]``. This modifies the following functions:
+
+  * :c:func:`bt_audio_codec_cap_meta_set_lang`
+  * :c:func:`bt_audio_codec_cap_meta_get_lang`
+  * :c:func:`bt_audio_codec_cfg_meta_set_lang`
+  * :c:func:`bt_audio_codec_cfg_meta_get_lang`
+
+  The result of this is that string values such as ``"eng"`` and ``"deu"`` can now be used to set
+  new values, and to prevent unnecessary copies of data when getting the values. (:github:`72584`)
 
 * All occurrences of ``set_sirk`` have been changed to just ``sirk`` as the ``s`` in ``sirk`` stands
   for set. (:github:`73413`)
@@ -559,6 +620,12 @@ Networking
   socket calls. Linux expects the protocol field to be ``htons(ETH_P_ALL)`` if it is desired
   to receive all the network packets. See details in
   https://www.man7.org/linux/man-pages/man7/packet.7.html documentation. (:github:`73338`)
+
+* TCP now uses SHA-256 instead of MD5 for ISN generation. The crypto support for
+  this hash computation was also changed from Mbed TLS to PSA APIs. This was achieved
+  by making :kconfig:option:`CONFIG_NET_TCP_ISN_RFC6528` depend on
+  :kconfig:option:`PSA_WANT_ALG_SHA_256` instead of legacy ``CONFIG_MBEDTLS_*``
+  features. (:github:`71827`)
 
 Other Subsystems
 ****************

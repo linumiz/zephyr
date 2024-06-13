@@ -257,7 +257,7 @@ Artificially long but functional example:
         "-A", "--board-root", action="append", default=board_root_list,
         help="""Directory to search for board configuration files. All .yaml
 files in the directory will be processed. The directory should have the same
-structure in the main Zephyr tree: boards/<arch>/<board_name>/""")
+structure in the main Zephyr tree: boards/<vendor>/<board_name>/""")
 
     parser.add_argument(
         "--allow-installed-plugin", action="store_true", default=None,
@@ -384,6 +384,18 @@ structure in the main Zephyr tree: boards/<arch>/<board_name>/""")
         action="store_true",
         help="Generate detailed json reports with ROM/RAM symbol sizes for each test image built "
              "using additional build option `--target footprint`.")
+
+    footprint_group.add_argument(
+        "--footprint-report",
+        nargs="?",
+        default=None,
+        choices=['all', 'ROM', 'RAM'],
+        const="all",
+        help="Select which memory area symbols' data to collect as 'footprint' property "
+             "of each test suite built, and report in 'twister_footprint.json' together "
+             "with the relevant execution metadata the same way as in `twister.json`. "
+             "Implies '--create-rom-ram-report' to generate the footprint data files. "
+             "No value means '%(const)s'. Default: %(default)s""")
 
     footprint_group.add_argument(
         "--enable-size-report",
@@ -789,6 +801,9 @@ def parse_arguments(parser, args, options = None, on_init=True):
 
     if options.last_metrics or options.compare_report:
         options.enable_size_report = True
+
+    if options.footprint_report:
+        options.create_rom_ram_report = True
 
     if options.aggressive_no_clean:
         options.no_clean = True

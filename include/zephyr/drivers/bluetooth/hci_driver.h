@@ -37,8 +37,6 @@ enum {
 	BT_QUIRK_NO_AUTO_DLE = BIT(1),
 };
 
-#define IS_BT_QUIRK_NO_AUTO_DLE(bt_dev) ((bt_dev)->drv->quirks & BT_QUIRK_NO_AUTO_DLE)
-
 /**
  * @brief Receive data from the controller/HCI driver.
  *
@@ -49,8 +47,10 @@ enum {
  * @param buf Network buffer containing data from the controller.
  *
  * @return 0 on success or negative error number on failure.
+ *
+ * @deprecated Use the new HCI driver interface instead: @ref bt_hci_api
  */
-int bt_recv(struct net_buf *buf);
+__deprecated int bt_recv(struct net_buf *buf);
 
 /** Possible values for the 'bus' member of the bt_hci_driver struct */
 enum bt_hci_driver_bus {
@@ -156,8 +156,10 @@ struct bt_hci_driver {
  * @param drv A bt_hci_driver struct representing the driver.
  *
  * @return 0 on success or negative error number on failure.
+ *
+ * @deprecated Use the new HCI driver interface instead: @ref bt_hci_api
  */
-int bt_hci_driver_register(const struct bt_hci_driver *drv);
+__deprecated int bt_hci_driver_register(const struct bt_hci_driver *drv);
 
 /**
  * @brief Setup the HCI transport, which usually means to reset the
