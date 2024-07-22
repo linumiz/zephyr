@@ -2,6 +2,8 @@ manifest:
   remotes:
     - name: upstream
       url-base: https://github.com/zephyrproject-rtos
+    - name: parthitce
+      url-base: https://github.com/parthitce
   projects:
     - name: canopennode
       revision: dec12fa3f0d790cafa8414a4c2930ea71ab72ffd
@@ -16,9 +18,9 @@ manifest:
       groups:
         - optional
     - name: lz4
-      revision: 8e303c264fc21c2116dc612658003a22e933124d
+      revision: 65534ad88886b2acf058df389ae10a7d26bfe58b
       path: modules/lib/lz4
-      remote: upstream
+      remote: parthitce
       groups:
         - optional
     - name: nanopb
