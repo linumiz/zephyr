@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "lz4.h"
+#include "lz4frame.h"
 
 int main(void)
 {
