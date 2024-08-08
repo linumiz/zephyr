@@ -9,3 +9,15 @@ config LZ4
 	help
 	  This option enables lz4 compression & decompression library
 	  support.
+
+if LZ4
+config LZ4_AUTO_FRAME
+	bool "Lz4 auto-frame library support"
+	help
+	  This option enables lz4 auto-frame library support.
+
+config LZ4_HC
+	bool "Lz4 high compression mode support"
+	help
+	  This option enables lz4 high compression mode support.
+endif
