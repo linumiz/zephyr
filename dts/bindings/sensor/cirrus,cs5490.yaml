@@ -1,0 +1,24 @@
+# Copyright (c) 2024 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+description: Cirrus CS5490 Two Channel Energy Measurement sensor.
+
+compatible: "cirrus,cs5490"
+
+include: [sensor-device.yaml, uart-device.yaml]
+
+properties:
+  reg:
+    required: true
+  int-gpios:
+    type: phandle-array
+    required: true
+    description: |
+      This property specifies the connection for INT, this pin
+      defaults to active low when sample produce interrupt.
+
+  reset-gpios:
+    type: phandle-array
+    description: |
+      This property used to specifies reset pin from sensor to
+      microcontroller and active low to reset sensor.
