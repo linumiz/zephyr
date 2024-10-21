@@ -1,0 +1,4 @@
+# Copyright (c) 2024 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+source "drivers/sensor/cirrus/cs5490/Kconfig"

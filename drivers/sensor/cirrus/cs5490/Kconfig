@@ -1,0 +1,43 @@
+# Copyright (c) 2024 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig CS5490
+	bool "CS5490 Energy Mesaurement Sensor"
+	default y
+	depends on DT_HAS_CIRRUS_CS5490_ENABLED
+	depends on SERIAL && UART_ASYNC_API
+	help
+	 Enable driver for CS5490 Energy Measurement sensor.
+
+if CS5490
+
+config CS5490_TRIGGER
+	bool "Enable CS5490 Trigger"
+	depends on GPIO
+
+if CS5490_TRIGGER
+
+config CS5490_TRIGGER_OWN_THREAD
+	bool "Use own thread"
+	help
+	 Enable interrupt handle to run in own thread. By
+	 defaults it is in global thread mode(system work queue thread).
+
+config CS5490_THREAD_PRIORITY
+	int "CS5490 thread priority"
+	depends on CS5490_TRIGGER_OWN_THREAD
+	default 10
+	help
+	 Priority of CS5490 thread to handle interrupt.
+
+config CS5490_THREAD_STACK_SIZE
+	int "Thread stack size"
+	depends on CS5490_TRIGGER_OWN_THREAD
+	default 512
+	help
+	 Stack size of CS5490 interrupt handling thread.
+
+endif # CS5490_TRIGGER
+
+endif # CS5490
+
