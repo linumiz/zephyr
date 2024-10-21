@@ -1,0 +1,15 @@
+&uart1 {
+	compatible = "nordic,nrf-uarte";
+	current-speed = <600>;
+	status = "okay";
+
+	#address-cells=<1>;
+	#size-cells=<0>;
+	cs5490: cs5490@0 {
+		compatible = "cirrus,cs5490";
+		reg = <0x0>;
+		int-gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&gpio1 4 GPIO_ACTIVE_LOW>;
+		status = "okay";
+	};
+};		
