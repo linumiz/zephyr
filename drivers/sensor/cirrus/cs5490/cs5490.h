@@ -48,6 +48,7 @@
 #define REG_APPARENT_POWER	20
 #define REG_POWER_FACTOR	20
 #define REG_TEMPERATURE		27 /* In Page 16 */
+#define REG_FREQUENCY		49 /* In Page 16 */
 
 /* Interrupts */
 #define CS5490_INT_DRDY_MASK	BIT(23)
@@ -90,6 +91,7 @@ struct cs5490 {
 	float reactive_power;
 	float apparent_power;
 	float power_factor;
+	float frequency;
 };
 
 struct cs5490_config {

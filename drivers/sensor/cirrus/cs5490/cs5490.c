@@ -246,6 +246,11 @@ static int cs5490_fetch(const struct device *dev, struct cs5490 *out)
 		return rc;
 	}
 
+	rc = cs5490_param_fetch(dev, REG_FREQUENCY, 23, CS5490_MSBSIGNED,
+				&out->frequency);
+
+	printk("system freq %f\n", out->frequency);
+
 	rc = cs5490_param_fetch(dev, REG_INST_VOLTAGE, 23, CS5490_MSBSIGNED,
 				&out->inst_voltage);
 	if (rc < 0) {
@@ -340,6 +345,9 @@ static int cs5490_channel_get(const struct device *dev,
 	struct cs5490 *rdata = &data->sensor_data;
 
 	switch ((enum sensor_channel_cs5490)chan) {
+	case SENSOR_CHAN_FREQUENCY:
+		rc = sensor_value_from_double(val, rdata->frequency);
+		break;
 	case SENSOR_CHAN_INST_CURRENT:
 		rc = sensor_value_from_double(val, rdata->inst_current);
 		break;
@@ -403,7 +411,7 @@ static int cs5490_init(const struct device *dev)
 	struct cs5490_data *data = dev->data;
 	const struct cs5490_config *cfg = dev->config;
 	const struct uart_config uart_cfg = {
-		.baudrate = 600,
+		.baudrate = 115200,
 		.parity = UART_CFG_PARITY_NONE,
 		.stop_bits = UART_CFG_STOP_BITS_1,
 		.data_bits = UART_CFG_DATA_BITS_8,
