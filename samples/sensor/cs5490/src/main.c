@@ -12,6 +12,7 @@ static int fetch_and_display(const struct device *dev)
 	struct sensor_value rms_current;
 	struct sensor_value rms_voltage;
 	struct sensor_value power;
+	struct sensor_value freq;
 
 	rc = sensor_sample_fetch(dev);
 	if (rc < 0) {
@@ -37,9 +38,16 @@ static int fetch_and_display(const struct device *dev)
 		return rc;
 	}
 
+	rc = sensor_channel_get(dev, SENSOR_CHAN_FREQUENCY, &freq);
+	if (rc < 0) {
+		printk("Failed to get frequency %d\n", rc);
+		return rc;
+	}
+
 	printk("RMS Current %f\n", sensor_value_to_float(&rms_current));
 	printk("RMS Voltage %f\n", sensor_value_to_float(&rms_voltage));
 	printk("Power %f\n", sensor_value_to_float(&power));
+	printk("Frequency %f\n", sensor_value_to_float(&freq));
 
 	return 0;
 }
@@ -80,6 +88,7 @@ int main(void)
 		return 0;
 	}
 
+#if 0
 	/* Setting baudrate to 115200 */
 	baudrate.val1 = 115200;
 	rc = sensor_attr_set(sensor, 1,
@@ -89,7 +98,7 @@ int main(void)
 		printk("Failed to set baudrate %d\n", rc);
 		return 0;
 	}
-
+#endif
 #if defined CONFIG_CS5490_TRIGGER
 	struct sensor_trigger trig;
 
@@ -124,7 +133,7 @@ int main(void)
 	struct sensor_value attr_value = {0};
 	attr_value.val1 = 10;
 	rc = sensor_attr_set(sensor, 1,
-			     SENSOR_ATTR_BAUDRATE,
+			     SENSOR_ATTR_OVERCURRENT_THRESHOLD,
 			     &attr_value);
 	if (rc != 0) {
 		printf("Failed to set overcurrent threshold %d\n", rc);
@@ -142,7 +151,7 @@ int main(void)
 	while (1) {
 		fetch_and_display(sensor);
 
-		k_sleep(K_SECONDS(2));
+		k_sleep(K_SECONDS(5));
 	}
 #endif
 
