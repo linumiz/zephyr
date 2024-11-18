@@ -36,6 +36,8 @@ enum sensor_channel_cs5490 {
 	SENSOR_CHAN_PEAK_CURRENT,
 	/** Peak Voltage in Volts */
 	SENSOR_CHAN_PEAK_VOLTAGE,
+	/** Frequency in Hz */
+	SENSOR_CHAN_FREQUENCY,
 };
 
 enum sensor_trigger_type_cs5490 {
