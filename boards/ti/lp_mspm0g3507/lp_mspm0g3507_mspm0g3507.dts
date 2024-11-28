@@ -77,6 +77,12 @@
 	status = "okay";
 };
 
+&i2c0 {
+	status = "okay";
+	pinctrl-0 = <&i2c0_scl_pa31 &i2c0_sda_pa28>;
+	pinctrl-names = "default";
+};
+
 &uart0 {
 	status = "okay";
 	current-speed = <115200>;
