@@ -59,7 +59,6 @@ static int uart_mspm0_init(const struct device *dev)
 	/* Reset power */
 	DL_UART_Main_reset(config->regs);
 	DL_UART_Main_enablePower(config->regs);
-	delay_cycles(POWER_STARTUP_DELAY);
 
 	/* Init UART pins */
 	ret = pinctrl_apply_state(config->pinctrl, PINCTRL_STATE_DEFAULT);
