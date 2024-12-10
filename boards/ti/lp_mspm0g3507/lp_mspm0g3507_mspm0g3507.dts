@@ -83,11 +83,19 @@
 	status = "okay";
 	pinctrl-0 = <&i2c0_scl_pa31 &i2c0_sda_pa28>;
 	pinctrl-names = "default";
+
+	eeprom0: eeprom@54 {
+		reg = <0x54>;
+		size = <256>;
+		compatible = "zephyr,i2c-target-eeprom";
+		status = "okay";
+	};
 };
+target_eeprom: &eeprom0{};
 
 &i2c1 {
-	status = "okay";
-	pinctrl-0 = <&i2c1_scl_pb2 &i2c1_sda_pb3>;
+	status = "disabled";
+	pinctrl-0 = <&i2c1_scl_pb2_pull_up &i2c1_sda_pb3_pull_up>;
 	pinctrl-names = "default";
 };
 
