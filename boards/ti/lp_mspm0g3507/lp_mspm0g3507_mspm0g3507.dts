@@ -79,3 +79,35 @@
 	pinctrl-0 = <&uart0_tx_pa10 &uart0_rx_pa11>;
 	pinctrl-names = "default";
 };
+
+&pwm0 {
+	status = "okay";
+	pinctrl-0 = <&timg0c0_pa12>;
+	pinctrl-names = "default";
+
+	ti,cc-index = <0>;
+	ti,prescaler = <256>;
+	ti,pulse-cycle = <300>;
+
+	pwm_out {
+		channel = <0>;
+		ti,pwm-mode = "EDGE_ALIGN";
+		ti,period = <1500>;
+	};
+};
+
+&pwma1 {
+	status = "okay";
+	pinctrl-0 = <&tima1c0_pb0>;
+	pinctrl-names = "default";
+
+	ti,cc-index = <0>;
+	ti,prescaler = <256>;
+	ti,pulse-cycle = <600>;
+
+	pwm_out {
+		channel = <0>;
+		ti,pwm-mode = "EDGE_ALIGN_UP";
+		ti,period = <1500>;
+	};
+};
