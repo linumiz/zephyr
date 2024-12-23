@@ -167,12 +167,16 @@ static const struct pwm_driver_api pwm_mspm0_driver_api = {
 
 #define MSPM0_PWM_MODE(mode)	DT_CAT(DL_TIMER_PWM_MODE_, mode)
 
+#define MSPM0_PWM_DATA(n)              .pwm_config = {                         \
+       .pwmMode = MSPM0_PWM_MODE(DT_STRING_TOKEN(DT_INST_CHILD(0, pwm_out), ti_pwm_mode)),\
+       .period = DT_PROP(DT_INST_CHILD(0, pwm_out), ti_period),                           \
+       }
+
+
 #define PWM_DEVICE_INIT_MSPM0(n)					  \
 	static struct pwm_mspm0_data pwm_mspm0_data_ ## n = {		  \
 		.pulse_cycle  = DT_PROP(DT_DRV_INST(n), ti_pulse_cycle),  \
-		.pwm_config = {.pwmMode = MSPM0_PWM_MODE(DT_STRING_TOKEN(DT_DRV_INST(n), ti_pwm_mode)),\
-			       .period = DT_PROP(DT_DRV_INST(n), ti_period),	  \
-			       },					  \
+		COND_CODE_1(DT_NODE_EXISTS(DT_INST_CHILD(0, pwm_out)), (MSPM0_PWM_DATA(n)), ()) \
 	};								  \
 	PINCTRL_DT_INST_DEFINE(n);					  \
 									  \
