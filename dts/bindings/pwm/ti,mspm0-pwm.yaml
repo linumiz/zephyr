@@ -38,30 +38,6 @@ properties:
   pinctrl-names:
     required: true
 
-  "#pwm-cells":
-    const: 2
-
-  channel:
-      type: int
-      required: true
-      description: MSPM0 PWM channel
-
-  ti,pwm-mode:
-    type: string
-    required: true
-    description: |
-      Select PWM mode:
-      - EDGE_ALIGN: generate pulses with edge aligned down counting mode
-
-      - EDGE_ALIGN_UP:  generate pulses with edge aligned up counting mode
-
-      - CENTER_ALIGN: generates pulses center aligned up and down counting mode
-
-    enum:
-      - "EDGE_ALIGN"
-      - "EDGE_ALIGN_UP"
-      - "CENTER_ALIGN"
-
   ti,advanced:
     type: boolean
     description: |
@@ -79,12 +55,6 @@ properties:
     description: |
       Duty-cycle (in ticks) for PWM channel at boot time.
 
-  ti,period:
-    type: int
-    required: true
-    description: |
-      PWM Period in cycle at boot time.
-
   ti,prescaler:
     type: int
     required: true
@@ -92,7 +62,38 @@ properties:
       The clock divider for internal counter prescaler.
       Valid range [0 ... 255].
 
+  "#pwm-cells":
+    const: 2
+
 pwm-cells:
   - channel
   # Period in terms of nanoseconds
   - period
+
+child-binding:
+  properties:
+    channel:
+      type: int
+      description: MSPM0 PWM channel
+
+    ti,pwm-mode:
+      type: string
+      required: true
+      description: |
+        Select PWM mode:
+        - EDGE_ALIGN: generate pulses with edge aligned down counting mode
+
+        - EDGE_ALIGN_UP:  generate pulses with edge aligned up counting mode
+
+        - CENTER_ALIGN: generates pulses center aligned up and down counting mode
+
+      enum:
+        - "EDGE_ALIGN"
+        - "EDGE_ALIGN_UP"
+        - "CENTER_ALIGN"
+
+    ti,period:
+      type: int
+      required: true
+      description: |
+        PWM Period in cycle at boot time.
