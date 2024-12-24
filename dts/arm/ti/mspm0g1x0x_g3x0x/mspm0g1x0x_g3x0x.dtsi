@@ -121,12 +121,12 @@
 		gpt0: timg@40084000 {
 			compatible = "ti,mspm0g1x0x_g3x0x-timer";
 			reg = <0x40084000 0x2000>;
-			interrupts = <16 0>;
 			status = "disabled";
 
 			pwm0: pwm {
 				compatible = "ti,mspm0g1x0x_g3x0x-timer-pwm";
 				clocks = <&clkmux MSPM0_CLOCK_BUS_ULPCLK>;
+				interrupts = <16 0>;
 				#pwm-cells = <2>;
 				status = "disabled";
 			};
@@ -135,12 +135,12 @@
 		gpt8: timg@40090000 {
 			compatible = "ti,mspm0g1x0x_g3x0x-timer";
 			reg = <0x40090000 0x2000>;
-			interrupts = <2 0>;
 			status = "disabled";
 
 			pwm8: pwm {
 				compatible = "ti,mspm0g1x0x_g3x0x-timer-pwm";
 				clocks = <&clkmux MSPM0_CLOCK_BUS_ULPCLK>;
+				interrupts = <2 0>;
 				#pwm-cells = <2>;
 				status = "disabled";
 			};
@@ -149,12 +149,12 @@
 		gpta0: tima@40860000 {
 			compatible = "ti,mspm0g1x0x_g3x0x-timer";
 			reg = <0x40860000 0x2000>;
-			interrupts = <18 0>;
 			status = "disabled";
 
 			pwma0: pwma0 {
 				compatible = "ti,mspm0g1x0x_g3x0x-timer-pwm";
 				clocks = <&clkmux MSPM0_CLOCK_BUS_LFCLK>;
+				interrupts = <18 0>;
 				#pwm-cells = <2>;
 				ti,advanced;
 				status = "disabled";
@@ -164,12 +164,12 @@
 		gpta1: tima@40862000 {
 			compatible = "ti,mspm0g1x0x_g3x0x-timer";
 			reg = <0x40862000 0x2000>;
-			interrupts = <19 0>;
 			status = "disabled";
 
 			pwma1: pwma1 {
 				compatible = "ti,mspm0g1x0x_g3x0x-timer-pwm";
 				clocks = <&clkmux MSPM0_CLOCK_BUS_LFCLK>;
+				interrupts = <19 0>;
 				#pwm-cells = <2>;
 				ti,advanced;
 				status = "disabled";

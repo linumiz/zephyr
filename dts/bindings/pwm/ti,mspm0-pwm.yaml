@@ -78,7 +78,6 @@ child-binding:
 
     ti,pwm-mode:
       type: string
-      required: true
       description: |
         Select PWM mode:
         - EDGE_ALIGN: generate pulses with edge aligned down counting mode
@@ -91,6 +90,21 @@ child-binding:
         - "EDGE_ALIGN"
         - "EDGE_ALIGN_UP"
         - "CENTER_ALIGN"
+
+    ti,cc-mode:
+      type: string
+      description: |
+        Select input capture mode:
+        - EDGE_TIME: capture edge time with down mode
+
+        - PERIOD_CAPTURE: capture period with down mode
+
+        - PULSE_WIDTH: capture pulse width down mode
+
+      enum:
+        - "EDGE_TIME"
+        - "PERIOD_CAPTURE"
+        - "PULSE_WIDTH"
 
     ti,period:
       type: int

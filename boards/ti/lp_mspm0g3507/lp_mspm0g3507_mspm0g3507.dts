@@ -110,4 +110,11 @@
 		ti,pwm-mode = "EDGE_ALIGN_UP";
 		ti,period = <1500>;
 	};
+
+#if 0
+	cc_capture {
+		ti,cc-mode = "PULSE_WIDTH";
+		ti,period = <1500>;
+	};
+#endif
 };
