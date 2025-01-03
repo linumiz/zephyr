@@ -30,15 +30,16 @@ static void uart_read_callback(const struct device *dev,
 	switch(evt->type) {
 	case UART_TX_DONE:
 		k_sem_give(&data->uart_tx_sem);
-		printk("TX done\n");
+//		printk("TX done\n");
 		break;
 	case UART_RX_RDY:
 		uint8_t *buf = evt->data.rx.buf;
 
 #if 1
-		printk("RX len %u\n", evt->data.rx.len);
+		printk("RX len %u >> ", evt->data.rx.len);
 		for (int i = 0; i < 3; i++)
-			printk("0x%x ", buf[i]);
+			printk("%d ", buf[i]);
+		printk("\n");
 #endif
 		if (evt->data.rx.len == 3) {
 			k_sem_give(&data->uart_rx_sem);
@@ -83,6 +84,7 @@ static int cs5490_get_baudrate(const struct device *dev)
 	return rc;
 }
 
+
 static int cs5490_set_baudrate(const struct device *dev, uint32_t baudrate)
 {
 	int rc;
@@ -98,7 +100,6 @@ static int cs5490_set_baudrate(const struct device *dev, uint32_t baudrate)
 	};
 
 
-	select_page = PAGE_SELECT_CMD | CS5490_PAGE_0;
 	rc = cs5490_select_page(dev, CS5490_PAGE_0);
 	if (rc < 0) {
 		return rc;
@@ -117,7 +118,7 @@ static int cs5490_set_baudrate(const struct device *dev, uint32_t baudrate)
 	}
 
 	/* Wait before change buadrate of uart for flush data*/
-	k_msleep(50);
+//	k_msleep(50);
 
 	rc = cs5490_configure_uart(cfg->dev, &uart_cfg);
 	if (rc < 0) {
@@ -166,6 +167,76 @@ static float cs5490_convert_to_value(int lsb, int msboption, uint32_t buf)
 
 	return output;
 }
+
+static int cs5490_convert_to_binary(int lsb, int msboption, double input)
+{
+	uint32_t output = 0;
+
+	switch (msboption) {
+	case CS5490_MSBNULL:
+		input *= pow(2, lsb);
+		output = (uint32_t)input;
+		output &= 0x7FFFFF;
+		break;
+	case CS5490_MSBSIGNED:
+		if(input <= 0){
+			input *= -pow(2, lsb);
+			output = (uint32_t)input;
+			output = ~output;
+			output = (output + 1) & 0xFFFFFF;
+		} else {
+			input *= (pow(2, lsb) - 1.0);
+			output = (uint32_t)input;
+		}
+		break;
+	default:
+		case CS5490_MSBUNSIGNED:
+		input *= pow(2, lsb);
+		output = (uint32_t)input;
+		break;
+	}
+
+	return output;
+}
+
+static int cs5490_enable_lf(const struct device *dev)
+{
+	int ret;
+	uint32_t gain = cs5490_convert_to_binary(22, CS5490_MSBUNSIGNED, 10); 
+
+	uint8_t data[3] = {0};
+	ret = cs5490_select_page(dev, CS5490_PAGE_16);
+	if (ret < 0) {
+		return ret;
+	}
+
+	data[0] = 35;
+	data[1] = 219;
+	data[2] = 25;
+	ret = cs5490_write(dev, REG_VOLTAGE_GAIN, sys_get_le24(data));
+	if (ret < 0) {
+		return ret;
+	}
+
+#if 1
+
+	ret = cs5490_select_page(dev, CS5490_PAGE_18);
+	if (ret < 0) {
+		return ret;
+	}
+
+	data[0] = 120;
+	data[1] = 0;
+	data[2] = 0;
+	ret = cs5490_write(dev, REG_SAMPLE_COUNT, sys_get_le24(data));
+	if (ret < 0) {
+		return ret;
+	}
+#endif
+
+	return 0;
+}
+
 
 static int cs5490_set_overcurrent_threshold(const struct device *dev,
 					    uint16_t threshold)
@@ -223,7 +294,8 @@ static inline int cs5490_param_fetch(const struct device *dev, uint8_t addr,
 {
 	int rc;
 	uint32_t val = 0;
-	struct cs5490_rx_frame buf = {0};
+//	struct cs5490_rx_frame buf = {0};
+	uint8_t buf[3] = {0};
 
 	rc = cs5490_read(dev, addr, (uint8_t *)&buf,
 			 sizeof(struct cs5490_rx_frame));
@@ -231,7 +303,10 @@ static inline int cs5490_param_fetch(const struct device *dev, uint8_t addr,
 		return rc;
 	}
 
-	val = sys_get_le24((uint8_t *)&buf);
+//	printk("le val %d\n", sys_get_le24((uint8_t *)&buf));
+	val = val + buf[2] << 8; 
+	val = val + buf[1] << 8; 
+	val = val + buf[0]; 
 	*result = cs5490_convert_to_value(lsb, msb, val);
 
 	return 0;
@@ -246,11 +321,15 @@ static int cs5490_fetch(const struct device *dev, struct cs5490 *out)
 		return rc;
 	}
 
-	rc = cs5490_param_fetch(dev, REG_FREQUENCY, 23, CS5490_MSBSIGNED,
-				&out->frequency);
+	rc = cs5490_param_fetch(dev, REG_RMS_VOLTAGE, 24, CS5490_MSBUNSIGNED,
+				&out->rms_voltage);
+	if (rc < 0) {
+		return rc;
+	}
 
-	printk("system freq %f\n", out->frequency);
+	printk("rms volatge %f\n", out->rms_voltage);
 
+	out->inst_voltage = 0;
 	rc = cs5490_param_fetch(dev, REG_INST_VOLTAGE, 23, CS5490_MSBSIGNED,
 				&out->inst_voltage);
 	if (rc < 0) {
@@ -258,6 +337,53 @@ static int cs5490_fetch(const struct device *dev, struct cs5490 *out)
 	}
 
 	printk("volatge %f\n", out->inst_voltage);
+
+	out->frequency = 0;
+	rc = cs5490_param_fetch(dev, REG_FREQUENCY, 23, CS5490_MSBSIGNED,
+				&out->frequency);
+
+	printk("system freq %f\n", out->frequency);
+
+	float system_time = 0;
+	rc = cs5490_param_fetch(dev, 61, 0, CS5490_MSBUNSIGNED,
+				&system_time);
+	if (rc < 0) {
+		return rc;
+	}
+
+	printk("system time %f\n", system_time);
+
+	rc = cs5490_select_page(dev, CS5490_PAGE_0);
+	if (rc < 0) {
+		return rc;
+	}
+
+	return 0;
+
+	struct cs5490_rx_frame buf = {0};
+
+	rc = cs5490_read(dev, 23, (uint8_t *)&buf,
+			 sizeof(struct cs5490_rx_frame));
+	if (rc < 0) {
+		return rc;
+	}
+
+	printk("status 0x%x\n", sys_get_le24((uint8_t *)&buf));
+
+	rc = cs5490_write(dev, 23, 0xFFFFFF);
+	if (rc < 0) {
+		return rc;
+	}
+
+	rc = cs5490_read(dev, 23, (uint8_t *)&buf,
+			 sizeof(struct cs5490_rx_frame));
+	if (rc < 0) {
+		return rc;
+	}
+
+	printk("status 0x%x\n", sys_get_le24((uint8_t *)&buf));
+	return 0;
+
 	rc = cs5490_param_fetch(dev, REG_INST_POWER, 23, CS5490_MSBSIGNED,
 				&out->inst_active_power);
 	if (rc < 0) {
@@ -411,7 +537,7 @@ static int cs5490_init(const struct device *dev)
 	struct cs5490_data *data = dev->data;
 	const struct cs5490_config *cfg = dev->config;
 	const struct uart_config uart_cfg = {
-		.baudrate = 115200,
+		.baudrate = 600,
 		.parity = UART_CFG_PARITY_NONE,
 		.stop_bits = UART_CFG_STOP_BITS_1,
 		.data_bits = UART_CFG_DATA_BITS_8,
@@ -440,11 +566,44 @@ static int cs5490_init(const struct device *dev)
 	k_sem_init(&data->uart_tx_sem, 0, 1);
 	k_sem_init(&data->uart_rx_sem, 0, 1);
 
-	rc = cs5490_get_baudrate(dev);
+	uint8_t write_cmd = 193; 
+#if 0
+	rc = cs5490_send(dev, &write_cmd, sizeof(write_cmd));
 	if (rc < 0) {
-		LOG_ERR("Failed to get baudrate %d", rc);
+		LOG_ERR("Failed to set cont conv %d\n", rc);
 		return rc;
 	}
+
+	
+	k_msleep(100);
+#endif
+
+#if 1
+	rc = cs5490_set_baudrate(dev, 115200);
+	if (rc < 0) {
+		LOG_ERR("Failed to set baudrate %d\n", rc);
+		return rc;
+	}
+#endif
+#if 0
+	rc = cs5490_enable_lf(dev);
+	if (rc < 0) {
+		LOG_ERR("Enable high pass filter failed (%d)", rc);
+		return rc;
+	}
+#endif
+#if 1
+	write_cmd = 213; 
+	rc = cs5490_send(dev, &write_cmd, sizeof(write_cmd));
+	if (rc < 0) {
+		LOG_ERR("Failed to set cont conv %d\n", rc);
+		return rc;
+	}
+
+	LOG_INF("Continoue mode set\n");
+	k_msleep(2000);
+#endif
+
 #if defined(CONFIG_CS5490_TRIGGER)
 	rc = cs5490_trigger_init(dev);
 	if (rc < 0) {

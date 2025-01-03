@@ -29,7 +29,7 @@
 /* Registers */
 #define REG_CONFIG_0		0 /* In Page 0 */
 #define REG_CONFIG_1		1
-#define REG_CONFIG_2		0 /* In Page 1 */
+#define REG_CONFIG_2		0 /* In Page 16 */
 #define REG_SERIAL_CTRL		7
 #define REG_LOCK_CTRL		34
 #define REG_INT_STATUS		23
@@ -49,6 +49,8 @@
 #define REG_POWER_FACTOR	20
 #define REG_TEMPERATURE		27 /* In Page 16 */
 #define REG_FREQUENCY		49 /* In Page 16 */
+#define REG_SAMPLE_COUNT	51 /* In Page 16 */
+#define REG_VOLTAGE_GAIN	35 /* In Page 16 */
 
 /* Interrupts */
 #define CS5490_INT_DRDY_MASK	BIT(23)
@@ -130,7 +132,7 @@ static inline int cs5490_send(const struct device *dev,
 		return -EINVAL;
 	}
 
-	printk("send data len %u\n", len);
+//	printk("send data len %u\n", len);
 	rc = uart_tx(cfg->dev, send_data, len, 1000 * USEC_PER_MSEC);
 	if (rc < 0) {
 		return rc;
@@ -140,7 +142,7 @@ static inline int cs5490_send(const struct device *dev,
 		return -ETIMEDOUT;
 	}
 
-	k_msleep(20);
+	k_msleep(2);
 
 	return rc;
 }
@@ -163,7 +165,7 @@ static inline int cs5490_transceive(const struct device *dev,
 		return rc;
 	}
 
-	printk("transecive data len %u\n", len);
+//	printk("transecive data len %u\n", len);
 	rc = uart_tx(cfg->dev, send_data, len, 1000 * USEC_PER_MSEC);
 	if (rc < 0) {
 		return rc;
@@ -173,7 +175,7 @@ static inline int cs5490_transceive(const struct device *dev,
 		return -ETIMEDOUT;
 	}
 
-	k_msleep(20);
+	k_msleep(2);
 
 	return 0;
 }

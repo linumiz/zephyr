@@ -239,5 +239,12 @@ int cs5490_trigger_init(const struct device *dev)
 		return rc;
 	}
 
+	rc = cs5490_write(dev, REG_CONFIG_0, 0x00000F);
+	if (rc < 0) {
+		LOG_ERR("Failed to configure DO pin as interrupt %d", rc);
+		return rc;
+	}
+
+
 	return rc;
 }

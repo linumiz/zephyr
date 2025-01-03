@@ -12,6 +12,7 @@ static int fetch_and_display(const struct device *dev)
 	struct sensor_value rms_current;
 	struct sensor_value rms_voltage;
 	struct sensor_value power;
+	struct sensor_value inst_voltage;
 	struct sensor_value freq;
 
 	rc = sensor_sample_fetch(dev);
@@ -20,7 +21,8 @@ static int fetch_and_display(const struct device *dev)
 		return rc;
 	}
 
-	rc = sensor_channel_get(dev, SENSOR_CHAN_INST_POWER, &power); 
+#if 0
+	rc = sensor_channel_get(dev, SENSOR_CHAN_INST_VOLTAGE, &inst_voltage); 
 	if (rc < 0) {
 		printk("Failed to get sample %d\n", rc);
 		return rc;
@@ -37,18 +39,16 @@ static int fetch_and_display(const struct device *dev)
 		printk("Failed to get sample %d\n", rc);
 		return rc;
 	}
-
 	rc = sensor_channel_get(dev, SENSOR_CHAN_FREQUENCY, &freq);
 	if (rc < 0) {
 		printk("Failed to get frequency %d\n", rc);
 		return rc;
 	}
 
-	printk("RMS Current %f\n", sensor_value_to_float(&rms_current));
-	printk("RMS Voltage %f\n", sensor_value_to_float(&rms_voltage));
-	printk("Power %f\n", sensor_value_to_float(&power));
+	printk("Inst voltage %f\n", sensor_value_to_float(&inst_voltage));
 	printk("Frequency %f\n", sensor_value_to_float(&freq));
 
+#endif
 	return 0;
 }
 
@@ -109,6 +109,7 @@ int main(void)
 		return 0;
 	}
 
+#if 0
 	trig.type = SENSOR_TRIG_OUT_OF_RANGE_VOLTAGE;
 	rc = sensor_trigger_set(sensor, &trig, trigger_handler);
 	if (rc != 0) {
@@ -147,13 +148,14 @@ int main(void)
 		return 0;
 	}
 #else
+#endif
+#endif
 	/* Polling Mode */
 	while (1) {
 		fetch_and_display(sensor);
 
-		k_sleep(K_SECONDS(5));
+		k_sleep(K_SECONDS(1));
 	}
-#endif
 
 	return 0;
 }
