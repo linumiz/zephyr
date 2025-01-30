@@ -188,6 +188,10 @@ static int spi_mcux_configure(const struct device *dev,
 		(SPI_MODE_GET(spi_cfg->operation) & SPI_MODE_CPOL)
 		? kECSPI_PolarityActiveLow
 		: kECSPI_PolarityActiveHigh;
+	master_config.channelConfig.clockInactiveState =
+		(SPI_MODE_GET(spi_cfg->operation) & SPI_MODE_CPOL)
+		? kECSPI_ClockInactiveStateHigh
+		: kECSPI_ClockInactiveStateLow;
 	master_config.channelConfig.phase =
 		(SPI_MODE_GET(spi_cfg->operation) & SPI_MODE_CPHA)
 		? kECSPI_ClockPhaseSecondEdge
