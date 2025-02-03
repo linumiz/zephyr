@@ -205,7 +205,8 @@ static int mcux_gpt_init(const struct device *dev)
 	}
 
 	GPT_GetDefaultConfig(&gptConfig);
-	gptConfig.enableFreeRun = true; /* Do not reset on compare */
+	//gptConfig.enableFreeRun = true; /* Do not reset on compare */
+	gptConfig.enableFreeRun = false; /* Do reset on compare */
 	gptConfig.clockSource = kGPT_ClockSource_Periph;
 	gptConfig.divider = clock_freq / config->info.freq;
 	base = get_base(dev);
