@@ -86,28 +86,37 @@
 	pinctrl-names = "default";
 
 	ti,cc-index = <0>;
-	ti,prescaler = <256>;
-	ti,pulse-cycle = <300>;
+	ti,clk-prescaler = <255>;
+	ti,clk-div = <1>;
 
-	pwm_out {
-		channel = <0>;
-		ti,pwm-mode = "EDGE_ALIGN";
-		ti,period = <1500>;
-	};
+	ti,cc-mode = "PULSE_WIDTH";
+	ti,period = <62499>;
 };
 
-&pwma1 {
+&pwm7 {
 	status = "okay";
-	pinctrl-0 = <&tima1c0_pb0>;
+	pinctrl-0 = <&timg7c0_pb15>;
 	pinctrl-names = "default";
 
 	ti,cc-index = <0>;
-	ti,prescaler = <256>;
-	ti,pulse-cycle = <600>;
+	ti,clk-prescaler = <255>;
+	ti,clk-div = <1>;
 
-	pwm_out {
-		channel = <0>;
-		ti,pwm-mode = "EDGE_ALIGN_UP";
-		ti,period = <1500>;
-	};
+	ti,pwm-mode = "EDGE_ALIGN";
+	ti,pulse-cycle = <249>;
+	ti,period = <1000>;
+};
+
+&pwma0 {
+	status = "disabled";
+	pinctrl-0 = <&tima0c0_pa8>;
+	pinctrl-names = "default";
+
+	ti,cc-index = <0>;
+	ti,clk-prescaler = <9>;
+	ti,clk-div = <1>;
+
+	ti,pwm-mode = "CENTER_ALIGN";
+	ti,pulse-cycle = <3>;
+	ti,period = <10>;
 };
