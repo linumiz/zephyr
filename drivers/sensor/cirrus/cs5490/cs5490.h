@@ -64,13 +64,17 @@
 #define CS5490_INT_CFG_MASK	GENMASK(0,4)
 #define CS5490_MCLK		4.096
 
+#define CS540_COMM_TIMEOUT	(1000 * USEC_PER_MSEC)
+#define CS5490_CONT_CONVERSION	0xD5
+#define CS5490_INTERVAL		500 /* 500 ms */
+
 enum cs5490_interrupts {
 	CS5490_INT_DRDY,	/* Data Ready */
 	CS5490_INT_IOC,		/* Overcurrent */
 	CS5490_INT_POR,		/* Power overflow */
 	CS5490_INT_IOR,		/* Current overlfow */
 	CS5490_INT_VOR,		/* Voltage overflow */
-	CS5490_INT_VSAG,		/* Volatge sag */
+	CS5490_INT_VSAG,	/* Volatge sag */
 	CS5490_INT_VSWELL,	/* Volatge swell */
 	CS5490_INT_MAX,
 };
@@ -99,6 +103,7 @@ struct cs5490 {
 struct cs5490_config {
 	const struct device *dev;
 	struct gpio_dt_spec int_gpio;
+	struct gpio_dt_spec reset_gpio;
 };
 
 struct cs5490_data {
@@ -132,8 +137,7 @@ static inline int cs5490_send(const struct device *dev,
 		return -EINVAL;
 	}
 
-//	printk("send data len %u\n", len);
-	rc = uart_tx(cfg->dev, send_data, len, 1000 * USEC_PER_MSEC);
+	rc = uart_tx(cfg->dev, send_data, len, CS540_COMM_TIMEOUT);
 	if (rc < 0) {
 		return rc;
 	}
@@ -142,7 +146,7 @@ static inline int cs5490_send(const struct device *dev,
 		return -ETIMEDOUT;
 	}
 
-	k_msleep(2);
+	k_msleep(20);
 
 	return rc;
 }
@@ -160,13 +164,13 @@ static inline int cs5490_transceive(const struct device *dev,
 		return -EINVAL;
 	}
 
-	rc = uart_rx_enable(cfg->dev, recv_buf, recv_buf_len, 1000 * USEC_PER_MSEC);
+	rc = uart_rx_enable(cfg->dev, recv_buf, recv_buf_len, CS540_COMM_TIMEOUT);
 	if (rc < 0) {
 		return rc;
 	}
 
 //	printk("transecive data len %u\n", len);
-	rc = uart_tx(cfg->dev, send_data, len, 1000 * USEC_PER_MSEC);
+	rc = uart_tx(cfg->dev, send_data, len, CS540_COMM_TIMEOUT);
 	if (rc < 0) {
 		return rc;
 	}
@@ -175,7 +179,7 @@ static inline int cs5490_transceive(const struct device *dev,
 		return -ETIMEDOUT;
 	}
 
-	k_msleep(2);
+	k_msleep(20);
 
 	return 0;
 }
@@ -203,9 +207,24 @@ static inline int cs5490_write(const struct device *dev,
 	uint8_t write_cmd[4] = {0};
 
 	write_cmd[0] = WRITE_CMD | addr;
-	sys_put_be24(write_data, &write_cmd[1]);
+	sys_put_le24(write_data, &write_cmd[1]);
 
 	return cs5490_send(dev, write_cmd, sizeof(write_cmd));
+}
+
+static inline int cs5490_enable_conversion(const struct device *dev)
+{
+	int rc;
+	uint8_t write_cmd = CS5490_CONT_CONVERSION;
+
+	rc = cs5490_send(dev, &write_cmd, sizeof(write_cmd));
+	if (rc < 0) {
+		return rc;
+	}
+
+	k_msleep(CS5490_INTERVAL);
+
+	return 0;
 }
 
 int cs5490_trigger_init(const struct device *dev);

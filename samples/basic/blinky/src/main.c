@@ -34,6 +34,15 @@ int main(void)
 		return 0;
 	}
 
+	ret = gpio_pin_set_dt(&led, 1);
+	if (ret < 0) {
+		printk("Failed to set gpio pin to 1 %d\n", ret);
+		return ret;
+	}
+
+	printk("pin set success\n");
+	return 0;
+
 	while (1) {
 		ret = gpio_pin_toggle_dt(&led);
 		if (ret < 0) {

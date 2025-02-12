@@ -25,6 +25,7 @@ properties:
       Initial baud rate setting for UART. Only a fixed set of baud
       rates are selectable on these devices.
     enum:
+      - 600
       - 1200
       - 2400
       - 4800

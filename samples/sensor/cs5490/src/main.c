@@ -21,7 +21,7 @@ static int fetch_and_display(const struct device *dev)
 		return rc;
 	}
 
-#if 0
+#if 1
 	rc = sensor_channel_get(dev, SENSOR_CHAN_INST_VOLTAGE, &inst_voltage); 
 	if (rc < 0) {
 		printk("Failed to get sample %d\n", rc);
@@ -102,6 +102,9 @@ int main(void)
 #if defined CONFIG_CS5490_TRIGGER
 	struct sensor_trigger trig;
 
+	k_msleep(2000);
+
+#if 1
 	trig.type = SENSOR_TRIG_DATA_READY;
 	rc = sensor_trigger_set(sensor, &trig, trigger_handler);
 	if (rc != 0) {
@@ -109,7 +112,6 @@ int main(void)
 		return 0;
 	}
 
-#if 0
 	trig.type = SENSOR_TRIG_OUT_OF_RANGE_VOLTAGE;
 	rc = sensor_trigger_set(sensor, &trig, trigger_handler);
 	if (rc != 0) {
@@ -147,9 +149,8 @@ int main(void)
 		printk("Failed to set trigger: %d\n", rc);
 		return 0;
 	}
+#endif
 #else
-#endif
-#endif
 	/* Polling Mode */
 	while (1) {
 		fetch_and_display(sensor);
@@ -157,5 +158,6 @@ int main(void)
 		k_sleep(K_SECONDS(1));
 	}
 
+#endif
 	return 0;
 }

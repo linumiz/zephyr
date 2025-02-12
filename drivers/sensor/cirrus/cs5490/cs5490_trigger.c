@@ -5,10 +5,11 @@
  */
 
 #include "cs5490.h"
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor/cs5490.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_DECLARE(CS5490, CONFIG_SENSOR_LOG_LEVEL);
+LOG_MODULE_DECLARE(cs5490, CONFIG_SENSOR_LOG_LEVEL);
 
 static void cs5490_gpio_callback(const struct device *dev,
 				 struct gpio_callback *cb,
@@ -18,11 +19,10 @@ static void cs5490_gpio_callback(const struct device *dev,
 
 	const struct cs5490_config *cfg = data->int_gpio->config;
 
-	if ((pin_mask & (BIT(cfg->int_gpio.pin))) == 0U) {
+	printk("interrupt\n");
+	if ((pin_mask & BIT(cfg->int_gpio.pin)) == 0U) {
 		return;
 	}
-
-	gpio_pin_interrupt_configure_dt(&cfg->int_gpio, GPIO_INT_DISABLE);
 
 #if defined(CONFIG_CS5490_TRIGGER_OWN_THREAD)
 	k_sem_give(&data->trig_sem);
@@ -34,7 +34,7 @@ static void cs5490_gpio_callback(const struct device *dev,
 static void cs5490_process_interrupt(const struct device *dev)
 {
 	int rc;
-	uint32_t int_source = 0;
+	uint32_t int_source;
 	struct cs5490_rx_frame buf = {0};
 	const struct cs5490_config *cfg = dev->config;
 	struct cs5490_data *data = dev->data;
@@ -50,6 +50,7 @@ static void cs5490_process_interrupt(const struct device *dev)
 	}
 
 	int_source = sys_get_le24((uint8_t*)&buf);
+	printk("int status = 0x%x\n", int_source);
 	if (int_source & CS5490_INT_DRDY_MASK) {
 		if (data->handler[CS5490_INT_DRDY]) {
 			data->handler[CS5490_INT_DRDY](dev, data->trigger[CS5490_INT_DRDY]);
@@ -74,31 +75,19 @@ static void cs5490_process_interrupt(const struct device *dev)
 		}
 	}
 
-	if (int_source & CS5490_INT_IOR_MASK) {
-		if (data->handler[CS5490_INT_IOR]) {
+	if (int_source & CS5490_INT_IOC_MASK) {
+		if (data->handler[CS5490_INT_IOC]) {
 			data->handler[CS5490_INT_IOC](dev, data->trigger[CS5490_INT_IOC]);
 		}
 	}
 
-	if (int_source & CS5490_INT_VSAG_MASK) {
-		if (data->handler[CS5490_INT_VSAG]) {
-			data->handler[CS5490_INT_VSAG](dev, data->trigger[CS5490_INT_VSAG]);
-		}
-	}
-
-	if (int_source & CS5490_INT_VSWELL_MASK) {
-		if (data->handler[CS5490_INT_VSWELL]) {
-			data->handler[CS5490_INT_VSWELL](dev, data->trigger[CS5490_INT_VSWELL]);
-		}
-	}
-
-	rc = cs5490_write(dev, REG_INT_STATUS, int_source);
+	rc = cs5490_write(dev, REG_INT_STATUS, 0xFFFFFF);
 	if (rc < 0) {
-		LOG_ERR("Failed to clear interrupts");
+		LOG_ERR("Failed to clear interrupts %d", rc);
 		return;
 	}
 
-	gpio_pin_interrupt_configure_dt(&cfg->int_gpio, GPIO_INT_EDGE_FALLING);
+	k_msleep(4000);
 
 	return;
 }
@@ -108,7 +97,7 @@ static void cs5490_thread(struct cs5490_data *data)
 {
 	while(true) {
 		k_sem_take(&data->trig_sem, K_FOREVER);
-		cs5490_process_int(data->int_gpio);
+		cs5490_process_interrupt(data->int_gpio);
 	}
 }
 #else
@@ -141,12 +130,6 @@ int cs5490_configure_trigger(const struct device *dev,
 	}
 
 	rc = cs5490_select_page(dev, CS5490_PAGE_0);
-	if (rc < 0) {
-		return rc;
-	}
-
-	mask = CS5490_INT_CFG_MASK;
-	rc = cs5490_write(dev, REG_CONFIG_1, mask);
 	if (rc < 0) {
 		return rc;
 	}
@@ -194,12 +177,13 @@ int cs5490_configure_trigger(const struct device *dev,
 
 	rc = cs5490_read(dev, REG_INT_MASK, (uint8_t *)&buf, sizeof(buf));
 	if (rc < 0) {
-		return rc;
+		return;
 	}
 
+	printk("status %x\n", sys_get_le24((uint8_t*)&buf));
 	gpio_pin_interrupt_configure_dt(&cfg->int_gpio, GPIO_INT_EDGE_FALLING);
 
-	return 0;
+	return cs5490_enable_conversion(dev);
 }
 
 int cs5490_trigger_init(const struct device *dev)
@@ -220,16 +204,6 @@ int cs5490_trigger_init(const struct device *dev)
 	}
 
 	data->int_gpio = dev;
-#if defined(CONFIG_CS5490_TRIGGER_OWN_THREAD)
-	k_sem_init(&data->trig_sem, 0, 1);
-	k_thread_create(&data->thread, data->thread_stack,
-			CONFIG_CS5490_THREAD_STACK_SIZE,
-			(k_thread_entry_t)cs5490_thread, data, NULL,
-			NULL, K_PRIO_COOP(CONFIG_CS5490_THREAD_PRIORITY),
-			0, K_NO_WAIT);
-#else
-	k_work_init(&data->work, cs5490_work_cb);
-#endif
 	gpio_init_callback(&data->int_gpio_cb, cs5490_gpio_callback,
 			   BIT(cfg->int_gpio.pin));
 
@@ -238,13 +212,22 @@ int cs5490_trigger_init(const struct device *dev)
 		LOG_ERR("Failed to set interrupt callback");
 		return rc;
 	}
+#if defined(CONFIG_CS5490_TRIGGER_OWN_THREAD)
+	k_sem_init(&data->trig_sem, 0, 1);
+	k_thread_create(&data->thread, data->cs5490_stack,
+			CONFIG_CS5490_THREAD_STACK_SIZE,
+			(k_thread_entry_t)cs5490_thread, data, NULL,
+			NULL, K_PRIO_COOP(CONFIG_CS5490_THREAD_PRIORITY),
+			0, K_NO_WAIT);
+#else
+	k_work_init(&data->work, cs5490_work_cb);
+#endif
 
-	rc = cs5490_write(dev, REG_CONFIG_0, 0x00000F);
+	rc = cs5490_write(dev, REG_CONFIG_1, 0x1000F);
 	if (rc < 0) {
 		LOG_ERR("Failed to configure DO pin as interrupt %d", rc);
 		return rc;
 	}
-
 
 	return rc;
 }

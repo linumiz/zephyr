@@ -60,7 +60,7 @@ int main(void)
 	}
 
 	ret = gpio_pin_interrupt_configure_dt(&button,
-					      GPIO_INT_EDGE_TO_ACTIVE);
+					      GPIO_INT_EDGE_FALLING);
 	if (ret != 0) {
 		printk("Error %d: failed to configure interrupt on %s pin %d\n",
 			ret, button.port->name, button.pin);

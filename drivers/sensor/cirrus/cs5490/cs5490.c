@@ -15,12 +15,14 @@
 
 #include "cs5490.h"
 
-LOG_MODULE_REGISTER(CS5490, CONFIG_SENSOR_LOG_LEVEL);
+LOG_MODULE_REGISTER(cs5490, CONFIG_SENSOR_LOG_LEVEL);
 
 /* Macro's for Parameters Calculations */
 #define CS5490_MSBNULL		0
 #define CS5490_MSBSIGNED	1
 #define CS5490_MSBUNSIGNED	2
+
+#define CS5490_RESET_PERIOD	100 /* 100 ms */
 
 static void uart_read_callback(const struct device *dev,
 			       struct uart_event *evt, void *user_data)
@@ -35,7 +37,7 @@ static void uart_read_callback(const struct device *dev,
 	case UART_RX_RDY:
 		uint8_t *buf = evt->data.rx.buf;
 
-#if 1
+#if 0
 		printk("RX len %u >> ", evt->data.rx.len);
 		for (int i = 0; i < 3; i++)
 			printk("%d ", buf[i]);
@@ -84,7 +86,6 @@ static int cs5490_get_baudrate(const struct device *dev)
 	return rc;
 }
 
-
 static int cs5490_set_baudrate(const struct device *dev, uint32_t baudrate)
 {
 	int rc;
@@ -117,22 +118,13 @@ static int cs5490_set_baudrate(const struct device *dev, uint32_t baudrate)
 		return rc;
 	}
 
-	/* Wait before change buadrate of uart for flush data*/
-//	k_msleep(50);
-
 	rc = cs5490_configure_uart(cfg->dev, &uart_cfg);
 	if (rc < 0) {
 		LOG_ERR("Failed to configure uart %d", rc);
 		return rc;
 	}
 
-	rc = cs5490_get_baudrate(dev);
-	if (rc < 0) {
-		LOG_ERR("Failed to get baud rate %d", rc);
-		return rc;
-	}
-
-	return rc;
+	return cs5490_get_baudrate(dev);
 }
 
 static float cs5490_convert_to_value(int lsb, int msboption, uint32_t buf)
@@ -140,7 +132,7 @@ static float cs5490_convert_to_value(int lsb, int msboption, uint32_t buf)
 	double output = 0.0;
 	bool msb;
 
-	switch(msboption){
+	switch (msboption) {
 	case CS5490_MSBNULL:
 		buf &= 0x7FFFFF;
 		output = (double)buf;
@@ -148,7 +140,7 @@ static float cs5490_convert_to_value(int lsb, int msboption, uint32_t buf)
 		break;
 	case CS5490_MSBSIGNED:
 		msb = FIELD_GET(BIT(23), buf);
-		if(msb){
+		if (msb) {
 			buf = ~buf;
 			buf = buf & 0x00FFFFFF;
 			output = (double)buf + 1.0;
@@ -175,92 +167,57 @@ static int cs5490_convert_to_binary(int lsb, int msboption, double input)
 	switch (msboption) {
 	case CS5490_MSBNULL:
 		input *= pow(2, lsb);
-		output = (uint32_t)input;
+		output = (uint32_t) input;
 		output &= 0x7FFFFF;
 		break;
 	case CS5490_MSBSIGNED:
-		if(input <= 0){
+		if (input <= 0) {
 			input *= -pow(2, lsb);
-			output = (uint32_t)input;
+			output = (uint32_t) input;
 			output = ~output;
 			output = (output + 1) & 0xFFFFFF;
 		} else {
 			input *= (pow(2, lsb) - 1.0);
-			output = (uint32_t)input;
+			output = (uint32_t) input;
 		}
 		break;
 	default:
-		case CS5490_MSBUNSIGNED:
+	case CS5490_MSBUNSIGNED:
 		input *= pow(2, lsb);
-		output = (uint32_t)input;
+		output = (uint32_t) input;
 		break;
 	}
 
 	return output;
 }
 
-static int cs5490_enable_lf(const struct device *dev)
-{
-	int ret;
-	uint32_t gain = cs5490_convert_to_binary(22, CS5490_MSBUNSIGNED, 10); 
-
-	uint8_t data[3] = {0};
-	ret = cs5490_select_page(dev, CS5490_PAGE_16);
-	if (ret < 0) {
-		return ret;
-	}
-
-	data[0] = 35;
-	data[1] = 219;
-	data[2] = 25;
-	ret = cs5490_write(dev, REG_VOLTAGE_GAIN, sys_get_le24(data));
-	if (ret < 0) {
-		return ret;
-	}
-
-#if 1
-
-	ret = cs5490_select_page(dev, CS5490_PAGE_18);
-	if (ret < 0) {
-		return ret;
-	}
-
-	data[0] = 120;
-	data[1] = 0;
-	data[2] = 0;
-	ret = cs5490_write(dev, REG_SAMPLE_COUNT, sys_get_le24(data));
-	if (ret < 0) {
-		return ret;
-	}
-#endif
-
-	return 0;
-}
-
-
 static int cs5490_set_overcurrent_threshold(const struct device *dev,
 					    uint16_t threshold)
 {
 	int rc;
+	uint32_t bin_threshold;
 
 	rc = cs5490_select_page(dev, CS5490_PAGE_17);
 	if (rc < 0) {
 		return rc;
 	}
 
-	return cs5490_write(dev, REG_IOVR_LEVEL, threshold);
+	bin_threshold = cs5490_convert_to_binary(23, CS5490_MSBSIGNED, threshold);
+	return cs5490_write(dev, REG_IOVR_LEVEL, bin_threshold);
 }
 
 static int cs5490_set_overcurrent_duration(const struct device *dev,
 					   uint16_t threshold)
 {
 	int rc;
+	uint32_t bin_threshold;
 
 	rc = cs5490_select_page(dev, CS5490_PAGE_17);
 	if (rc < 0) {
 		return rc;
 	}
 
+	bin_threshold = cs5490_convert_to_binary(0, CS5490_MSBNULL, threshold);
 	return cs5490_write(dev, REG_IOVR_DUR, threshold);
 }
 
@@ -294,8 +251,7 @@ static inline int cs5490_param_fetch(const struct device *dev, uint8_t addr,
 {
 	int rc;
 	uint32_t val = 0;
-//	struct cs5490_rx_frame buf = {0};
-	uint8_t buf[3] = {0};
+	struct cs5490_rx_frame buf = {0};
 
 	rc = cs5490_read(dev, addr, (uint8_t *)&buf,
 			 sizeof(struct cs5490_rx_frame));
@@ -303,10 +259,7 @@ static inline int cs5490_param_fetch(const struct device *dev, uint8_t addr,
 		return rc;
 	}
 
-//	printk("le val %d\n", sys_get_le24((uint8_t *)&buf));
-	val = val + buf[2] << 8; 
-	val = val + buf[1] << 8; 
-	val = val + buf[0]; 
+	val = sys_get_le24((uint8_t *)&buf);
 	*result = cs5490_convert_to_value(lsb, msb, val);
 
 	return 0;
@@ -327,22 +280,14 @@ static int cs5490_fetch(const struct device *dev, struct cs5490 *out)
 		return rc;
 	}
 
-	printk("rms volatge %f\n", out->rms_voltage);
-
-	out->inst_voltage = 0;
 	rc = cs5490_param_fetch(dev, REG_INST_VOLTAGE, 23, CS5490_MSBSIGNED,
 				&out->inst_voltage);
 	if (rc < 0) {
 		return rc;
 	}
 
-	printk("volatge %f\n", out->inst_voltage);
-
-	out->frequency = 0;
 	rc = cs5490_param_fetch(dev, REG_FREQUENCY, 23, CS5490_MSBSIGNED,
 				&out->frequency);
-
-	printk("system freq %f\n", out->frequency);
 
 	float system_time = 0;
 	rc = cs5490_param_fetch(dev, 61, 0, CS5490_MSBUNSIGNED,
@@ -358,73 +303,41 @@ static int cs5490_fetch(const struct device *dev, struct cs5490 *out)
 		return rc;
 	}
 
-	return 0;
-
-	struct cs5490_rx_frame buf = {0};
-
-	rc = cs5490_read(dev, 23, (uint8_t *)&buf,
-			 sizeof(struct cs5490_rx_frame));
-	if (rc < 0) {
-		return rc;
-	}
-
-	printk("status 0x%x\n", sys_get_le24((uint8_t *)&buf));
-
-	rc = cs5490_write(dev, 23, 0xFFFFFF);
-	if (rc < 0) {
-		return rc;
-	}
-
-	rc = cs5490_read(dev, 23, (uint8_t *)&buf,
-			 sizeof(struct cs5490_rx_frame));
-	if (rc < 0) {
-		return rc;
-	}
-
-	printk("status 0x%x\n", sys_get_le24((uint8_t *)&buf));
-	return 0;
-
 	rc = cs5490_param_fetch(dev, REG_INST_POWER, 23, CS5490_MSBSIGNED,
 				&out->inst_active_power);
 	if (rc < 0) {
 		return rc;
 	}
 
-	printk("power %f\n", out->inst_active_power);
 	rc = cs5490_param_fetch(dev, REG_ACTIVE_POWER, 23, CS5490_MSBSIGNED,
 				&out->active_power);
 	if (rc < 0) {
 		return rc;
 	}
 
-	printk("active power %f\n", out->active_power);
 	rc = cs5490_param_fetch(dev, REG_RMS_CURRENT, 24, CS5490_MSBUNSIGNED,
 				&out->rms_current);
 	if (rc < 0) {
 		return rc;
 	}
 
-	printk("rms current %f\n", out->rms_voltage);
 	rc = cs5490_param_fetch(dev, REG_RMS_VOLTAGE, 24, CS5490_MSBUNSIGNED,
 				&out->rms_voltage);
 	if (rc < 0) {
 		return rc;
 	}
 
-	printk("rms volatge %f\n", out->rms_voltage);
 	rc = cs5490_param_fetch(dev, REG_REACT_POWER, 23, CS5490_MSBSIGNED,
 				&out->reactive_power);
 	if (rc < 0) {
 		return rc;
 	}
-	printk("reactive power %f\n", out->reactive_power);
 
 	rc = cs5490_param_fetch(dev, REG_APPARENT_POWER, 23, CS5490_MSBSIGNED,
 				&out->apparent_power);
 	if (rc < 0) {
 		return rc;
 	}
-	printk("apprent power %f\n", out->apparent_power);
 
 	rc = cs5490_param_fetch(dev, REG_POWER_FACTOR, 23, CS5490_MSBSIGNED,
 				&out->power_factor);
@@ -432,7 +345,6 @@ static int cs5490_fetch(const struct device *dev, struct cs5490 *out)
 		return rc;
 	}
 
-	printk("power factor %f\n", out->power_factor);
 	rc = cs5490_select_page(dev, CS5490_PAGE_0);
 	if (rc < 0) {
 		return rc;
@@ -443,13 +355,12 @@ static int cs5490_fetch(const struct device *dev, struct cs5490 *out)
 	if (rc < 0) {
 		return rc;
 	}
-	printk("peak current %f\n", out->peak_current);
+
 	rc = cs5490_param_fetch(dev, REG_PEAK_VOLTAGE, 23, CS5490_MSBSIGNED,
 				&out->peak_voltage);
 	if (rc < 0) {
 		return rc;
 	}
-	printk("peak voltage %f\n", out->peak_voltage);
 
 	return 0;
 }
@@ -457,9 +368,14 @@ static int cs5490_fetch(const struct device *dev, struct cs5490 *out)
 static int cs5490_sample_fetch(const struct device *dev,
 			       enum sensor_channel chan)
 {
+	int rc;
 	struct cs5490_data *data = dev->data;
 
-	return cs5490_fetch(dev, &data->sensor_data);
+	k_sem_take(&data->lock, K_FOREVER);
+	rc = cs5490_fetch(dev, &data->sensor_data);
+	k_sem_give(&data->lock);
+
+	return rc;
 }
 
 static int cs5490_channel_get(const struct device *dev,
@@ -470,6 +386,7 @@ static int cs5490_channel_get(const struct device *dev,
 	struct cs5490_data *data = dev->data;
 	struct cs5490 *rdata = &data->sensor_data;
 
+	k_sem_take(&data->lock, K_FOREVER);
 	switch ((enum sensor_channel_cs5490)chan) {
 	case SENSOR_CHAN_FREQUENCY:
 		rc = sensor_value_from_double(val, rdata->frequency);
@@ -512,6 +429,8 @@ static int cs5490_channel_get(const struct device *dev,
 		break;
 	}
 
+	k_sem_give(&data->lock);
+
 	return rc;
 }
 
@@ -531,6 +450,41 @@ static inline int cs5490_trigger_set(const struct device *dev,
 }
 #endif
 
+static inline int cs5490_configure_reset_gpio(const struct device *dev)
+{
+	const struct cs5490_config *cfg = dev->config;
+
+	if (cfg->reset_gpio.port != NULL) {
+		if (!gpio_is_ready_dt(&cfg->reset_gpio)) {
+			return -ENODEV;
+		}
+
+		return gpio_pin_configure_dt(&cfg->reset_gpio, GPIO_OUTPUT);
+	} else {
+		LOG_ERR("Reset GPIO is not configured");
+		return -EINVAL;
+	}
+}
+
+static inline int cs5490_reset(const struct device *dev)
+{
+	int rc;
+	const struct cs5490_config *cfg = dev->config;
+
+	rc = gpio_pin_set_dt(&cfg->reset_gpio, 1);
+	if (rc < 0) {
+		return rc;
+	}
+
+	k_msleep(CS5490_RESET_PERIOD);
+	rc = gpio_pin_set_dt(&cfg->reset_gpio, 0);
+	if (rc < 0) {
+		return rc;
+	}
+
+	return 0;
+}
+
 static int cs5490_init(const struct device *dev)
 {
 	int rc;
@@ -547,6 +501,18 @@ static int cs5490_init(const struct device *dev)
 	if (!device_is_ready(cfg->dev)) {
 		LOG_ERR("Error: CS5490 is not ready");
 		return -ENODEV;
+	}
+
+	rc = cs5490_configure_reset_gpio(dev);
+	if (rc < 0) {
+		LOG_ERR("Failed to configure gpio %d", rc);
+		return rc;
+	}
+
+	rc = cs5490_reset(dev);
+	if (rc < 0) {
+		LOG_ERR("Failed to reset device %d", rc);
+		return rc;
 	}
 
 	rc = cs5490_configure_uart(cfg->dev, &uart_cfg);
@@ -566,52 +532,25 @@ static int cs5490_init(const struct device *dev)
 	k_sem_init(&data->uart_tx_sem, 0, 1);
 	k_sem_init(&data->uart_rx_sem, 0, 1);
 
-	uint8_t write_cmd = 193; 
-#if 0
-	rc = cs5490_send(dev, &write_cmd, sizeof(write_cmd));
-	if (rc < 0) {
-		LOG_ERR("Failed to set cont conv %d\n", rc);
-		return rc;
-	}
-
-	
-	k_msleep(100);
-#endif
-
-#if 1
 	rc = cs5490_set_baudrate(dev, 115200);
 	if (rc < 0) {
-		LOG_ERR("Failed to set baudrate %d\n", rc);
+		LOG_ERR("Failed to set baudrate %d", rc);
 		return rc;
 	}
-#endif
-#if 0
-	rc = cs5490_enable_lf(dev);
-	if (rc < 0) {
-		LOG_ERR("Enable high pass filter failed (%d)", rc);
-		return rc;
-	}
-#endif
-#if 1
-	write_cmd = 213; 
-	rc = cs5490_send(dev, &write_cmd, sizeof(write_cmd));
-	if (rc < 0) {
-		LOG_ERR("Failed to set cont conv %d\n", rc);
-		return rc;
-	}
-
-	LOG_INF("Continoue mode set\n");
-	k_msleep(2000);
-#endif
 
 #if defined(CONFIG_CS5490_TRIGGER)
 	rc = cs5490_trigger_init(dev);
 	if (rc < 0) {
-		LOG_ERR("Failed to initialize interrupts");
+		LOG_ERR("Failed to initialize interrupts %d", rc);
 		return rc;
 	}
-#endif /* CONFIG_CS5490_TRIGGER */
-
+#else
+	rc = cs5490_enable_conversion(dev);
+	if (rc < 0) {
+		LOG_ERR("Failed to set cont conv %d", rc);
+		return rc;
+	}
+#endif
 	LOG_INF("CS5490 Initialized");
 
 	return 0;
@@ -630,6 +569,7 @@ static const struct sensor_driver_api cs5490_api = {
                                                                                      \
 	static const struct cs5490_config cs5490_config_##idx = {                    \
 		.dev = DEVICE_DT_GET(DT_INST_BUS(idx)),                              \
+		.reset_gpio = GPIO_DT_SPEC_INST_GET_OR(idx, reset_gpios, {}),        \
 		IF_ENABLED(CONFIG_CS5490_TRIGGER,				     \
 		(.int_gpio = GPIO_DT_SPEC_INST_GET_OR(idx, int_gpios, {}),)) };	     \
 	static struct cs5490_data cs5490_data_##idx;                                 \

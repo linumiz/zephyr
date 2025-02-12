@@ -88,18 +88,33 @@
 	apb3-prescaler = <1>;
 };
 
+&gpdma1 {
+	status = "okay";
+};
+
 &lpuart1 {
 	pinctrl-0 = <&lpuart1_tx_pg7 &lpuart1_rx_pg8>;
 	pinctrl-names = "default";
-	current-speed = <115200>;
-	status = "okay";
 };
 
 &usart2 {
 	pinctrl-0 = <&usart2_tx_pd5 &usart2_rx_pd6>;
 	pinctrl-names = "default";
-	current-speed = <115200>;
+	current-speed = <600>;
 	status = "okay";
+
+	dmas = <&gpdma1 0 27 STM32_DMA_PERIPH_TX
+		&gpdma1 1 26 STM32_DMA_PERIPH_RX>;
+	dma-names = "tx", "rx";
+
+	#address-cells=<1>;
+	#size-cells=<0>;
+	cs5490: cs5490@0 {
+		compatible = "cirrus,cs5490";
+		reg = <0x0>;
+		int-gpios = <&gpioa 3 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+		reset-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+	};
 };
 
 &i2c1 {
