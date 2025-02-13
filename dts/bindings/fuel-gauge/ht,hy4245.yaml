@@ -1,0 +1,10 @@
+# Copyright (c) 2025, Linumiz
+#
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Hycon Technology HY4245 fuel gauge.
+
+compatible: "ht,hy4245"
+
+include: [i2c-device.yaml, fuel-gauge.yaml]
