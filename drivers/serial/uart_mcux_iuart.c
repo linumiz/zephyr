@@ -22,6 +22,7 @@ struct mcux_iuart_config {
 	/* initial parity, 0 for none, 1 for odd, 2 for even */
 	uint8_t parity;
 	const struct pinctrl_dev_config *pincfg;
+    bool dte_mode;
 #ifdef CONFIG_UART_INTERRUPT_DRIVEN
 	void (*irq_config_func)(const struct device *dev);
 #endif
@@ -242,6 +243,7 @@ static int mcux_iuart_init(const struct device *dev)
 	uart_config.enableTx = true;
 	uart_config.enableRx = true;
 	uart_config.baudRate_Bps = config->baud_rate;
+    uart_config.dcedte = config->dte_mode;
 
 	clock_control_on(config->clock_dev, config->clock_subsys);
 	switch (config->parity) {
@@ -331,6 +333,7 @@ static const struct mcux_iuart_config mcux_iuart_##n##_config = {	\
 	.baud_rate = DT_INST_PROP(n, current_speed),			\
 	.parity = DT_INST_ENUM_IDX(n, parity),				\
 	.pincfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),			\
+    .dte_mode = DT_INST_PROP(n, dte_mode),				\
 	IRQ_FUNC_INIT							\
 }
 

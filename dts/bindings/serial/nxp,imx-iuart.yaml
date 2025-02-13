@@ -17,3 +17,8 @@ properties:
 
   pinctrl-names:
     required: true
+
+  dte-mode:
+    type: boolean
+    description: |
+      Set to enable DTE mode at boot time.
