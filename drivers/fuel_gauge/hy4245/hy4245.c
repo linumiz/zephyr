@@ -103,6 +103,10 @@ static int hy4245_get_prop(const struct device *dev, fuel_gauge_prop_t prop,
 		ret = hy4245_read16(dev, HY4245_CMD_CAPACITY_FULL_AVAIL, &raw);
 		val->design_cap = raw;
 		break;
+	case FUEL_GAUGE_RELATIVE_STATE_OF_CHARGE:
+		ret = hy4245_read16(dev, HY4245_CMD_RELATIVE_STATE_OF_CHRG, &raw);
+		val->relative_state_of_charge = raw;
+		break;
 	default:
 		ret = -ENOTSUP;
 	}
