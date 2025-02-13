@@ -1,0 +1,76 @@
+# Copyright 2025 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  BQ25620/BQ25622 is a highly integrated switch-mode buck-boost charger for 1-4 cell
+  Li-ion batteries and Li-polymer batteries. The device charges a battery from a
+  wide range of input sources including legacy USB adapters to high voltage USB
+  PD adapters and traditional barrel adapters.
+
+  The device has a single child node for the charger. For example:
+
+  bq25620@6b {
+    compatible = "ti,bq2562x";
+    reg = <0x6b>;
+
+    ce-gpios = <&gpioa 3 GPIO_ACTIVE_LOW>;
+    watchdog-timeout-ms = <50000>;
+    constant-charge-current-max-microamp = <1040000>;
+    constant-charge-voltage-max-microvolt = <4200000>;
+    precharge-current-microamp = <100000>;
+    charge-term-current-microamp = <60000>;
+    input-current-limit-microamp = <1000000>;
+    input-voltage-limit-microvolt = <4600000>;
+  };
+
+compatible: "ti,bq2562x"
+
+include: [battery.yaml, i2c-device.yaml]
+
+properties:
+  watchdog-timeout-ms:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+      - 2
+      - 3
+    description: |
+      Watchdog timer setting. Defaults to 50 seconds.
+      0: Disable Watchdog timer
+      1: Watchdog timer is 50 seconds, which is default
+      2: Watchdog timer is 100 seconds
+      3: Watchdog timer is 200 seconds
+
+  constant-charge-current-max-microamp:
+    type: int
+    default: 1040000
+
+  constant-charge-voltage-max-microvolt:
+    type: int
+    default: 4200000
+
+  precharge-current-microamp:
+    type: int
+    default: 100000
+
+  charge-term-current-microamp:
+    type: int
+    default: 60000
+
+  input-voltage-limit-microvolt:
+    type: int
+    default: 4800000
+    description: |
+      Minimum input voltage limit in micro volts with a 100000 micro volt step.
+
+  input-current-limit-microamp:
+    type: int
+    default: 4000000
+    description: |
+      Maximum input current limit in micro amps with a 100000 micro amp step.
+
+  ce-gpios:
+    type: phandle-array
+    description: Active low, charge enable pin
