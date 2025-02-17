@@ -1,0 +1,14 @@
+&i2c0 {
+	charger: bq25620@6b {
+		compatible = "ti,bq2562x";
+		reg = <0x6b>;
+		ce-gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
+		watchdog-timeout-ms = <1>;
+		constant-charge-current-max-microamp = <1040000>;
+		constant-charge-voltage-max-microvolt = <4200000>;
+		precharge-current-microamp = <100000>;
+		charge-term-current-microamp = <60000>;
+		input-current-limit-microamp = <1000000>;
+		input-voltage-limit-microvolt = <4600000>;
+	};
+};
