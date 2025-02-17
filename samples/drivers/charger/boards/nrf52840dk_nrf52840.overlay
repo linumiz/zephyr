@@ -1,0 +1,18 @@
+&i2c0 {
+	charger: bq25620@6b {
+		compatible = "ti,bq2562x";
+		reg = <0x6b>;
+		ce-gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
+		int-gpios = <&gpio1 4 GPIO_ACTIVE_LOW>;
+		constant-charge-current-max-microamp = <1040000>;
+		constant-charge-voltage-max-microvolt = <4200000>;
+		precharge-current-microamp = <100000>;
+		charge-term-current-microamp = <60000>;
+		ti,min-sys-voltage-microvolt = <3600000>;
+		ti,input-current-limit-microamp = <1000000>;
+		ti,input-voltage-limit-microvolt = <4600000>;
+		ti,thermal-regulation-threshold = <0>;
+		ti,switching-converter-freq = <1>;
+		ti,switching-converter-strength = <3>;
+	};
+};
