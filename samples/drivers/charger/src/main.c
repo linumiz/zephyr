@@ -13,6 +13,89 @@
 
 static const struct device *chgdev = DEVICE_DT_GET(DT_NODELABEL(charger));
 
+static int print_all(void)
+{
+	int ret;
+	charger_prop_t props[] = {
+		CHARGER_PROP_ONLINE,
+		CHARGER_PROP_CHARGE_TYPE,
+		CHARGER_PROP_CHARGE_TYPE,
+		CHARGER_PROP_CHARGE_TYPE,
+		CHARGER_PROP_HEALTH,
+		CHARGER_PROP_STATUS,
+		CHARGER_PROP_STATUS,
+		//CHARGER_PROP_USB_TYPE,
+		CHARGER_PROP_CONSTANT_CHARGE_CURRENT_UA,
+		CHARGER_PROP_CONSTANT_CHARGE_VOLTAGE_UV,
+		CHARGER_PROP_PRECHARGE_CURRENT_UA,
+		CHARGER_PROP_CHARGE_TERM_CURRENT_UA,
+		CHARGER_PROP_BATTERY_VOLTAGE_NOW,
+		CHARGER_PROP_BATTERY_CURRENT_NOW,
+		CHARGER_PROP_INPUT_VOLTAGE_NOW,
+		CHARGER_PROP_INPUT_CURRENT_NOW,
+		CHARGER_PROP_INPUT_REGULATION_CURRENT_UA,
+		CHARGER_PROP_INPUT_REGULATION_VOLTAGE_UV
+	};
+	union charger_propval all[ARRAY_SIZE(props)] = {0};
+
+	ret = charger_get_props(chgdev, props, all, ARRAY_SIZE(props));
+	if (ret < 0)
+		return ret;
+
+	printk("CHARGER_PROP_ONLINE: %d\n", all[0].online);
+	printk("CHARGER_PROP_CHARGE_TYPE: %d\n", all[3].charge_type);
+	printk("CHARGER_PROP_HEALTH: %d\n", all[4].health);
+	printk("CHARGER_PROP_STATUS: %d\n", all[5].status);
+	//printk("CHARGER_PROP_USB_TYPE: %d\n", all[6].usb_type);
+	printk("CHARGER_PROP_CONSTANT_CHARGE_CURRENT_UA: %d\n", all[7].const_charge_current_ua);
+	printk("CHARGER_PROP_CONSTANT_CHARGE_VOLTAGE_UV: %d\n", all[8].const_charge_voltage_uv);
+	printk("CHARGER_PROP_PRECHARGE_CURRENT_UA: %d\n", all[9].precharge_current_ua);
+	printk("CHARGER_PROP_CHARGE_TERM_CURRENT_UA: %d\n", all[10].charge_term_current_ua);
+	printk("CHARGER_PROP_BATTERY_VOLTAGE_NOW: %d\n", all[11].battery_voltage_now_uv);
+	printk("CHARGER_PROP_BATTERY_CURRENT_NOW: %d\n", all[12].battery_current_now_ua);
+	printk("CHARGER_PROP_VOLTAGE_NOW: %d\n", all[13].input_voltage_now_uv);
+	printk("CHARGER_PROP_CURRENT_NOW: %d\n", all[14].input_current_now_ua);
+	printk("CHARGER_PROP_INPUT_REGULATION_CURRENT_UA: %d\n", all[15].input_current_regulation_current_ua);
+	printk("CHARGER_PROP_INPUT_REGULATION_VOLTAGE_UV: %d\n", all[16].input_voltage_regulation_voltage_uv);
+
+	return 0;
+}
+
+static void set_all(void)
+{
+	int ret;
+	charger_prop_t props[] = {
+		CHARGER_PROP_CONSTANT_CHARGE_CURRENT_UA,
+		CHARGER_PROP_CONSTANT_CHARGE_VOLTAGE_UV,
+		CHARGER_PROP_PRECHARGE_CURRENT_UA,
+		CHARGER_PROP_CHARGE_TERM_CURRENT_UA,
+		CHARGER_PROP_INPUT_REGULATION_CURRENT_UA,
+		CHARGER_PROP_INPUT_REGULATION_VOLTAGE_UV,
+	};
+	union charger_propval all[ARRAY_SIZE(props)] = {
+		{ 1040000 },
+		{ 4800000 },
+		{ 20000   },
+		{ 100000  },
+		{ 2000000 },
+		{ 16800000},
+	};
+
+	ret = charger_set_props(chgdev, props, all, ARRAY_SIZE(props));
+	if (ret < 0)
+		return;
+}
+
+static void status_cb(enum charger_status status)
+{
+	printk("%s status %d\n", __func__, status);
+}
+
+static void online_cb(enum charger_online online)
+{
+	printk("%s status %d\n", __func__, online);
+}
+
 int main(void)
 {
 	union charger_propval val;
@@ -55,8 +138,31 @@ int main(void)
 	}
 #endif
 
+	union charger_propval stat;
+	stat.status_notification = status_cb;
+
+	union charger_propval online;
+	online.online_notification = online_cb;
+
+	charger_set_prop(chgdev, CHARGER_PROP_STATUS_NOTIFICATION, &stat);
+	charger_set_prop(chgdev, CHARGER_PROP_ONLINE_NOTIFICATION, &online);
+
+		ret = charger_charge_enable(chgdev, true);
+		if (ret == -ENOTSUP) {
+			printk("Enabling charge not supported, assuming auto charge enable\n");
+		} else if (ret < 0) {
+			return ret;
+		}
+
+
 	while (1) {
+	//	k_sleep(K_FOREVER);
+		print_all();
+		//set_all();
+		//print_all();
+		//k_sleep(K_FOREVER);
 		/* Poll until external power is presented to the charger */
+/*
 		do {
 			ret = charger_get_prop(chgdev, CHARGER_PROP_ONLINE, &val);
 			if (ret < 0) {
@@ -65,18 +171,11 @@ int main(void)
 
 			k_msleep(100);
 		} while (val.online == CHARGER_ONLINE_OFFLINE);
+*/
 
 		val.status = CHARGER_STATUS_CHARGING;
 
-		ret = charger_charge_enable(chgdev, true);
-		if (ret == -ENOTSUP) {
-			printk("Enabling charge not supported, assuming auto charge enable\n");
-			continue;
-		} else if (ret < 0) {
-			return ret;
-		}
-
-		k_msleep(500);
+		k_msleep(5000);
 
 		ret = charger_get_prop(chgdev, CHARGER_PROP_STATUS, &val);
 		if (ret < 0) {
@@ -106,7 +205,7 @@ int main(void)
 			break;
 		case CHARGER_STATUS_FULL:
 			printk("Charging complete!");
-			return 0;
+			break;
 		case CHARGER_STATUS_DISCHARGING:
 			printk("External power removed, discharging\n");
 
