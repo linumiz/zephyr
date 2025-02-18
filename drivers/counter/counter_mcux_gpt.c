@@ -205,8 +205,7 @@ static int mcux_gpt_init(const struct device *dev)
 	}
 
 	GPT_GetDefaultConfig(&gptConfig);
-	//gptConfig.enableFreeRun = true; /* Do not reset on compare */
-	gptConfig.enableFreeRun = false; /* Do reset on compare */
+	gptConfig.enableFreeRun = !DT_NODE_HAS_PROP(DT_DRV_INST(0), disable_free_run); /* true if disable_free_run not set in DT */
 	gptConfig.clockSource = kGPT_ClockSource_Periph;
 	gptConfig.divider = clock_freq / config->info.freq;
 	base = get_base(dev);

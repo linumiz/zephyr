@@ -18,3 +18,7 @@ properties:
     type: int
     required: true
     description: gpt frequencies
+
+  disable-free-run:
+    type: boolean
+    description: Disable free-running mode (default: enabled). If set, GPT resets on compare.
