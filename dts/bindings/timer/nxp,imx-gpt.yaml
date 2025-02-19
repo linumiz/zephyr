@@ -21,4 +21,4 @@ properties:
 
   disable-free-run:
     type: boolean
-    description: Disable free-running mode (default: enabled). If set, GPT resets on compare.
+    description: Disable free-running mode (default enabled). If set, GPT resets on compare.
