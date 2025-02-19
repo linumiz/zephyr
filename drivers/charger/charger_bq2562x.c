@@ -73,14 +73,13 @@ static bool bq2562x_get_charge_enable(const struct device *dev)
 
 static int bq2562x_set_charge_enable(const struct device *dev, const bool enable)
 {
+	int ret;
 	const struct bq2562x_config *const config = dev->config;
 
 	if (config->ce_gpio.port != NULL) {
-		if (enable == true) {
-			return gpio_pin_set_dt(&config->ce_gpio, 1);
-		} else {
-			return gpio_pin_set_dt(&config->ce_gpio, 0);
-		}
+		ret = gpio_pin_set_dt(&config->ce_gpio, !enable);
+		if (ret < 0)
+			return ret;
 	}
 
 	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, BQ2562X_CHRG_EN, enable);

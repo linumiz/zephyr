@@ -78,6 +78,24 @@ int main(void)
 
 		k_msleep(500);
 
+		ret = charger_get_prop(chgdev, CHARGER_PROP_BATTERY_VOLTAGE_NOW, &val);
+		printk("CHARGER_PROP_BATTERY_VOLTAGE_NOW: %d\n", val.bat_voltage_now_uv);
+
+		ret = charger_get_prop(chgdev, CHARGER_PROP_BATTERY_CURRENT_NOW, &val);
+		printk("CHARGER_PROP_BATTERY_CURRENT_NOW: %d\n", val.bat_current_now_ua);
+
+		ret = charger_get_prop(chgdev, CHARGER_PROP_VOLTAGE_NOW, &val);
+		printk("CHARGER_PROP_VOLTAGE_NOW: %d\n", val.voltage_now_uv);
+
+		ret = charger_get_prop(chgdev, CHARGER_PROP_CURRENT_NOW, &val);
+		printk("CHARGER_PROP_CURRENT_NOW: %d\n", val.current_now_ua);
+
+		ret = charger_get_prop(chgdev, CHARGER_PROP_MODEL_NAME, &val);
+		printk("CHARGER_PROP_MODEL_NAME: %s\n", val.model);
+
+		ret = charger_get_prop(chgdev, CHARGER_PROP_MANUFACTURER, &val);
+		printk("CHARGER_PROP_MANUFACTURER: %s\n", val.manufacturer);
+
 		ret = charger_get_prop(chgdev, CHARGER_PROP_STATUS, &val);
 		if (ret < 0) {
 			return ret;

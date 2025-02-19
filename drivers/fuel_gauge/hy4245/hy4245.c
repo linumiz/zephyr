@@ -135,6 +135,7 @@ static int hy4245_init(const struct device *dev)
 		LOG_ERR("unknown chip id %x", chip_id);
 		return -ENODEV;
 	}
+	printk("unknown chip id %x\n", chip_id);
 	return 0;
 }
 
