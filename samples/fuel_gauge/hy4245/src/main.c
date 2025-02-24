@@ -33,6 +33,7 @@ int main(void)
 		return 0;
 	}
 
+	return 0;
 	while (1) {
 
 		fuel_gauge_prop_t props[] = {

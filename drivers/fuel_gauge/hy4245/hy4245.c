@@ -18,6 +18,7 @@ LOG_MODULE_REGISTER(HY4245);
 #define HY4245_CHIPID			0x4245
 
 #define HY4245_CMD_CTRL			0x00
+#define HY4245_CMD_FLASH		0x3e
 #define HY4245_CMD_TEMPERATURE		0x06	
 #define HY4245_CMD_VOLTAGE		0x08
 #define HY4245_CMD_CURRENT		0x0c	
@@ -30,7 +31,11 @@ LOG_MODULE_REGISTER(HY4245);
 #define HY4245_CMD_CHRG_CURRENT		0x32
 #define HY4245_CMD_CAPACITY_FULL_AVAIL	0x78
 
+#define HY4245_SUBCMD_CTRL_STATUS	0x0
 #define HY4245_SUBCMD_CTRL_CHIPID	0x55
+#define HY4245_SUBCMD_CTRL_FLAG		0x77
+#define HY4245_SUBCMD_CTRL_CFGA		0x98
+#define HY4245_SUBCMD_CTRL_FLASH	0x03
 
 struct hy4245_config {
 	struct i2c_dt_spec i2c;
@@ -114,7 +119,12 @@ static int hy4245_init(const struct device *dev)
 {
 	int ret;
 	const struct hy4245_config *cfg;
-	uint8_t cmd[3] = {HY4245_CMD_CTRL,  HY4245_SUBCMD_CTRL_CHIPID};
+	uint8_t cmd[4][3] = {{HY4245_CMD_CTRL,  HY4245_SUBCMD_CTRL_CHIPID},
+		{HY4245_CMD_CTRL,  HY4245_SUBCMD_CTRL_STATUS},
+		{HY4245_CMD_CTRL,  HY4245_SUBCMD_CTRL_FLAG},
+		{HY4245_CMD_CTRL,  HY4245_SUBCMD_CTRL_CFGA},
+	};
+	uint8_t db[2] = {HY4245_CMD_FLASH,  HY4245_SUBCMD_CTRL_FLASH};
 	uint16_t chip_id;
 
 	cfg = dev->config;
@@ -124,12 +134,70 @@ static int hy4245_init(const struct device *dev)
 		return -ENODEV;
 	}
 
-	ret = i2c_write_read_dt(&cfg->i2c, cmd, sizeof(cmd),
+#if 1
+	uint8_t hib[3] = {HY4245_CMD_CTRL, 0x12};
+	ret = i2c_write_dt(&cfg->i2c, hib, sizeof(hib));
+
+	k_msleep(100);
+#endif
+
+	for (int i = 0; i < 4; i++) {
+		ret = i2c_write_read_dt(&cfg->i2c, cmd[i], sizeof(cmd[i]),
 				&chip_id, sizeof(chip_id));
-	if (ret != 0) {
-		LOG_ERR("Unable to read register, error %d", ret);
-		return ret;
+		if (ret != 0) {
+			LOG_ERR("Unable to read register, error %d", ret);
+			return ret;
+		}
+
+		printk("id %x\n", chip_id);
 	}
+
+	uint8_t db_key[] = {0x0, 0x88, 0x42, 0x80, 0x28};
+	ret = i2c_write_dt(&cfg->i2c, db_key, sizeof(db_key));
+	if (ret < 0)
+		printk("FAIL %d\n", ret);
+
+	uint8_t db_ctrl[] = {0x61, 0x00};
+	ret = i2c_write_dt(&cfg->i2c, db_ctrl, sizeof(db_ctrl));
+	if (ret < 0)
+		printk("FAIL %d\n", ret);
+
+	uint8_t db_class[] = {0x3e, 0x03};
+	ret = i2c_write_dt(&cfg->i2c, db_class, sizeof(db_class));
+	if (ret < 0)
+		printk("FAIL %d\n", ret);
+
+	uint8_t db_blk[] = {0x3f, 0x0};
+	ret = i2c_write_dt(&cfg->i2c, db_blk, sizeof(db_blk));
+	if (ret < 0)
+		printk("FAIL %d\n", ret);
+
+	uint8_t db_stat[] = {0x0, 0x0, 0x0};
+	
+	for (int i = 0; i < 3; i++) {
+		ret = i2c_write_read_dt(&cfg->i2c, db_stat, sizeof(db_stat),
+				&chip_id, sizeof(chip_id));
+		if (ret < 0)
+			printk("FAIL %d\n", ret);
+
+		printk("id: %x\n", chip_id);
+
+		if(!(chip_id & BIT(12)))
+			break;
+
+		k_msleep(1000);
+	}
+
+	/* sleep 10ms */
+	k_msleep(20);
+	uint8_t db_rd[] = {0x40};
+	uint8_t db_out[3] = {0};
+	ret = i2c_write_read_dt(&cfg->i2c, db_rd, sizeof(db_rd),
+			&db_out, sizeof(db_out));
+	if (ret < 0)
+		printk("FAIL %d\n", ret);
+
+	printk("%x %x %x\n", db_out[0], db_out[1], db_out[2]);
 
 	if (chip_id != HY4245_CHIPID) {
 		LOG_ERR("unknown chip id %x", chip_id);
@@ -150,6 +218,6 @@ static DEVICE_API(fuel_gauge, hy4245_driver_api) = {
 	};										\
 											\
 	DEVICE_DT_INST_DEFINE(index, &hy4245_init, NULL, NULL, &hy4245_config_##index,	\
-			      POST_KERNEL, CONFIG_FUEL_GAUGE_INIT_PRIORITY, &hy4245_driver_api);
+			      POST_KERNEL, 99, &hy4245_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(HY4245_INIT)
