@@ -11,6 +11,7 @@ menuconfig ETH_XLNX_GEM
 	default y
 	depends on DT_HAS_XLNX_GEM_ENABLED
 	depends on !QEMU_TARGET || (QEMU_TARGET && NET_QEMU_ETHERNET)
+	select MDIO if DT_HAS_XLNX_GEM_MDIO_ENABLED
 	help
 	  Enable Xilinx GEM Ethernet driver.
 
