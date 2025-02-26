@@ -152,33 +152,59 @@ static int hy4245_init(const struct device *dev)
 		printk("id %x\n", chip_id);
 	}
 
+	/* unseal */
 	uint8_t db_key[] = {0x0, 0x88, 0x42, 0x80, 0x28};
 	ret = i2c_write_dt(&cfg->i2c, db_key, sizeof(db_key));
 	if (ret < 0)
 		printk("FAIL %d\n", ret);
 
-	uint8_t db_ctrl[] = {0x61, 0x00};
-	ret = i2c_write_dt(&cfg->i2c, db_ctrl, sizeof(db_ctrl));
+	uint8_t db_act[] = {0x0, 0xff, 0xff, 0xff, 0xff};
+	ret = i2c_write_dt(&cfg->i2c, db_act, sizeof(db_act));
 	if (ret < 0)
 		printk("FAIL %d\n", ret);
 
-	uint8_t db_class[] = {0x3e, 0x03};
-	ret = i2c_write_dt(&cfg->i2c, db_class, sizeof(db_class));
-	if (ret < 0)
-		printk("FAIL %d\n", ret);
-
-	uint8_t db_blk[] = {0x3f, 0x0};
-	ret = i2c_write_dt(&cfg->i2c, db_blk, sizeof(db_blk));
+	/* BCA */
+	uint8_t db_bca[] = {0x0, 0x40, 0x0};
+	ret = i2c_write_dt(&cfg->i2c, db_bca, sizeof(db_bca));
 	if (ret < 0)
 		printk("FAIL %d\n", ret);
 
 	uint8_t db_stat[] = {0x0, 0x0, 0x0};
 	
+	ret = i2c_write_read_dt(&cfg->i2c, db_stat, sizeof(db_stat),
+			&chip_id, sizeof(chip_id));
+	if (ret < 0)
+		printk("FAIL %d\n", ret);
+
+	printk("BCA: %x\n", chip_id);
+
+	/* block data control */
+	uint8_t db_ctrl[] = {0x61, 0x00};
+	ret = i2c_write_dt(&cfg->i2c, db_ctrl, sizeof(db_ctrl));
+	if (ret < 0)
+		printk("FAIL %d\n", ret);
+
+	uint8_t db_ctrl_rd;
+	ret = i2c_write_read_dt(&cfg->i2c, &db_ctrl, 1,
+			&db_ctrl_rd, sizeof(db_ctrl_rd));
+	printk("DB_CTRL_RD: %x\n", db_ctrl_rd);
+
+	/* HY4245_SetDataFlashClassID */
+	uint8_t db_class[] = {0x3e, 0x20};
+	ret = i2c_write_dt(&cfg->i2c, db_class, sizeof(db_class));
+	if (ret < 0)
+		printk("FAIL %d %d\n", ret, __LINE__);
+
+	uint8_t db_blk[] = {0x3f, 0x0};
+	ret = i2c_write_dt(&cfg->i2c, db_blk, sizeof(db_blk));
+	if (ret < 0)
+		printk("FAIL %d %d\n", ret, __LINE__);
+
 	for (int i = 0; i < 3; i++) {
 		ret = i2c_write_read_dt(&cfg->i2c, db_stat, sizeof(db_stat),
 				&chip_id, sizeof(chip_id));
 		if (ret < 0)
-			printk("FAIL %d\n", ret);
+			printk("FAIL %d %d\n", ret, __LINE__);
 
 		printk("id: %x\n", chip_id);
 
