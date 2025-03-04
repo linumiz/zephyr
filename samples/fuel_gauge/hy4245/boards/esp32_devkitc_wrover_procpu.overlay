@@ -1,0 +1,18 @@
+/*
+ * Copyright (c) 2025 Linumiz
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
+&i2c0 {
+	status = "okay";
+	pinctrl-0 = <&i2c0_default>;
+	pinctrl-names = "default";
+	hy4245:hy4245@55 {
+		compatible = "ht,hy4245";
+		status = "ok";
+		reg = <0x55>;
+	};
+};
+
