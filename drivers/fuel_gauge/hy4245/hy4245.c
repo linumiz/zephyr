@@ -262,7 +262,7 @@ int hy4245_access_flash_data(const struct device *dev,
 			     bool is_read)
 {
 	int ret;
-	uint8_t cmd[] = { HY4245_EXTCMD_BLKDATA_CHECKSUM };
+	uint8_t cmd[2] = { HY4245_EXTCMD_BLKDATA_CHECKSUM };
 	const struct hy4245_config *cfg = dev->config;
 	struct hy4245_data *drvdata = dev->data;
 	uint8_t checksum = 0;
@@ -303,20 +303,16 @@ int hy4245_access_flash_data(const struct device *dev,
 	/* as per data sheet 10msec delay */
 	k_sleep(K_MSEC(10));
 
-	ret = i2c_write_read_dt(&cfg->i2c, cmd, 1, &resp, sizeof(resp));
-	if (ret < 0) {
-		LOG_ERR("checksum read error %d", ret);
-		goto err;
-	}
-
 	for (int i = 0; i < count; i++) {
 		checksum += data[i];
 	}
 	checksum = 0xFF - checksum;
 
-	if (checksum != resp) {
-		LOG_ERR("checksum not matched error %x-%x", checksum, resp);
-		ret = -EILSEQ;
+	cmd[1] = checksum
+	ret = i2c_write_dt(&cfg->i2c, cmd, sizeof(cmd));
+	if (ret < 0) {
+		LOG_ERR("checksum read error %d", ret);
+		goto err;
 	}
 
 err:
