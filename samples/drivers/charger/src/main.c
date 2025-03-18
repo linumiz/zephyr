@@ -55,6 +55,53 @@ int main(void)
 	}
 #endif
 
+	ret = charger_charge_enable(chgdev, true);
+	if (ret < 0) {
+		return ret;
+	}
+
+	union charger_propval prop;
+	ret = charger_get_prop(chgdev, CHARGER_PROP_MANUFACTURER, &prop);
+	if (ret < 0) {
+		return ret;
+	}
+	printk("manufacturer %s\n", prop.manufacturer);
+
+	ret = charger_get_prop(chgdev, CHARGER_PROP_MODEL_NAME, &prop);
+	if (ret < 0) {
+		return ret;
+	}
+	printk("model %s\n", prop.model);
+
+	ret = charger_get_prop(chgdev, CHARGER_PROP_ONLINE, &prop);
+	if (ret < 0) {
+		return ret;
+	}
+	printk("online %d\n", prop.online);
+
+	ret = charger_get_prop(chgdev, CHARGER_PROP_USB_TYPE, &prop);
+	if (ret < 0) {
+		return ret;
+	}
+	printk("usb %d\n", prop.usb_type);
+
+	/*
+	FIXME: discharge the battery and try get other values
+	*/
+	ret = charger_get_prop(chgdev, CHARGER_PROP_CHARGE_TYPE, &prop);
+	if (ret < 0) {
+		return ret;
+	}
+	printk("charge_type %d\n", prop.charge_type);
+
+	ret = charger_get_prop(chgdev, CHARGER_PROP_HEALTH, &prop);
+	if (ret < 0) {
+		return ret;
+	}
+	printk("health %d\n", prop.health);
+
+	return 0;
+
 	while (1) {
 		/* Poll until external power is presented to the charger */
 		do {

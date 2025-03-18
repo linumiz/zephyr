@@ -118,7 +118,7 @@
 
 /* REG0x16_Charger_Control_1 */
 #define BQ2562X_CHRG_EN			BIT(5)
-#define BQ2562X_WATCHDOG_MASK		BIT(1)
+#define BQ2562X_WATCHDOG_MASK		GENMASK(1, 0)
 #define BQ2562X_WATCHDOG_DIS		0
 
 /* REG0x17_Charger_Control_2 */

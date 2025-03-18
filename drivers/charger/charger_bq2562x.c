@@ -63,7 +63,7 @@ static bool bq2562x_get_charge_enable(const struct device *dev)
 	const struct bq2562x_config *const config = dev->config;
 
 	if (config->ce_gpio.port != NULL) {
-		ce_pin = gpio_pin_get_dt(&config->ce_gpio);
+		ce_pin = !gpio_pin_get_dt(&config->ce_gpio);
 	}
 
 	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, &chrg_ctrl_0);
@@ -93,7 +93,8 @@ static int bq2562x_set_charge_enable(const struct device *dev, const bool enable
 		}
 	}
 
-	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, BQ2562X_CHRG_EN, enable);
+	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, BQ2562X_CHRG_EN,
+					enable ? BQ2562X_CHRG_EN : 0);
 }
 
 /* Charge Current Limit */
@@ -495,18 +496,12 @@ static int bq2562x_get_online_status(const struct device *dev, enum charger_onli
 	uint8_t chrg_stat_1;
 	int online_status;
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_STAT_1,
-				BQ2562X_VBUS_STAT_MSK, BQ2562X_UNKNOWN_500MA);
-	if (ret)
-		return ret;
-
 	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_CHRG_STAT_1, &chrg_stat_1);
 	if (ret)
 		return ret;
 
 	online_status = chrg_stat_1 & BQ2562X_VBUS_STAT_MSK;
-
-	if ((online_status == BQ2562X_USB_SDP) || (online_status == BQ2562X_OTG_MODE))
+	if (!online_status || (online_status == BQ2562X_OTG_MODE))
 		*online = CHARGER_ONLINE_OFFLINE;
 	else
 		*online = CHARGER_ONLINE_FIXED;
@@ -641,8 +636,9 @@ static int bq2562x_get_usb_type(const struct device *dev, enum charger_usb_type 
 	const struct bq2562x_config *const config = dev->config;
 
 	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_CHRG_STAT_1, &chrg_stat_1);
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	chrg_stat_1 = FIELD_GET(BQ2562X_VBUS_STAT_MSK, chrg_stat_1);
 	switch (chrg_stat_1) {
@@ -723,7 +719,6 @@ static int bq2562x_get_prop(const struct device *dev, charger_prop_t prop,
 static int bq2562x_set_prop(const struct device *dev, charger_prop_t prop,
 			    const union charger_propval *val)
 {
-	int ret;
 	struct bq2562x_data *data = dev->data;
 
 	switch (prop) {
@@ -783,21 +778,21 @@ static int bq2562x_set_heat_mgmt(const struct device *dev)
 
 	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2,
 					BQ2562X_CTRL2_SET_CONV_STRN,
-					data->switching_converter_strength);
+					data->switching_converter_strength << 2);
 	if (ret) {
 		return ret;
 	}
 
 	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2,
 					BQ2562X_CTRL2_SET_CONV_FREQ,
-					data->switching_converter_freq);
+					data->switching_converter_freq << 4);
 	if (ret) {
 		return ret;
 	}
 
 	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2,
 					BQ2562X_CTRL2_TREG,
-					data->thermal_regulation_threshold);
+					data->thermal_regulation_threshold << 6);
 	if (ret) {
 		return ret;
 	}
@@ -811,13 +806,14 @@ static int bq2562x_hw_init(const struct device *dev)
 	struct bq2562x_data *data = dev->data;
 	const struct bq2562x_config *const config = dev->config;
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_REG_RST, 1);
+	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_REG_RST,
+					BQ2562X_CTRL2_REG_RST);
 	if (ret) {
 		return ret;
 	}
 
 	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_NTC_CTRL_0, BQ2562X_NTC_MASK,
-					BQ2562X_NTC_DIS);
+					BQ2562X_NTC_MASK);
 	if (ret) {
 		return ret;
 	}
@@ -827,6 +823,14 @@ static int bq2562x_hw_init(const struct device *dev)
 	if (ret) {
 		return ret;
 	}
+
+	uint8_t tmp;
+	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, &tmp);
+	printk("ctrl 2: %x\n", tmp);
+	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_NTC_CTRL_0, &tmp);
+	printk("ntc 0: %x\n", tmp);
+	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, &tmp);
+	printk("ctrl 1: %x\n", tmp);
 
 	ret = bq2562x_set_ichrg_curr(dev, data->constant_charge_current_max_ua);
 	if (ret) {
@@ -925,10 +929,7 @@ static int bq2562x_configure_interrupt(const struct device *dev)
 	struct bq2562x_data *data = dev->data;
 	int ret;
 
-	if (!config->int_gpio.port) {
-		return 0;
-	}
-
+	k_work_init(&data->int_routine_work, bq2562x_int_routine_work_handler);
 	if (!gpio_is_ready_dt(&config->int_gpio)) {
 		LOG_ERR("Interrupt GPIO device not ready");
 		return -ENODEV;
@@ -989,10 +990,12 @@ static int bq2562x_init(const struct device *dev)
 		LOG_DBG("Assuming charge enable pin is pulled low");
 	}
 
-	k_work_init(&data->int_routine_work, bq2562x_int_routine_work_handler);
-	ret = bq2562x_configure_interrupt(dev);
-	if (ret) {
-		return ret;
+	if (config->int_gpio.port != NULL) {
+		ret = bq2562x_configure_interrupt(dev);
+		if (ret) {
+			return ret;
+		}
+		printk("INT configured\n");
 	}
 
 	/* DT sanity */

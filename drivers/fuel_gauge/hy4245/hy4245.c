@@ -118,6 +118,7 @@ static int hy4245_ctrl_status(const struct device *dev, uint16_t status)
 		ret = -EIO;
 		k_sleep(K_MSEC(1));
 	}
+	printk("ctl stat: %x\n", resp);
 
 	return ret;
 }
@@ -308,11 +309,25 @@ int hy4245_access_flash_data(const struct device *dev,
 	}
 	checksum = 0xFF - checksum;
 
-	cmd[1] = checksum
-	ret = i2c_write_dt(&cfg->i2c, cmd, sizeof(cmd));
-	if (ret < 0) {
-		LOG_ERR("checksum read error %d", ret);
-		goto err;
+	cmd[1] = checksum;
+	if (!is_read) {
+		ret = i2c_write_dt(&cfg->i2c, cmd, sizeof(cmd));
+		if (ret < 0) {
+			//LOG_ERR("checksum read error %d", ret);
+			ret = 0;
+			goto err;
+		}
+	} else {
+		ret = i2c_write_read_dt(&cfg->i2c, cmd, 1, &resp, sizeof(resp));
+		if (ret < 0) {
+			LOG_ERR("checksum read error %d", ret);
+			goto err;
+		}
+
+		if (checksum != resp) {
+			LOG_ERR("checksum not matched error %x-%x", checksum, resp);
+			ret = -EILSEQ;
+		}
 	}
 
 err:
@@ -343,6 +358,7 @@ static int hy4245_get_prop(const struct device *dev, fuel_gauge_prop_t prop,
 		val->current = (int16_t)raw * 1000;
 		break;
 	case FUEL_GAUGE_REMAINING_CAPACITY:
+		hy4245_ctrl_status(dev, 1); 
 		ret = hy4245_read16(dev, HY4245_CMD_CAPACITY_REM, &raw);
 		val->remaining_capacity = raw * 1000;
 		break;
