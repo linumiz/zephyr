@@ -322,6 +322,11 @@ int main(void)
 			FUEL_GAUGE_CHARGE_VOLTAGE,
 			FUEL_GAUGE_CHARGE_CURRENT,
 			FUEL_GAUGE_RELATIVE_STATE_OF_CHARGE,
+
+			FUEL_GAUGE_TEMPERATURE,
+			FUEL_GAUGE_CURRENT,
+			FUEL_GAUGE_AVG_CURRENT,
+			FUEL_GAUGE_DESIGN_CAPACITY,
 		};
 
 		union fuel_gauge_prop_val vals[ARRAY_SIZE(props)];
@@ -341,8 +346,12 @@ int main(void)
 			printk("full capacity %d uAh\n", vals[4].full_charge_capacity);
 
 			printk("Charge voltge %d uV\n", vals[5].chg_voltage);
-			printk("Charge voltge %d uA\n", vals[6].chg_current);
+			printk("Charge current %d uA\n", vals[6].chg_current);
 			printk("rt chrg %u\n", vals[7].relative_state_of_charge);
+			printk("temperature %u\n", vals[8].temperature);
+			printk("current %d\n", vals[9].current);
+			printk("avg curr %d\n", vals[10].avg_current);
+			printk("design cap %d\n", vals[11].design_cap);
 		}
 
 		k_sleep(K_MSEC(5000));
