@@ -1,0 +1,5 @@
+# Copyright (c) 2025 Linuiz
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_LP_MSPM0C1104
+	select SOC_MSPM0C1104

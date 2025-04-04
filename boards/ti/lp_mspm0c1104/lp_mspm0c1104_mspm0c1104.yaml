@@ -1,0 +1,15 @@
+identifier: lp_mspm0c1104/mspm0c1104
+name: LP_MSPM0C1104_MSPM0C1104
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+ram: 1
+flash: 16
+supported:
+  - gpio
+  - pinctrl
+  - uart
+vendor: ti
