@@ -19,8 +19,8 @@ static int set_date_time(const struct device *rtc)
 		.tm_mon = 11 - 1,
 		.tm_mday = 17,
 		.tm_hour = 11,
-		.tm_min = 59,
-		.tm_sec = 50,
+		.tm_min = 20,
+		.tm_sec = 0,
 	};
 
 	ret = rtc_set_time(rtc, &tm);
@@ -54,8 +54,14 @@ static int set_alarm(const struct device *rtc)
 	int ret = 0;
 	struct rtc_time tm = {0};
 
-	tm.tm_hour = 12;
-	ret = rtc_alarm_set_time(rtc, 1, RTC_ALARM_TIME_MASK_HOUR, &tm);
+	ret = rtc_get_time(rtc, &tm);
+	if (ret < 0) {
+		printk("Cannot read date time: %d\n", ret);
+		return ret;
+	}
+
+	tm.tm_min += 1;
+	ret = rtc_alarm_set_time(rtc, 1, RTC_ALARM_TIME_MASK_MINUTE, &tm);
 	if (ret < 0) {
 		printk("Failed to set alarm %d\n", ret);
 		return ret;
