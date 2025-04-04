@@ -1,0 +1,11 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <ti/mspm0c110x/mspm0c110x.dtsi>
+
+&nvm {
+	reg = <0x00000000 0x4000>;
+};
+
+&sram0 {
+	reg = <0x20000000 0x400>;
+};

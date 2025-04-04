@@ -1,0 +1,17 @@
+# TI MSPM0C110X
+
+# Copyright (c) 2025 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+
+DT_MSPM0_CLKMUX_PATH := $(dt_nodelabel_path,clkmux)
+DT_MSPM0_CLKMUX_CPU_FREQ := $(dt_node_int_prop_int,$(DT_MSPM0_CLKMUX_PATH),clock-frequency)
+
+if SOC_SERIES_MSPM0C110X
+
+config SYS_CLOCK_HW_CYCLES_PER_SEC
+	default "$(DT_MSPM0_CLKMUX_CPU_FREQ)" if "$(dt_nodelabel_enabled,clkmux)"
+
+rsource "Kconfig.defconfig.mspm0c1104"
+
+endif # SOC_SERIES_MSPM0C110X

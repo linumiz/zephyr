@@ -1,0 +1,14 @@
+# TI MSPM0C1104 SoC
+
+# Copyright (c) 2025 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_MSPM0C1104
+
+config SOC
+	default "mspm0c1104"
+
+config NUM_IRQS
+	default 32
+
+endif # SOC_MSPM0C1104

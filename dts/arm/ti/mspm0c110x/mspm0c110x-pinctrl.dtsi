@@ -1,0 +1,27 @@
+#include <dt-bindings/pinctrl/mspm0-pinctrl.h>
+
+&pinctrl {
+
+	/omit-if-no-ref/ i2c0_scl_pa1_pull_up: i2c0_scl_pa1_pull_up {
+		pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_2)>;
+		input-enable;
+		drive-open-drain;
+	};
+
+	/omit-if-no-ref/ i2c0_sda_pa0_pull_up: i2c0_sda_pa0_pull_up {
+		pinmux = <MSP_PINMUX(1, MSPM0_PIN_FUNCTION_3)>;
+		input-enable;
+		drive-open-drain;
+	};
+
+	/omit-if-no-ref/ uart0_tx_pa27: uart_tx_pa27 {
+		pinmux = <MSP_PINMUX(28, MSPM0_PIN_FUNCTION_5)>;
+		drive-strength = <20>;
+	};
+
+	/omit-if-no-ref/ uart0_rx_pa26: uart_rx_pa26 {
+		pinmux = <MSP_PINMUX(27, MSPM0_PIN_FUNCTION_3)>;
+		drive-strength = <20>;
+		input-enable;
+	};
+};

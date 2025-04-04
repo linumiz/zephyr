@@ -17,3 +17,6 @@ family:
     - name: mspm0l1228
     - name: mspm0l2227
     - name: mspm0l1227
+  - name: mspm0c110x
+    socs:
+    - name: mspm0c1104

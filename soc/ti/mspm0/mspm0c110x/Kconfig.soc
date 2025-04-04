@@ -1,0 +1,18 @@
+# Copyright (c) 2025 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_SERIES_MSPM0C110X
+	bool
+	select SOC_FAMILY_TI_MSPM0
+	help
+	 Enable support for TI MSPM0C110X SoC Series.
+
+config SOC_MSPM0C1104
+	bool
+	select SOC_SERIES_MSPM0C110X
+
+config SOC_SERIES
+	default "mspm0c110x" if SOC_SERIES_MSPM0C110X
+
+config SOC
+	default "mspm0c1104" if SOC_MSPM0C1104
