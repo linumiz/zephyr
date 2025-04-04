@@ -16,6 +16,7 @@
 #include <zephyr/sys/printk.h>
 #include <inttypes.h>
 
+#if 0
 #define SLEEP_TIME_MS	1
 
 /*
@@ -41,9 +42,11 @@ void button_pressed(const struct device *dev, struct gpio_callback *cb,
 {
 	printk("Button pressed at %" PRIu32 "\n", k_cycle_get_32());
 }
+#endif
 
 int main(void)
 {
+#if 0
 	int ret;
 
 	if (!gpio_is_ready_dt(&button)) {
@@ -99,5 +102,6 @@ int main(void)
 			k_msleep(SLEEP_TIME_MS);
 		}
 	}
+#endif
 	return 0;
 }
