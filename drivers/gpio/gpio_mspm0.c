@@ -41,6 +41,15 @@ static uint32_t gpioa_pincm_lut[NUM_GPIOA_PIN] = {
 	IOMUX_PINCM68, IOMUX_PINCM69, IOMUX_PINCM73, IOMUX_PINCM74, IOMUX_PINCM3,  IOMUX_PINCM4,
 	IOMUX_PINCM5
 };
+#elif CONFIG_SOC_SERIES_MSPM0C110X
+#define GPIOA_NODE DT_NODELABEL(gpioa)
+#define NUM_GPIOA_PIN 30
+#define gpioa_pins    NUM_GPIOA_PIN
+static uint32_t gpioa_pincm_lut[NUM_GPIOA_PIN] = {
+	IOMUX_PINCM1,  IOMUX_PINCM2,  IOMUX_PINCM3,  0, IOMUX_PINCM5, 0, IOMUX_PINCM7, 0, 0, 0, 0, IOMUX_PINCM12,
+	0, 0, 0, 0, IOMUX_PINCM17, IOMUX_PINCM18, IOMUX_PINCM19, IOMUX_PINCM20, IOMUX_PINCM21, 0, IOMUX_PINCM23,
+	IOMUX_PINCM24, IOMUX_PINCM25, IOMUX_PINCM26, IOMUX_PINCM27, IOMUX_PINCM28, IOMUX_PINCM29
+};
 #else
 #throw "series lookup table not supported"
 #endif /* if config SOC_SERIES_MSPM0G1X0X_G3X0X */
@@ -307,10 +316,10 @@ static int gpio_mspm0_init(const struct device *port)
 {
 	/* Reset and enable GPIO banks */
 	DL_GPIO_reset(GPIOA);
-	DL_GPIO_reset(GPIOB);
+//	DL_GPIO_reset(GPIOB);
 
 	DL_GPIO_enablePower(GPIOA);
-	DL_GPIO_enablePower(GPIOB);
+//	DL_GPIO_enablePower(GPIOB);
 
 	if (init_irq) {
 
