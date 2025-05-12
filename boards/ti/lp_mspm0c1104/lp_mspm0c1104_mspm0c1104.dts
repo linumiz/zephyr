@@ -62,3 +62,12 @@
 	pinctrl-0 = <&uart0_tx_pa27 &uart0_rx_pa26>;
 	pinctrl-names = "default";
 };
+
+&gpt0 {
+	status = "okay";
+
+};
+
+&sysclock {
+	status = "okay";
+};

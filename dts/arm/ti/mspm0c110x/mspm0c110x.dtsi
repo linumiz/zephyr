@@ -62,7 +62,16 @@
 		gpt0: timg@40084000 {
 			compatible = "ti,mspm0g1x0x_g3x0x-timer";
 			reg = <0x40084000 0x2000>;
+			interrupts = <16 0>;
+			clk-prescaler = <0>;
+			clk-div = <1>;
+			clocks = <&clkmux MSPM0_CLOCK_BUS_LFCLK>;
 			status = "disabled";
+
+			sysclock: sysclock {
+				compatible = "ti,mspm0-timer-sysclock";
+				status = "disabled";
+			};
 
 			pwm0: pwm {
 				compatible = "ti,mspm0g1x0x_g3x0x-timer-pwm";
