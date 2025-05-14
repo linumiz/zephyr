@@ -65,7 +65,7 @@
 			interrupts = <16 0>;
 			clk-prescaler = <0>;
 			clk-div = <1>;
-			clocks = <&clkmux MSPM0_CLOCK_BUS_LFCLK>;
+			clocks = <&clkmux MSPM0_CLOCK_BUS_ULPCLK>;
 			status = "disabled";
 
 			sysclock: sysclock {
