@@ -199,11 +199,11 @@
 };
 
 &gpt0 {
-	status = "okay";
+	status = "disabled";
 };
 
 &gpt12 {
-	status = "okay";
+	status = "disabled";
 };
 
 &pwm4 {

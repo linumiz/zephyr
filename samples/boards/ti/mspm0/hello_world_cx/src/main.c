@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 Wind River Systems, Inc.
+ * Copyright (c) 2025 Linumiz GmbH
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -9,10 +9,9 @@
 
 int main(void)
 {
-	while (true) {
-		printf("Hello World! %s %llu\n", CONFIG_BOARD_TARGET, k_uptime_get());
+	while (1) {
+		printk("Hello World! %s %" PRIu32 "\n", CONFIG_BOARD_TARGET, k_cycle_get_32());
 		k_msleep(1000);
 	}
-
 	return 0;
 }
