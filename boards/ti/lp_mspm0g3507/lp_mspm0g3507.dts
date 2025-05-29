@@ -18,6 +18,7 @@
 
 	aliases {
 		led0 = &led0;
+		watchdog0 = &wdt0;
 	};
 
 	chosen {
@@ -104,4 +105,8 @@
 	current-speed = <115200>;
 	pinctrl-0 = <&uart0_tx_pa10 &uart0_rx_pa11>;
 	pinctrl-names = "default";
+};
+
+&wdt0 {
+	status = "okay";
 };
