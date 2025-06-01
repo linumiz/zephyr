@@ -172,6 +172,7 @@ __attribute__((interrupt("IRQ"))) void sys_clock_isr(void)
 	uint32_t dcycles;
 	uint32_t dticks;
 
+	printk("%s %d cur val: %u\n", __func__, __LINE__, SysTick->VAL);
 	/* Update overflow_cyc and clear COUNTFLAG by invoking elapsed() */
 	elapsed();
 
@@ -232,6 +233,7 @@ void sys_clock_set_timeout(int32_t ticks, bool idle)
 	if (IS_ENABLED(CONFIG_TICKLESS_KERNEL) && idle && ticks == K_TICKS_FOREVER) {
 		SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
 		last_load = TIMER_STOPPED;
+		printk("stp\n");
 		return;
 	}
 

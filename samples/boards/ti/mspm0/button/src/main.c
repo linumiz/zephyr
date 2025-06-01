@@ -32,7 +32,7 @@ static struct gpio_callback button_cb_data;
 void button_pressed(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
 {
-	printk("Button pressed at %" PRIu32 "\n", k_cycle_get_32());
+	printk("Button pressed at val: %u load: %u uptime: %llu %" PRIu32 "\n", SysTick->VAL, SysTick->LOAD, k_uptime_get(), k_cycle_get_32());
 }
 
 static bool main_init = false;
@@ -89,6 +89,8 @@ static int ti_mspm0l2xxx_bor_init(void)
 
 SYS_INIT(ti_mspm0l2xxx_bor_init, APPLICATION, 0);
 
+#if 0
+
 #include <zephyr/pm/policy.h>
 #include <zephyr/sys_clock.h>
 #include <zephyr/pm/device.h>
@@ -142,3 +144,4 @@ const struct pm_state_info *pm_policy_next_state(uint8_t cpu, int32_t ticks)
 
 	return NULL;
 }
+#endif

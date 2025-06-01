@@ -9,7 +9,7 @@
 int main(void)
 {
 	uint8_t cnt = 0, first = 0x04, last = 0x77, attempt = 0;
-	char *name = "i2c@400f0000";
+	char *name = "i2c@3ff53000";
 	const struct device *dev = device_get_binding(name);
 	if (!dev) {
 		printk("I2C: Device driver %s not found.", name);
@@ -25,6 +25,11 @@ int main(void)
 					printk("   ");
 					continue;
 				}
+
+#if 1
+				if (i + j == 0x54)
+					continue;
+#endif
 
 				struct i2c_msg msgs[1];
 				uint8_t dst;
@@ -47,7 +52,7 @@ int main(void)
 		printk("%u devices found on %s during attempt %u\n\n\n", cnt, name, attempt);
 		cnt = 0;
 
-		k_msleep(1000);
+		k_msleep(100);
 	}
 
 	return 0;
