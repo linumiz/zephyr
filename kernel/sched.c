@@ -1087,7 +1087,7 @@ static int32_t z_tick_sleep(k_ticks_t ticks)
 
 	__ASSERT(!arch_is_in_isr(), "");
 
-	LOG_DBG("thread %p for %lu ticks", arch_current_thread(), (unsigned long)ticks);
+	printk("thread %p for %lu ticks\n", arch_current_thread(), (unsigned long)ticks);
 
 	/* wait of 0 ms is treated as a 'yield' */
 	if (ticks == 0) {

@@ -18,6 +18,11 @@
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
+#if 1
+#define MAX_CNT	16
+static uint32_t idle_cnt;
+static uint32_t is_idle[MAX_CNT];
+#endif
 void idle(void *unused1, void *unused2, void *unused3)
 {
 	ARG_UNUSED(unused1);
@@ -51,6 +56,15 @@ void idle(void *unused1, void *unused2, void *unused3)
 
 #ifdef CONFIG_PM
 		_kernel.idle = z_get_next_timeout_expiry();
+#if 1
+		is_idle[idle_cnt++] = _kernel.idle;
+
+		if (idle_cnt >= MAX_CNT) {
+			for (int i = 0; i < MAX_CNT; i++)
+				printk("%u\n", is_idle[i]);
+			idle_cnt = 0;
+		}
+#endif
 
 		/*
 		 * Call the suspend hook function of the soc interface

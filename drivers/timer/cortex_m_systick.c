@@ -3,6 +3,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#include <zephyr/kernel.h>
 #include <zephyr/init.h>
 #include <zephyr/drivers/timer/system_timer.h>
 #include <zephyr/sys_clock.h>
@@ -162,6 +163,10 @@ static uint32_t elapsed(void)
 	return (last_load - val2) + overflow_cyc;
 }
 
+#define MAX_LD_CNT	1024
+static uint32_t ld_cnt;
+static uint32_t ld_val[MAX_LD_CNT];
+static struct k_thread *ld_thread[MAX_LD_CNT];
 /* sys_clock_isr is calling directly from the platform's vectors table.
  * However using ISR_DIRECT_DECLARE() is not so suitable due to possible
  * tracing overflow, so here is a stripped down version of it.
@@ -172,7 +177,13 @@ __attribute__((interrupt("IRQ"))) void sys_clock_isr(void)
 	uint32_t dcycles;
 	uint32_t dticks;
 
-	printk("%s %d cur val: %u\n", __func__, __LINE__, SysTick->VAL);
+	for (int i = 0; i < ld_cnt; i++) {
+		printk("%s - %u\n", ld_thread[i]->name, ld_val[i]);
+	}
+	memset(ld_val, 0, MAX_LD_CNT);
+
+	printk("cur val: %u cnt: %u\n", SysTick->VAL, ld_cnt);
+	ld_cnt = 0;
 	/* Update overflow_cyc and clear COUNTFLAG by invoking elapsed() */
 	elapsed();
 
@@ -325,6 +336,10 @@ void sys_clock_set_timeout(int32_t ticks, bool idle)
 	SysTick->LOAD = last_load - 1;
 	SysTick->VAL = 0; /* resets timer to last_load */
 
+	ld_val[ld_cnt] = last_load - 1;
+	ld_thread[ld_cnt] = arch_current_thread();
+	ld_cnt++;
+
 	/*
 	 * Add elapsed cycles while computing the new load to cycle_count.
 	 *
@@ -460,6 +475,7 @@ static int sys_clock_driver_init(void)
 
 	NVIC_SetPriority(SysTick_IRQn, _IRQ_PRIO_OFFSET);
 	last_load = CYC_PER_TICK;
+	printk("%s %u\n", __func__, last_load);
 	overflow_cyc = 0U;
 	SysTick->LOAD = last_load - 1;
 	SysTick->VAL = 0; /* resets timer to last_load */
