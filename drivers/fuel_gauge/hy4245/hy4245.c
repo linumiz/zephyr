@@ -12,6 +12,7 @@
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/logging/log.h>
 #include <string.h>
+#include <zephyr/drivers/fuel_gauge/hy4245.h>
 
 LOG_MODULE_REGISTER(HY4245);
 
@@ -34,6 +35,7 @@ LOG_MODULE_REGISTER(HY4245);
 #define HY4245_SUBCMD_CTRL_STATUS 	0x00
 #define HY4245_SUBCMD_CTRL_CHIPID	0x55
 #define HY4245_SUBCMD_CTRL_CALIB_MODE	0x40
+#define HY4245_SUBCMD_CTRL_RESET      0x41
 
 #define HY4245_EXTCMD_SUBCLASS		0x3E
 #define HY4245_EXTCMD_BLOCK		0x3F
@@ -322,6 +324,14 @@ int hy4245_access_flash_data(const struct device *dev,
 err:
 	k_mutex_unlock(&drvdata->mutex);
 	return ret;
+}
+
+int hy4245_reset(const struct device *dev)
+{
+	uint8_t cmd[3] = {HY4245_CMD_CTRL, HY4245_SUBCMD_CTRL_RESET};
+	const struct hy4245_config *cfg = dev->config;
+
+	return i2c_write_dt(&cfg->i2c, cmd, sizeof(cmd));
 }
 
 static int hy4245_get_prop(const struct device *dev, fuel_gauge_prop_t prop,
