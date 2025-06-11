@@ -887,9 +887,7 @@ static int bq2562x_hw_init(const struct device *dev)
 		return ret;
 	}
 
-	value = 0;
-	mask = 0;
-	value |= FIELD_PREP(BQ2562X_CHG_AUTO_IBATDIS, data->auto_battery_discharging);
+	value = FIELD_PREP(BQ2562X_CHG_AUTO_IBATDIS, data->auto_battery_discharging);
 	value |= FIELD_PREP(BQ2562X_WATCHDOG_MASK, BQ2562X_WATCHDOG_DIS);
 	mask = BQ2562X_CHG_AUTO_IBATDIS | BQ2562X_WATCHDOG_MASK;
 
@@ -898,9 +896,7 @@ static int bq2562x_hw_init(const struct device *dev)
 		return ret;
 	}
 
-	value = 0;
-	mask = 0;
-	value |= FIELD_PREP(BQ2562X_CTRL2_VBUS_OVP, data->vbus_ovp);
+	value = FIELD_PREP(BQ2562X_CTRL2_VBUS_OVP, data->vbus_ovp);
 	value |= BQ2562X_CTRL2_REG_RST;
 	mask = BQ2562X_CTRL2_VBUS_OVP | BQ2562X_CTRL2_REG_RST;
 
@@ -909,9 +905,7 @@ static int bq2562x_hw_init(const struct device *dev)
 		return ret;
 	}
 
-	value = 0;
-	mask = 0;
-	value |= FIELD_PREP(BQ2562X_CTRL4_IBAT_PEAK, data->peak_current_protection_threshold);
+	value = FIELD_PREP(BQ2562X_CTRL4_IBAT_PEAK, data->peak_current_protection_threshold);
 	value |= FIELD_PREP(BQ2562X_CTRL4_RATE, data->charge_rate_stage);
 	mask = BQ2562X_CTRL4_IBAT_PEAK | BQ2562X_CTRL4_RATE;
 
@@ -920,8 +914,6 @@ static int bq2562x_hw_init(const struct device *dev)
 		return ret;
 	}
 
-	value = 0;
-	mask = 0;
 	value |= FIELD_PREP(BQ2562X_TIMER_DCP_BIAS, data->enable_dcp_bias);
 	value |= FIELD_PREP(BQ2562X_TIMER_SAFETY_TMRS, data->enable_savety_tmrs);
 	mask = BQ2562X_TIMER_DCP_BIAS | BQ2562X_TIMER_SAFETY_TMRS;
