@@ -134,16 +134,11 @@ static int bq2562x_set_ichrg_curr(const struct device *dev, int chrg_curr)
 	int ret;
 
 	chrg_curr = CLAMP(chrg_curr, BQ2562X_ICHG_I_MIN_UA, chrg_curr_max);
-
-	(void)bq2562x_set_charge_enable(dev, 0);
-
 	chrg_curr = ((chrg_curr / BQ2562X_ICHG_I_STEP_UA) << BQ2562X_ICHG_I_SHIFT);
 	ichg[1] = (chrg_curr >> 8) & BQ2562X_ICHG_MSB_MSK;
 	ichg[0] = chrg_curr & BQ2562X_ICHG_LSB_MSK;
 
 	ret = i2c_burst_write_dt(&config->i2c, BQ2562X_CHRG_I_LIM_LSB, ichg, ARRAY_SIZE(ichg));
-
-	(void)bq2562x_set_charge_enable(dev, 1);
 
 	return ret;
 }
@@ -288,17 +283,12 @@ static int bq2562x_set_prechrg_curr(const struct device *dev, int pre_current)
 	int ret;
 
 	pre_current = CLAMP(pre_current, BQ2562X_PRECHRG_I_MIN_UA, BQ2562X_PRECHRG_I_MAX_UA);
-
-	(void)bq2562x_set_charge_enable(dev, 0);
-
 	pre_current = (pre_current / BQ2562X_PRECHRG_I_STEP_UA) << BQ2562X_PRECHRG_I_SHIFT;
 	prechrg_curr[1] = (pre_current >> 8) & BQ2562X_PRECHRG_I_MSB_MSK;
 	prechrg_curr[0] = pre_current & BQ2562X_PRECHRG_I_LSB_MSK;
 
 	ret = i2c_burst_write_dt(&config->i2c, BQ2562X_PRECHRG_CTRL_LSB, prechrg_curr,
 				 ARRAY_SIZE(prechrg_curr));
-
-	(void)bq2562x_set_charge_enable(dev, 1);
 
 	return ret;
 }
@@ -925,21 +915,6 @@ static int bq2562x_hw_init(const struct device *dev)
 
 	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_NTC_CTRL_0, BQ2562X_NTC_MASK,
 				     BQ2562X_NTC_MASK);
-	if (ret) {
-		return ret;
-	}
-
-	ret = bq2562x_set_ichrg_curr(dev, data->constant_charge_current_max_ua);
-	if (ret) {
-		return ret;
-	}
-
-	ret = bq2562x_set_chrg_volt(dev, data->constant_charge_voltage_max_uv);
-	if (ret) {
-		return ret;
-	}
-
-	ret = bq2562x_set_prechrg_curr(dev, data->precharge_current_ua);
 	if (ret) {
 		return ret;
 	}
