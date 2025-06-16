@@ -1,4 +1,5 @@
 /*
+ * Copyright 2025 Testo SE & Co. KGaA
  *
  * SPDX-License-Identifier: Apache-2.0
  */
