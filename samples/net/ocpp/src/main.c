@@ -207,6 +207,7 @@ static void ocpp_cp_entry(void *p1, void *p2, void *p3)
 		/* Avoid quick retry since authorization request is possible only
 		 * after Bootnotification process (handled in lib) completed.
 		 */
+		
 		k_sleep(K_SECONDS(5));
 		ret = ocpp_authorize(sh,
 				     idtag,
@@ -220,6 +221,7 @@ static void ocpp_cp_entry(void *p1, void *p2, void *p3)
 				ret, idcon, status);
 			break;
 		}
+		
 	}
 
 	if (status != OCPP_AUTH_ACCEPTED) {
@@ -330,10 +332,10 @@ int main(void)
 	char *ip = NULL;
 
 	struct ocpp_cp_info cpi = { "basic", "zephyr", .num_of_con = NO_OF_CONN };
-	struct ocpp_cs_info csi = { NULL,
-				    "/steve/websocket/CentralSystemService/zephyr",
-				    CONFIG_NET_SAMPLE_OCPP_PORT,
-				    AF_INET };
+	struct ocpp_cs_info csi = {NULL,
+                             	"/steve/websocket/CentralSystemService/zephyr",
+                                CONFIG_NET_SAMPLE_OCPP_PORT,
+                                AF_INET};
 
 	printk("OCPP sample %s\n", CONFIG_BOARD);
 
@@ -361,6 +363,7 @@ int main(void)
 		LOG_ERR("ocpp init failed %d\n", ret);
 		return ret;
 	}
+
 
 	/* Spawn threads for each connector */
 	for (i = 0; i < NO_OF_CONN; i++) {

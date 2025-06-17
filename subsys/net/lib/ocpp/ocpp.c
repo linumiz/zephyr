@@ -6,6 +6,11 @@
 
 #include "ocpp_i.h"
 #include <zephyr/posix/time.h>
+#include <zephyr/net/tls_credentials.h>
+
+#if defined(CONFIG_NET_SOCKETS_SOCKOPT_TLS)	
+#include "credentials/certificate.h"
+#endif
 
 LOG_MODULE_REGISTER(ocpp, CONFIG_OCPP_LOG_LEVEL);
 
@@ -21,6 +26,7 @@ struct ocpp_msg_table {
 
 static K_THREAD_STACK_DEFINE(ocpp_int_handler_stack, CONFIG_OCPP_INT_THREAD_STACKSIZE);
 static K_THREAD_STACK_DEFINE(ocpp_wsreader_stack, CONFIG_OCPP_WSREADER_THREAD_STACKSIZE);
+
 
 K_MSGQ_DEFINE(ocpp_iq, OCPP_INTERNAL_MSG_SIZE, CONFIG_OCPP_INTERNAL_MSGQ_CNT, sizeof(uint32_t));
 
@@ -140,8 +146,8 @@ static int ocpp_connect_to_cs(struct ocpp_info *ctx)
 		zsock_inet_pton(addr->sa_family, ui->csi.cs_ip,
 				&net_sin6(addr)->sin6_addr);
 	}
-
-	ret = zsock_connect(ui->tcpsock, addr, addr_size);
+	
+	ret = zsock_connect(ui->tcpsock, addr, addr_size);	
 	if (ret < 0 && errno != EALREADY && errno != EISCONN) {
 		LOG_ERR("tcp socket connect fail %d %d", ret, errno);
 		return ret;
@@ -172,8 +178,7 @@ static int ocpp_connect_to_cs(struct ocpp_info *ctx)
 			return ret;
 		}
 		ui->wssock = ret;
-	}
-
+	}	
 	LOG_DBG("WS connect success %d", ui->wssock);
 	return 0;
 }
@@ -460,6 +465,7 @@ static void ocpp_wsreader(void *p1, void *p2, void *p3)
 
 	ctx->is_cs_offline = true;
 	tcpfd.fd = ui->tcpsock;
+	
 	tcpfd.events = ZSOCK_POLLIN | ZSOCK_POLLERR
 			| ZSOCK_POLLHUP | ZSOCK_POLLNVAL;
 
@@ -467,7 +473,6 @@ static void ocpp_wsreader(void *p1, void *p2, void *p3)
 
 		if (ctx->is_cs_offline &&
 		    !(retry_cnt++ % TCP_CONNECT_AFTER)) {
-
 			k_mutex_lock(&ctx->ilock, K_FOREVER);
 			ocpp_connect_to_cs(ctx);
 			k_mutex_unlock(&ctx->ilock);
@@ -505,21 +510,58 @@ static void ocpp_wsreader(void *p1, void *p2, void *p3)
 	}
 }
 
-int ocpp_upstream_init(struct ocpp_info *ctx, struct ocpp_cs_info *csi)
-{
+
+int ocpp_upstream_init(struct ocpp_info *ctx, struct ocpp_cs_info *csi) 
+{	
 	struct ocpp_upstream_info *ui = &ctx->ui;
-
-	LOG_INF("upstream init");
-
 	ui->csi.ws_url = strdup(csi->ws_url);
 	ui->csi.cs_ip = strdup(csi->cs_ip);
 	ui->csi.port = csi->port;
 	ui->csi.sa_family = csi->sa_family;
-	ui->tcpsock = zsock_socket(csi->sa_family, SOCK_STREAM,
-				   IPPROTO_TCP);
-	if (ui->tcpsock < 0) {
+
+	LOG_INF("upstream init");
+
+#if defined(CONFIG_NET_SOCKETS_SOCKOPT_TLS)	
+	int ret = tls_credential_add(CA_CERTIFICATE_TAG, TLS_CREDENTIAL_CA_CERTIFICATE, ca_certificate, sizeof(ca_certificate));
+
+	if (ret < 0) 
+	{
+		LOG_ERR("Failed to register CA certificate: %d", ret);
+		return ret;
+	}
+
+	ui->tcpsock = zsock_socket(csi->sa_family, SOCK_STREAM, IPPROTO_TLS_1_3);
+	if (ui->tcpsock < 0) 
+	{
+		LOG_ERR("Failed to create TLS socket: %d", errno);
 		return -errno;
 	}
+	
+	sec_tag_t sec_tag_list[] = {CA_CERTIFICATE_TAG};
+	
+	ret = zsock_setsockopt(ui->tcpsock, SOL_TLS, TLS_SEC_TAG_LIST, sec_tag_list, sizeof(sec_tag_list));
+	
+	if (ret < 0) 
+	{
+		LOG_ERR("Failed to set TLS_SEC_TAG_LIST: %d", -errno);
+		goto fail;
+	}
+
+	ret = zsock_setsockopt(ui->tcpsock, SOL_TLS, TLS_HOSTNAME, TLS_PEER_HOSTNAME, sizeof(TLS_PEER_HOSTNAME));
+	if (ret < 0) 
+	{
+		LOG_ERR("Failed to set TLS_HOSTNAME: %d", -errno);
+		goto fail;
+	}
+#else	
+	ui->tcpsock = zsock_socket(csi->sa_family, SOCK_STREAM, IPPROTO_TCP);
+
+	if (ui->tcpsock < 0) 
+	{
+		LOG_ERR("Failed to create TCP socket: %d", -errno);
+		return -errno;
+	}
+#endif
 
 	k_mutex_init(&ui->ws_sndlock);
 	k_poll_signal_init(&ui->ws_rspsig);
@@ -528,12 +570,21 @@ int ocpp_upstream_init(struct ocpp_info *ctx, struct ocpp_cs_info *csi)
 	websocket_init();
 
 	k_thread_create(&ui->tinfo, ocpp_wsreader_stack,
-			CONFIG_OCPP_WSREADER_THREAD_STACKSIZE,
-			ocpp_wsreader, ctx, NULL, NULL,
-			OCPP_UPSTREAM_PRIORITY,	0, K_MSEC(100));
+	    		CONFIG_OCPP_WSREADER_THREAD_STACKSIZE,
+	    		ocpp_wsreader, ctx, NULL, NULL,
+	    		OCPP_UPSTREAM_PRIORITY, 0, K_MSEC(100));
 
 	return 0;
+
+fail:
+	if (ui->tcpsock >= 0) 
+	{
+		zsock_close(ui->tcpsock);
+		ui->tcpsock = -1;
+	}
+	return -errno;
 }
+
 
 static void timer_heartbeat_cb(struct k_timer *t)
 {
@@ -623,7 +674,7 @@ int ocpp_session_open(ocpp_session_handle_t *hndl)
 	k_mutex_unlock(&gctx->ilock);
 
 	*hndl = (void *)sh;
-
+	
 	return 0;
 }
 
