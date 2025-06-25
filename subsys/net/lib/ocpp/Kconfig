@@ -3,7 +3,7 @@
 
 config OCPP
 	bool "Open Charge Point Protocol [EXPERIMENTAL]"
-	depends on JSONC
+	depends on JSON_LIBRARY
 	depends on WEBSOCKET_CLIENT
 	select EXPERIMENTAL
 	help
