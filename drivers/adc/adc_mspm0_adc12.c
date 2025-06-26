@@ -485,11 +485,47 @@ static int adc_mspm0g3xx_configSequence(const struct device *dev)
 	return error;
 }
 
+static int set_oversampling(const struct adc_sequence *sequence, uint16_t *oversampling)
+{
+	switch (sequence->oversampling) {
+	case 0:
+		*oversampling = 0;
+		break;
+	case 1:
+		*oversampling = 2;
+		break;
+	case 2:
+		*oversampling = 4;
+		break;
+	case 3:
+		*oversampling = 8;
+		break;
+	case 4:
+		*oversampling = 16;
+		break;
+	case 5:
+		*oversampling = 32;
+		break;
+	case 6:
+		*oversampling = 64;
+		break;
+	case 7:
+		*oversampling = 128;
+		break;
+	default:
+		LOG_ERR("Oversampling value %d is not valid",
+			    sequence->oversampling);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static int adc_mspm0_read_internal(const struct device *dev, const struct adc_sequence *sequence)
 {
 	struct adc_mspm0_data *data = dev->data;
 	size_t exp_size;
-	int sequence_ret;
+	int ret;
 	int ch_count;
 
 	/* Validate resolution */
@@ -529,22 +565,16 @@ static int adc_mspm0_read_internal(const struct device *dev, const struct adc_se
 
 	data->buffer = sequence->buffer;
 
-	/* Validate oversampling */
-	if ((sequence->oversampling != 0) && (sequence->oversampling != 2) &&
-	    (sequence->oversampling != 4) && (sequence->oversampling != 8) &&
-	    (sequence->oversampling != 16) && (sequence->oversampling != 32) &&
-	    (sequence->oversampling != 64) && (sequence->oversampling != 128)) {
-		LOG_ERR("ADC oversampling %d not supported. Only 2/4/8/16/32/64/128.",
-			sequence->oversampling);
-		return -EINVAL;
-	}
-
 	if(data->resolution == 14 && sequence->oversampling != 128){
 		LOG_ERR("Oversampling has to be set to 128. 14-bit effective resolution can only be used with hardware averaging.");
 		return -EINVAL;
 	}
 
-	data->oversampling = sequence->oversampling;
+	ret = set_oversampling(sequence, &data->oversampling);
+	if (ret < 0) {
+		LOG_ERR("Set Oversampling failed");
+		return ret;
+	}
 
 	if (sequence->calibrate) {
 		LOG_ERR("Calibration not supported");
@@ -552,10 +582,10 @@ static int adc_mspm0_read_internal(const struct device *dev, const struct adc_se
 	}
 
 	/* Configure the ADC sequence */
-	sequence_ret = adc_mspm0g3xx_configSequence(dev);
-	if (sequence_ret < 0) {
+	ret = adc_mspm0g3xx_configSequence(dev);
+	if (ret < 0) {
 		LOG_ERR("Error in ADC sequence configuration");
-		return sequence_ret;
+		return ret;
 	}
 
 	adc_context_start_read(&data->ctx, sequence);
