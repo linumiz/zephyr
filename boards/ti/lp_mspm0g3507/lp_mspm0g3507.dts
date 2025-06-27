@@ -9,6 +9,7 @@
 
 #include <ti/mspm0/g/mspm0g3507.dtsi>
 #include <ti/mspm0/g/mspm0g1x0x_g3x0x-pinctrl.dtsi>
+#include <zephyr/dt-bindings/adc/adc.h>
 #include <zephyr/dt-bindings/clock/mspm0_clock.h>
 #include <zephyr/dt-bindings/gpio/gpio.h>
 #include <zephyr/dt-bindings/pwm/pwm.h>
@@ -28,6 +29,7 @@
 		zephyr,console = &uart0;
 		zephyr,shell-uart = &uart0;
 		zephyr,code-partition = &slot0_partition;
+		zephyr,canbus = &mcp2515;
 	};
 
 	leds {
@@ -46,6 +48,12 @@
 			pwms = <&pwma0 0 PWM_MSEC(100) PWM_POLARITY_NORMAL>;
 		};
 	};
+
+#if 0
+	zephyr,user {
+		io-channels = <&ads1310 0>, <&ads1310 1>;
+	};
+#endif
 };
 
 &cpu0 {
@@ -65,6 +73,66 @@
 &hsclk {
 	clocks = <&syspll2x 0>;
 	status = "okay";
+};
+
+#if 0
+&spi0 {
+	pinctrl-0 = <&spi0_sclk_pa12 &spi0_pico_pa14 &spi0_poci_pa13 &spi0_cs0_pa8>; //&ads1310_nrst_pa27_pullup>;
+#endif
+
+&spi1 {
+	pinctrl-0 = <&spi1_sclk_pb9 &spi1_pico_pb8 &spi1_poci_pb7>; //&spi1_cs0_pb6>;
+	pinctrl-names = "default";
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+	cs-gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
+
+	mcp2515: mcp2518fd@0 {
+		compatible = "microchip,mcp2515";
+		status = "okay";
+		spi-max-frequency = <1000000>;
+		int-gpios = <&gpiob 18 GPIO_ACTIVE_LOW>;
+		reg = <0x0>;
+		osc-freq = <16000000>;
+		can-transceiver {
+			min-bitrate = <60000>;
+			max-bitrate = <1000000>;
+		};
+
+	};
+
+#if 0
+	ads1310: ads1310@0 {
+		compatible = "ti,ads131m02";
+		reg = <0>;
+//		clocks = <&clkmux MSPM0_CLOCK_BUS_CLK_OUT>;
+//		clock-frequency = <2000000>;
+		#io-channel-cells = <1>;
+//		drdy-gpios = <&gpioa 26 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+		drdy-gpios = <&gpiob 18 (GPIO_ACTIVE_LOW)>;
+		spi-max-frequency = <8192000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		channel@0 {
+			reg = <0>;
+			zephyr,gain = "ADC_GAIN_1";
+			zephyr,reference = "ADC_REF_INTERNAL";
+			zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+			zephyr,resolution = <24>;
+		};
+
+		channel@1 {
+			reg = <1>;
+			zephyr,gain = "ADC_GAIN_1";
+			zephyr,reference = "ADC_REF_INTERNAL";
+			zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+			zephyr,resolution = <24>;
+		};
+
+	};
+#endif
 };
 
 &syspll2x {
