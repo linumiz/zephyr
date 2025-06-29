@@ -12,3 +12,6 @@ family:
   - name: apollo5x
     socs:
     - name: apollo510
+  - name: apollo2x
+    socs:
+    - name: apollo2
