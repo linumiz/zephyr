@@ -1,0 +1,104 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <arm/armv7-m.dtsi>
+#include <mem.h>
+#include <freq.h>
+
+/ {
+	clocks {
+		uartclk: apb-pclk {
+			compatible = "fixed-clock";
+			clock-frequency = <DT_FREQ_M(24)>;
+			#clock-cells = <0>;
+		};
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu0: cpu@0 {
+			compatible = "arm,cortex-m4f";
+			reg = <0>;
+			cpu-power-states = <&idle &suspend_to_ram>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			itm: itm@e0000000 {
+				compatible = "arm,armv7m-itm";
+				reg = <0xe0000000 0x1000>;
+				swo-ref-frequency = <DT_FREQ_M(6)>;
+			};
+		};
+
+		power-states {
+			idle: idle {
+				compatible = "zephyr,power-state";
+				power-state-name = "suspend-to-idle";
+				min-residency-us = <100>;
+				exit-latency-us = <5>;
+			};
+
+			suspend_to_ram: suspend_to_ram {
+				compatible = "zephyr,power-state";
+				power-state-name = "suspend-to-ram";
+				min-residency-us = <2000>;
+				exit-latency-us = <125>;
+			};
+		};
+	};
+
+	/* SRAM */
+	sram0: memory@10000000 {
+		compatible = "mmio-sram";
+		reg = <0x10000000 0x40000>;
+	};
+
+	soc {
+		compatible = "ambiq,apollo2", "ambiq,apollo2x", "simple-bus";
+
+		flash: flash-controller@0 {
+			compatible = "ambiq,flash-controller";
+			reg = <0x00000000 0x100000>;
+
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			/* Flash region */
+			flash0: flash@0 {
+				compatible = "soc-nv-flash";
+				reg = <0x00000000 0x100000>;
+			};
+		};
+
+		uart0: uart@4001c000 {
+			compatible = "ambiq,pl011-uart", "arm,pl011";
+			reg = <0x4001c000 0x400>;
+			interrupts = <14 0>;
+			interrupt-names = "UART0";
+			status = "disabled";
+			clocks = <&uartclk>;
+			zephyr,pm-device-runtime-auto;
+		};
+
+		uart1: uart@4001d000 {
+			compatible = "ambiq,pl011-uart", "arm,pl011";
+			reg = <0x4001d000 0x400>;
+			interrupts = <15 0>;
+			interrupt-names = "UART1";
+			status = "disabled";
+			clocks = <&uartclk>;
+			zephyr,pm-device-runtime-auto;
+		};
+
+		pinctrl: pin-controller@40010000 {
+			compatible = "ambiq,apollo2-pinctrl";
+			reg = <0x40010000 0x400>;
+		};
+
+	};
+};
+
+&nvic {
+	arm,num-irq-priority-bits = <3>;
+};

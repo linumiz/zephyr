@@ -2,6 +2,7 @@
  * Copyright (c) 2018 Linaro Limited
  * Copyright (c) 2022 Arm Limited (or its affiliates). All rights reserved.
  * Copyright (c) 2023 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025 Linumiz GmbH
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -63,7 +64,11 @@ struct pl011_config {
 #endif
 	bool fifo_disable;
 	int (*clk_enable_func)(const struct device *dev, uint32_t clk);
+#if defined(CONFIG_SOC_SERIES_APOLLO2X)
+	void (*pwr_on_func)(void);
+#else
 	int (*pwr_on_func)(void);
+#endif
 };
 
 /* Device data structure */
@@ -526,7 +531,11 @@ static int pl011_init(const struct device *dev)
 #endif
 		/* Call vendor-specific function to power on the peripheral */
 		if (config->pwr_on_func != NULL) {
+#if defined(CONFIG_SOC_SERIES_APOLLO2X)
+			config->pwr_on_func();
+#else
 			ret = config->pwr_on_func();
+#endif
 		}
 
 		/* disable the uart */

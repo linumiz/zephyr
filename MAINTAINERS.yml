@@ -295,6 +295,7 @@ Ambiq Platforms:
   collaborators:
     - aaronyegx
     - RichardSWheatley
+    - srisurya1
   files:
     - soc/ambiq/
     - boards/ambiq/apollo*/
