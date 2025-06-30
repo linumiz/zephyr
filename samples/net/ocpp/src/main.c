@@ -16,6 +16,10 @@
 #include <zephyr/random/random.h>
 #include <zephyr/zbus/zbus.h>
 
+#if defined(CONFIG_NET_SOCKETS_SOCKOPT_TLS)
+#include "credentials/certificate.h"
+#endif
+
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 #define NO_OF_CONN 2
@@ -207,6 +211,7 @@ static void ocpp_cp_entry(void *p1, void *p2, void *p3)
 		/* Avoid quick retry since authorization request is possible only
 		 * after Bootnotification process (handled in lib) completed.
 		 */
+
 		k_sleep(K_SECONDS(5));
 		ret = ocpp_authorize(sh,
 				     idtag,
@@ -220,6 +225,7 @@ static void ocpp_cp_entry(void *p1, void *p2, void *p3)
 				ret, idcon, status);
 			break;
 		}
+
 	}
 
 	if (status != OCPP_AUTH_ACCEPTED) {
@@ -331,9 +337,9 @@ int main(void)
 
 	struct ocpp_cp_info cpi = { "basic", "zephyr", .num_of_con = NO_OF_CONN };
 	struct ocpp_cs_info csi = { NULL,
-				    "/steve/websocket/CentralSystemService/zephyr",
-				    CONFIG_NET_SAMPLE_OCPP_PORT,
-				    AF_INET };
+				   "/steve/websocket/CentralSystemService/basic",
+				   CONFIG_NET_SAMPLE_OCPP_PORT,
+				   AF_INET};
 
 	printk("OCPP sample %s\n", CONFIG_BOARD);
 
@@ -352,6 +358,24 @@ int main(void)
 	csi.cs_ip = ip;
 
 	ocpp_get_time_from_sntp();
+
+#if defined(CONFIG_NET_SOCKETS_SOCKOPT_TLS)
+	sec_tag_t tags[] = {CA_CERTIFICATE_TAG};
+
+	ret = tls_credential_add(CA_CERTIFICATE_TAG,
+				 TLS_CREDENTIAL_CA_CERTIFICATE,
+				 ca_certificate,
+				 sizeof(ca_certificate));
+	if (ret < 0) {
+		LOG_ERR("Failed to register CA certificate: %d", ret);
+		return ret;
+	}
+
+	csi.creds.sec_tag_list = tags;
+	csi.creds.tls_hostname = TLS_PEER_HOSTNAME;
+	csi.creds.sec_tag_list_size = sizeof(tags);
+	csi.creds.tls_hostname_size = strlen(TLS_PEER_HOSTNAME);
+#endif
 
 	ret = ocpp_init(&cpi,
 			&csi,
