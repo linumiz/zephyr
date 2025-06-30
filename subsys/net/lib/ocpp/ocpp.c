@@ -75,12 +75,12 @@ void ocpp_get_utc_now(char utc[CISTR25])
 	gmtime_r(&tv.tv_sec, &htime);
 
 	snprintk(utc, CISTR25, "%04d-%02d-%02dT%02d:%02d:%02dZ",
-		htime.tm_year + 1900,
-		htime.tm_mon + 1,
-		htime.tm_mday,
-		htime.tm_hour,
-		htime.tm_min,
-		htime.tm_sec);
+		 htime.tm_year + 1900,
+		 htime.tm_mon + 1,
+		 htime.tm_mday,
+		 htime.tm_hour,
+		 htime.tm_min,
+		 htime.tm_sec);
 }
 
 bool ocpp_session_is_valid(struct ocpp_session *sh)
@@ -173,7 +173,6 @@ static int ocpp_connect_to_cs(struct ocpp_info *ctx)
 		}
 		ui->wssock = ret;
 	}
-
 	LOG_DBG("WS connect success %d", ui->wssock);
 	return 0;
 }
@@ -309,7 +308,7 @@ static int ocpp_process_server_msg(struct ocpp_info *ctx)
 
 	if (is_rsp) {
 		buf = strtok_r(uid, "-", &tmp);
-		sh = (struct ocpp_session *) atoi(buf);
+		sh = (struct ocpp_session *)atoi(buf);
 
 		buf = strtok_r(NULL, "-", &tmp);
 		pdu = atoi(buf);
@@ -460,14 +459,13 @@ static void ocpp_wsreader(void *p1, void *p2, void *p3)
 
 	ctx->is_cs_offline = true;
 	tcpfd.fd = ui->tcpsock;
+
 	tcpfd.events = ZSOCK_POLLIN | ZSOCK_POLLERR
 			| ZSOCK_POLLHUP | ZSOCK_POLLNVAL;
 
 	while (1) {
-
 		if (ctx->is_cs_offline &&
 		    !(retry_cnt++ % TCP_CONNECT_AFTER)) {
-
 			k_mutex_lock(&ctx->ilock, K_FOREVER);
 			ocpp_connect_to_cs(ctx);
 			k_mutex_unlock(&ctx->ilock);
@@ -507,19 +505,47 @@ static void ocpp_wsreader(void *p1, void *p2, void *p3)
 
 int ocpp_upstream_init(struct ocpp_info *ctx, struct ocpp_cs_info *csi)
 {
+	int ret;
 	struct ocpp_upstream_info *ui = &ctx->ui;
-
-	LOG_INF("upstream init");
 
 	ui->csi.ws_url = strdup(csi->ws_url);
 	ui->csi.cs_ip = strdup(csi->cs_ip);
 	ui->csi.port = csi->port;
 	ui->csi.sa_family = csi->sa_family;
-	ui->tcpsock = zsock_socket(csi->sa_family, SOCK_STREAM,
-				   IPPROTO_TCP);
+
+	LOG_INF("upstream init");
+
+#if defined(CONFIG_NET_SOCKETS_SOCKOPT_TLS)
+	ui->csi.creds.sec_tag_list = csi->creds.sec_tag_list;
+	ui->csi.creds.sec_tag_list_size = csi->creds.sec_tag_list_size;
+	ui->csi.creds.tls_hostname = csi->creds.tls_hostname;
+
+	ui->tcpsock = zsock_socket(csi->sa_family, SOCK_STREAM, IPPROTO_TLS_1_3);
 	if (ui->tcpsock < 0) {
+		LOG_ERR("Failed to create TLS socket: %d", errno);
 		return -errno;
 	}
+
+	ret = zsock_setsockopt(ui->tcpsock, SOL_TLS, TLS_SEC_TAG_LIST, csi->creds.sec_tag_list,
+			       csi->creds.sec_tag_list_size);
+	if (ret < 0) {
+		LOG_ERR("Failed to set TLS_SEC_TAG_LIST: %d", -errno);
+		goto fail;
+	}
+
+	ret = zsock_setsockopt(ui->tcpsock, SOL_TLS, TLS_HOSTNAME, csi->creds.tls_hostname,
+			       csi->creds.tls_hostname_size);
+	if (ret < 0) {
+		LOG_ERR("Failed to set TLS_HOSTNAME: %d", -errno);
+		goto fail;
+	}
+#else
+	ui->tcpsock = zsock_socket(csi->sa_family, SOCK_STREAM, IPPROTO_TCP);
+	if (ui->tcpsock < 0) {
+		LOG_ERR("Failed to create TCP socket: %d", -errno);
+		return -errno;
+	}
+#endif
 
 	k_mutex_init(&ui->ws_sndlock);
 	k_poll_signal_init(&ui->ws_rspsig);
@@ -530,9 +556,16 @@ int ocpp_upstream_init(struct ocpp_info *ctx, struct ocpp_cs_info *csi)
 	k_thread_create(&ui->tinfo, ocpp_wsreader_stack,
 			CONFIG_OCPP_WSREADER_THREAD_STACKSIZE,
 			ocpp_wsreader, ctx, NULL, NULL,
-			OCPP_UPSTREAM_PRIORITY,	0, K_MSEC(100));
+			OCPP_UPSTREAM_PRIORITY, 0, K_MSEC(100));
 
 	return 0;
+
+fail:
+	if (ui->tcpsock >= 0) {
+		zsock_close(ui->tcpsock);
+		ui->tcpsock = -1;
+	}
+	return -errno;
 }
 
 static void timer_heartbeat_cb(struct k_timer *t)
