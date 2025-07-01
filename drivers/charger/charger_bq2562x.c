@@ -325,6 +325,14 @@ static int bq2562x_set_term_curr(const struct device *dev, int term_current)
 	return i2c_burst_write_dt(&config->i2c, BQ2562X_TERM_CTRL_LSB, iterm, ARRAY_SIZE(iterm));
 }
 
+static int bq2562x_disbale_watchdog(const struct device *dev)
+{
+	const struct bq2562x_config *const config = dev->config;
+
+	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, BQ2562X_WATCHDOG_MASK,
+				      FIELD_PREP(BQ2562X_WATCHDOG_MASK, BQ2562X_WATCHDOG_DIS));
+}
+
 int bq2562x_set_charge_current_threshold(const struct device *dev,
 					 enum charger_current_threshold current_threshold)
 {
@@ -776,7 +784,13 @@ static int bq2562x_get_prop(const struct device *dev, charger_prop_t prop,
 static int bq2562x_set_prop(const struct device *dev, charger_prop_t prop,
 			    const union charger_propval *val)
 {
+	int ret = 0;
 	struct bq2562x_data *data = dev->data;
+
+	ret = bq2562x_disbale_watchdog(dev);
+	if (ret < 0) {
+		return ret;
+	}
 
 	switch (prop) {
 	case CHARGER_PROP_CONSTANT_CHARGE_CURRENT_UA:
@@ -904,7 +918,7 @@ static int bq2562x_hw_init(const struct device *dev)
 		return ret;
 	}
 
-	value |= FIELD_PREP(BQ2562X_TIMER_DCP_BIAS, data->enable_dcp_bias);
+	value = FIELD_PREP(BQ2562X_TIMER_DCP_BIAS, data->enable_dcp_bias);
 	value |= FIELD_PREP(BQ2562X_TIMER_SAFETY_TMRS, data->enable_savety_tmrs);
 	mask = BQ2562X_TIMER_DCP_BIAS | BQ2562X_TIMER_SAFETY_TMRS;
 
@@ -914,7 +928,7 @@ static int bq2562x_hw_init(const struct device *dev)
 	}
 
 	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_NTC_CTRL_0, BQ2562X_NTC_MASK,
-				     BQ2562X_NTC_MASK);
+				     FIELD_PREP(BIT(7), BQ2562X_NTC_DIS));
 	if (ret) {
 		return ret;
 	}
