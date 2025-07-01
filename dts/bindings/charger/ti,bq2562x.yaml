@@ -103,3 +103,121 @@ properties:
       0: weak
       1: normal
       3: strong
+
+  q1-fullon:
+    type: int
+    default: 0
+    enum:
+      - 0
+      - 1
+    description: |
+      Forces RBFET (Q1) into low resistance state (26 m次) , regardless of IINDPM setting.
+      0: RBFET RDSON determined by IINDPM setting
+      1: RBFET RDSON is always 26 m次
+
+  q4-fullon:
+    type: int
+    default: 0
+    enum:
+      - 0
+      - 1
+    description: |
+      Forces BATFET (Q4) into low resistance state (15 m次), regardless of ICHG setting.
+      0: BATFET RDSON determined by charge current
+      1: BATFET RDSON is always 15 m次 
+
+  vindpm-bat-track:
+    type: int
+    default: 0
+    enum:
+      - 0
+      - 1
+    description: |
+      Sets VINDPM to track BAT voltage. Actual VINDPM is higher of the VINDPM register value and VBAT + VINDPM_BAT_TRACK.
+      0: Disable function
+      1: VBAT + 400 mV
+
+  verchg-bat-offset:
+    type: int
+    default: 0
+    enum:
+      - 0
+      - 1
+    description: |
+      Battery Recharge Threshold Offset.
+      0: 100 mV
+      1: 200 mV
+
+  enable-dcp-bias:
+    type: int
+    default: 0
+    enum:
+      - 0
+      - 1
+    description: |
+      Enable 600 mV bias on D+ pin whenever DCP is detected by BC1.2 detection algorithm.
+      0: Disable 600 mV bias on D+ pin
+      1: Enable 600 mV bias on D+ pin if DCP detected 
+
+  enable-savety-tmrs:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+    description: |
+      Enable fast charge, pre-charge and trickle charge timers.
+      0: Disable 
+      1: Enable 
+
+  auto-battery-discharging:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+    description: |
+      Enable the auto battery discharging during the battery OVP fault.
+      0: The charger does NOT apply a discharging current on BAT during battery OVP triggered 
+      1: The charger does apply a discharging current on BAT during battery OVP triggered 
+
+  vbus-ovp:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+    description: |
+      Sets VBUS overvoltage protection threshold.
+      0: 6.3v
+      1: 18.5v 
+
+  peak-current-protection-threshold:
+    type: int
+    default: 3
+    enum:
+      - 0
+      - 1
+      - 2
+      - 3
+    description: |
+      Battery discharging peak current protection threshold setting.
+      0: 1.5 A
+      1: 3 A 
+      2: 6 A
+      3: 12 A
+
+  charge-rate-stage:
+    type: int
+    default: 0
+    enum:
+      - 0
+      - 1
+      - 2
+      - 3
+    description: |
+      The charge rate definition for the fast charge stage.
+      0: 1 C
+      1: 2 C 
+      2: 4 C
+      3: 6 C
