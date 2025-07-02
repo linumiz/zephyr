@@ -756,8 +756,6 @@ static int ads131m02_init(const struct device *dev)
 			n, SPI_OP_MODE_MASTER | SPI_MODE_CPHA |			\
 			SPI_WORD_SET(8), 0),					\
 		.gpio_drdy = GPIO_DT_SPEC_INST_GET(n, drdy_gpios),		\
-		.clock_frequency = DT_INST_PROP_OR(n, clock_frequency, 0),	\
-		.bus_clk = DT_INST_CLOCKS_CELL(n, bus),				\
 	};									\
 	static struct ads131m02_data data_##n;					\
 	DEVICE_DT_INST_DEFINE(n, ads131m02_init,				\

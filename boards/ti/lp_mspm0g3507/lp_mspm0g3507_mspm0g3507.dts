@@ -160,23 +160,45 @@
 	status = "okay";
 };
 
+#if 0
 &spi1 {
-	pinctrl-0 = <&spi1_sclk_pb9 &spi1_pico_pb8 &spi1_poci_pb7 &spi1_cs0_pb6>;
+	pinctrl-0 = <&spi1_sclk_pa17 &spi1_pico_pb8 &spi1_poci_pb7>;
 	pinctrl-names = "default";
 	status = "okay";
 	#address-cells = <1>;
 	#size-cells = <0>;
 
+	cs-gpios = <&gpiob 6 (GPIO_ACTIVE_LOW)>;
 	ads1310: ads1310@0 {
 		compatible = "ti,ads131m02";
 		reg = <0>;
-		clocks = <&clkmux MSPM0_CLOCK_BUS_CLK_OUT>;
-		clock-frequency = <2000000>;
 		#io-channel-cells = <1>;
 		drdy-gpios = <&gpiob 18 (GPIO_ACTIVE_LOW)>;
 		spi-max-frequency = <8000000>;
 	};
 };
+#endif
+
+#if 1
+&spi1 {
+	pinctrl-0 = <&spi1_sclk_pb9 &spi1_pico_pb8 &spi1_poci_pb7>; //&spi1_cs0_pb6>;
+	pinctrl-names = "default";
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	cs-gpios = <&gpiob 6 (GPIO_ACTIVE_LOW)>;
+	ads1310: ads1310@0 {
+		compatible = "ti,ads131m02";
+		reg = <0>;
+		//clocks = <&clkmux MSPM0_CLOCK_BUS_CLK_OUT>;
+		//clock-frequency = <2000000>;
+		#io-channel-cells = <1>;
+		drdy-gpios = <&gpiob 18 (GPIO_ACTIVE_LOW)>;
+		spi-max-frequency = <8000000>;
+	};
+};
+#endif
 
 &uart0 {
 	status = "okay";
@@ -214,7 +236,7 @@
 	ti,clk-div = <1>;
 
 	ti,pwm-mode = "EDGE_ALIGN";
-	ti,pulse-cycle = <249>;
+	//ti,pulse-cycle = <249>;
 	ti,period = <1000>;
 };
 
@@ -228,7 +250,7 @@
 	ti,clk-div = <1>;
 
 	ti,pwm-mode = "CENTER_ALIGN";
-	ti,pulse-cycle = <3>;
+	//ti,pulse-cycle = <3>;
 	ti,period = <10>;
 };
 

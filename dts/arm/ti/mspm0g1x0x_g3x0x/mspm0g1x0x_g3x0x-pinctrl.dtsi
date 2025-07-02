@@ -109,6 +109,11 @@
 		drive-strength = <20>;
 	};
 
+	/omit-if-no-ref/ spi1_sclk_pa17: spi1_sclk_pa17 {
+		pinmux = <MSP_PINMUX(49, MSPM0_PIN_FUNCTION_3)>;
+		drive-open-drain;
+	};
+
 	/omit-if-no-ref/ spi1_sclk_pb9: spi1_sclk_pb9 {
 		pinmux = <MSP_PINMUX(26,MSPM0_PIN_FUNCTION_3)>;
 	};
