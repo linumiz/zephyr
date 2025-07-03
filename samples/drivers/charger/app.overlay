@@ -1,0 +1,18 @@
+&i2c1 {
+	charger: mp2733@4b {
+		compatible = "mp,mp2733";
+		reg = <0x4b>;
+		ce-gpios = <&gpioa 12 GPIO_ACTIVE_LOW>;
+		otg-gpios = <&gpioa 15 GPIO_ACTIVE_HIGH>;
+		watchdog-timeout-ms = <40000>;               
+		constant-charge-current-max-microamp = <1840000>;  
+		constant-charge-voltage-max-microvolt = <4200000>;  
+		precharge-current-microamp = <230000>;       
+		termcharge-current-microamp = <200000>;       
+		input-current-limit-microamp = <500000>;       
+		input-voltage-limit-microvolt = <4300000>;       
+		input-voltage-dschg-otg-microvolt = <5000000>;    
+		input-current-dschg-otg-microamp = <500000>;       
+		min-sys-voltage-microvolt = <3600000>;  
+	};
+};

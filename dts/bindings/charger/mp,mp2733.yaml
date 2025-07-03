@@ -1,0 +1,83 @@
+#Copyright 2025 Linumiz
+#SPDX - Licesnse-Identifier: Apache-2.0
+
+description: |
+  MP2733 is a single cell switch mode battery charger with OTG support.
+
+compatible: "mp,mp2733"
+
+on-bus: i2c
+
+include: [battery.yaml, i2c-device.yaml]
+
+properties: 
+  reg:
+    required: true
+  
+  constant-charge-current-max-microamp:
+    type: int
+    default: 1840000
+
+  constant-charge-voltage-max-microvolt:
+    type: int
+    default: 4200000
+
+  precharge-current-microamp: 
+    type: int 
+    default: 230000
+
+  termcharge-current-microamp:
+    type: int
+    default: 2000000
+
+  ce-gpios:
+    type: phandle-array
+    description: Active low, charge enable pin
+
+  int-gpios:
+    type: phandle-array
+    description: Interrupt pin
+  
+  otg-gpios:
+    type: phandle-array
+    description: Active high, otg mode enable pin
+
+  watchdog-timeout-ms:
+    type: int
+    default: 40000
+
+  min-sys-voltage-microvolt:
+    type: int
+    default: 3600000
+
+  input-current-limit-microamp:
+    type: int
+    default: 5000000
+    description: |
+
+  input-voltage-limit-microvolt:
+    type: int
+    default: 4300000
+
+  input-current-dschg-otg-microamp: 
+    type: int
+    default: 500000
+
+  input-voltage-dschg-otg-microvolt:
+    type: int
+    default: 5000000
+
+  thermal-regulation-threshold:
+    type: int
+    default: 3
+    enum:
+      - 0
+      - 1
+      - 2 
+      - 3
+    description: |
+      charge control thermal regulation thershold
+      0 - 60 degree celsius
+      1 - 80 degree celsius
+      2 - 100 degree celsius
+      3 - 120 degree celsius

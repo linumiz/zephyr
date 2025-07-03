@@ -1,0 +1,6 @@
+config CHARGER_MP2733
+        bool "MP2733 Battery Charger"
+        default y
+        select I2C
+        help
+          Enable I2C-based driver for the TI BQ24190 Battery Charger.

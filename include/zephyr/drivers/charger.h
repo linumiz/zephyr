@@ -56,6 +56,8 @@ enum charger_property {
 	CHARGER_PROP_CHARGE_TERM_CURRENT_UA,
 	/** Configuration of charge voltage regulation target in µV */
 	CHARGER_PROP_CONSTANT_CHARGE_VOLTAGE_UV,
+	/** Represents USB charge type based on BC 1.2*/
+	CHARGER_PROP_USB_TYPE,
 	/**
 	 * Configuration of the input current regulation target in µA
 	 *
@@ -70,6 +72,14 @@ enum charger_property {
 	 * current output
 	 */
 	CHARGER_PROP_INPUT_REGULATION_VOLTAGE_UV,
+	/** Present battery voltage in uV */
+	CHARGER_PROP_BATTERY_VOLTAGE_NOW,
+	/** Present battery current in uA */
+	CHARGER_PROP_BATTERY_CURRENT_NOW,
+	/** Present charger input voltage in uV */
+	CHARGER_PROP_INPUT_VOLTAGE_NOW,
+	/** Present charger input current in uA */
+	CHARGER_PROP_INPUT_CURRENT_NOW,
 	/**
 	 * Configuration to issue a notification to the system based on the input current
 	 * level and timing
@@ -182,6 +192,22 @@ enum charger_charge_type {
 };
 
 /**
+ * @brief Charger USB types
+ */
+enum charger_usb_type {
+	CHARGER_USB_TYPE_UNKNOWN = 0,
+	CHARGER_USB_TYPE_SDP,			/* Standard Downstream Port */
+	CHARGER_USB_TYPE_DCP,			/* Dedicated Charging Port */
+	CHARGER_USB_TYPE_CDP,			/* Charging Downstream Port */
+	CHARGER_USB_TYPE_ACA,			/* Accessory Charger Adapters */
+	CHARGER_USB_TYPE_C,			/* Type C Port */
+	CHARGER_USB_TYPE_PD,			/* Power Delivery Port */
+	CHARGER_USB_TYPE_PD_DRP,		/* PD Dual Role Port */
+	CHARGER_USB_TYPE_PD_PPS,		/* PD Programmable Power Supply */
+	CHARGER_USB_TYPE_APPLE_BRICK_ID,	/* Apple Charging Method */
+};
+
+/**
  * @brief Charger health conditions
  *
  * These conditions determine the ability to, or the rate of, charge
@@ -275,6 +301,8 @@ union charger_propval {
 	enum charger_charge_type charge_type;
 	/** CHARGER_PROP_HEALTH */
 	enum charger_health health;
+	/** CHARGER_PROP_USB_TYPE */
+	enum charger_usb_type usb_type;
 	/** CHARGER_PROP_CONSTANT_CHARGE_CURRENT_UA */
 	uint32_t const_charge_current_ua;
 	/** CHARGER_PROP_PRECHARGE_CURRENT_UA */
@@ -287,6 +315,14 @@ union charger_propval {
 	uint32_t input_current_regulation_current_ua;
 	/** CHARGER_PROP_INPUT_REGULATION_VOLTAGE_UV */
 	uint32_t input_voltage_regulation_voltage_uv;
+	/** CHARGER_PROP_BATTERY_VOLTAGE_NOW */
+	uint32_t battery_voltage_now_uv;
+	/** CHARGER_PROP_BATTERY_CURRENT_NOW */
+	int32_t battery_current_now_ua;
+	/** CHARGER_PROP_INPUT_VOLTAGE_NOW */
+	uint32_t input_voltage_now_uv;
+	/** CHARGER_PROP_INPUT_CURRENT_NOW */
+	int32_t input_current_now_ua;
 	/** CHARGER_PROP_INPUT_CURRENT_NOTIFICATION */
 	struct charger_current_notifier input_current_notification;
 	/** CHARGER_PROP_DISCHARGE_CURRENT_NOTIFICATION */
