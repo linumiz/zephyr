@@ -305,15 +305,23 @@ int hy4245_access_flash_data(const struct device *dev,
 	/* as per data sheet 10msec delay */
 	k_sleep(K_MSEC(10));
 
+	for (int i = 0; i < count; i++) {
+		checksum += data[i];
+	}
+
+	if (!is_read) {
+		cmd[1] = checksum;
+		ret = i2c_write_dt(&cfg->i2c, cmd, sizeof(cmd));
+		if (ret < 0) {
+			goto err;
+		}
+	}
 	ret = i2c_write_read_dt(&cfg->i2c, cmd, 1, &resp, sizeof(resp));
 	if (ret < 0) {
 		LOG_ERR("checksum read error %d", ret);
 		goto err;
 	}
 
-	for (int i = 0; i < count; i++) {
-		checksum += data[i];
-	}
 	checksum = 0xFF - checksum;
 
 	if (checksum != resp) {
