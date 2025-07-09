@@ -264,7 +264,7 @@ int hy4245_access_flash_data(const struct device *dev,
 			     bool is_read)
 {
 	int ret;
-	uint8_t cmd[] = { HY4245_EXTCMD_BLKDATA_CHECKSUM };
+	uint8_t cmd[2] = {HY4245_EXTCMD_BLKDATA_CHECKSUM};
 	const struct hy4245_config *cfg = dev->config;
 	struct hy4245_data *drvdata = dev->data;
 	uint8_t checksum = 0;
