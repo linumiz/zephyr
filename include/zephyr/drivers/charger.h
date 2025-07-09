@@ -58,6 +58,10 @@ enum charger_property {
 	CHARGER_PROP_CONSTANT_CHARGE_VOLTAGE_UV,
 	/** Represents USB charge type based on BC 1.2*/
 	CHARGER_PROP_USB_TYPE,
+	/** Represents the otg discharge voltage µV */
+	CHARGER_PROP_OTG_DSCHG_VOLTAGE_UV,
+	/** Represents the otg discharge current µA */
+	CHARGER_PROP_OTG_DSCHG_CURRENT_UA,
 	/**
 	 * Configuration of the input current regulation target in µA
 	 *
@@ -80,6 +84,8 @@ enum charger_property {
 	CHARGER_PROP_INPUT_VOLTAGE_NOW,
 	/** Present charger input current in uA */
 	CHARGER_PROP_INPUT_CURRENT_NOW,
+	/** Present sys voltage in uV */
+	CHARGER_PROP_SYS_VOLTAGE_NOW,
 	/**
 	 * Configuration to issue a notification to the system based on the input current
 	 * level and timing
@@ -322,7 +328,13 @@ union charger_propval {
 	/** CHARGER_PROP_INPUT_VOLTAGE_NOW */
 	uint32_t input_voltage_now_uv;
 	/** CHARGER_PROP_INPUT_CURRENT_NOW */
-	int32_t input_current_now_ua;
+	uint32_t input_current_now_ua;
+	/** CHARGER_PROP_SYS_VOLTAGE_NOW */
+	uint32_t vsys_voltage_now_uv;
+	/** CHARGER_PROP_OTG_DSCHG_VOLTAGE_UV */
+	uint32_t otg_dschg_voltage_uv;
+	/** CHARGER_PROP_OTG_DSCHG_CURRENT_UA */
+	uint32_t otg_dschg_current_ua;
 	/** CHARGER_PROP_INPUT_CURRENT_NOTIFICATION */
 	struct charger_current_notifier input_current_notification;
 	/** CHARGER_PROP_DISCHARGE_CURRENT_NOTIFICATION */

@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
+#if 1
 #include <stdio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
@@ -19,23 +19,28 @@ int main(void)
 	const struct charger_driver_api * api = (const struct charger_driver_api *)dev->api;
 	union charger_propval val;
 	int ret;
+	ret = api->get_property(dev, CHARGER_PROP_INPUT_REGULATION_VOLTAGE_UV, &val);
+	if(ret){
+		printk("\nreading err \n");	
+	}
+	
+	printk("Val : %d", val.input_voltage_regulation_voltage_uv);
+
 	ret = api->get_property(dev, CHARGER_PROP_INPUT_REGULATION_CURRENT_UA, &val);
-	if(ret)
-	{
+	if(ret){
 		printk("\n1. get err : %d\n", ret);
 	}
-	
+
 	ret = api->set_property(dev, CHARGER_PROP_INPUT_REGULATION_CURRENT_UA, &val);
-	if(ret)
-	{
+	if(ret){
 		printk("\n2. set err : %d\n", ret);
 	}
-	
+
 	ret = api->get_property(dev, CHARGER_PROP_INPUT_REGULATION_CURRENT_UA, &val);
-	if(ret)
-	{
+	if(ret){
 		printk("\n3. get err : %d\n", ret);
 	}
-
 	return 0;
 }
+#endif
+

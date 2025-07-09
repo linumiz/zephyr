@@ -21,11 +21,9 @@
 LOG_MODULE_REGISTER(mp_mp2733, CONFIG_CHARGER_LOG_LEVEL);
 
 /**
- *  TODO i2c_reg_update_byte_dt is not working anywhere in my code so i need to figure out why 
- *  TODO now the update is used and tehre is no error becuase of the value that is passed to the api is
- *  32 bit long , and now it is changed to 8 bit and this works fitered , but the problem is
- *  wheen i use the get property to get the value that i have written in the reg , it will raise an error
- *  saying wrong general input output. i don't what i am going to do now and how to slve this ??
+ * TODO the ic is pulling the sda pin to low , now i need to know how
+ * to reset the state so that the ic shouldn't pull the pin to low 
+ *
  *  */
 
 struct mp2733_config {
@@ -53,8 +51,8 @@ struct mp2733_data {
 	uint32_t otg_dschg_voltage_uv;
 	uint32_t otg_dschg_current_ua;
 	uint32_t thermal_regulation_threshold;
-	//	enum charger_status state;
-	//	enum charger_online online;
+	enum charger_status state;
+	enum charger_online online;
 };
 
 #if 1 /* valid Vin */
@@ -84,7 +82,7 @@ static int mp2733_is_valid_input(const struct device *dev)
 static bool mp2733_get_charge_enable(const struct device *dev)
 {
 	const struct mp2733_config *const config = dev->config;
-	uint8_t chrg_ctrl_0;
+	uint8_t chrg_ctrl;
 	int charger_enable;
 	int ce_pin = 0;
 	int ret;
@@ -92,7 +90,8 @@ static bool mp2733_get_charge_enable(const struct device *dev)
 	ret = mp2733_is_valid_input(dev);
 	if(ret < 0)
 	{
-		return ret;
+		printk("\nINVALID INPUT %d\n", ret);
+		return false;
 	}
 
 	if (config->ce_gpio.port != NULL) {
@@ -100,12 +99,13 @@ static bool mp2733_get_charge_enable(const struct device *dev)
 	}
 
 	ret = i2c_reg_read_byte_dt(&config->i2c, MP2733_CHRG_CTRL_VSYS_CONF,
-			&chrg_ctrl_0);
+			&chrg_ctrl);
 	if (ret) {
-		return ret;
+		printk("\nI2C READ ERR %d\n", ret);
+		return false;
 	}
 
-	charger_enable = chrg_ctrl_0 & MP2733_CHRG_CONFIG_MASK;
+	charger_enable = chrg_ctrl & MP2733_CHRG_CONFIG_MASK;
 	if (charger_enable != 0) {
 		if (config->ce_gpio.port && ce_pin) {
 			return true;
@@ -126,15 +126,14 @@ static int mp2733_set_charge_enable(const struct device *dev,
 		return ret;
 	}
 	if (config->ce_gpio.port != NULL) {
-		ret = gpio_pin_set_dt(&config->ce_gpio, enable);
+		ret = gpio_pin_set_dt(&config->ce_gpio, !enable);
 		if (ret) {
 			return ret;
 		}
 	}
 
 	return i2c_reg_update_byte_dt(&config->i2c, MP2733_CHRG_CTRL_VSYS_CONF,
-			MP2733_CHRG_CONFIG_MASK, 
-			(enable ? MP2733_CHRG_ENABLE : 0) 
+			MP2733_CHRG_CONFIG_MASK, (enable ? MP2733_CHRG_ENABLE : 0) 
 			<< MP2733_CHRG_CONFIG_SHIFT);
 }
 #endif  /* charge enable end */
@@ -154,7 +153,7 @@ static int mp2733_get_ichrg_curr(const struct device *dev,
 		return ret;
 	}
 	*current_ua = (((chrg_curr & MP2733_CCHRG_I_CONFIG_MASK)*
-				MP2733_CCHRG_I_STEP_UA )+ MP2733_CCHRG_I_OFFSET);
+				MP2733_CCHRG_I_STEP_UA ) + MP2733_CCHRG_I_OFFSET);
 	return 0;
 }
 
@@ -229,7 +228,6 @@ static int mp2733_set_chrg_volt(const struct device *dev,
 static int mp2733_get_input_curr_lim(const struct device *dev, 
 		uint32_t *current_ua)
 {
-	printk("input curr lim\n");
 	const struct mp2733_config *const config = dev->config;
 	uint8_t inp_curr;
 	int ret;
@@ -238,7 +236,6 @@ static int mp2733_get_input_curr_lim(const struct device *dev,
 			&inp_curr);
 	if(ret < 0)
 	{
-		printk("get prop read err : %d", ret);
 		return ret;
 	}
 
@@ -247,7 +244,7 @@ static int mp2733_get_input_curr_lim(const struct device *dev,
 			MP2733_INP_I_LIM_CONFIG_MASK);
 	if(ret)
 	{
-		printk("get prop udpdate err : %d", ret);
+		return ret;
 	}
 
 	*current_ua =(((inp_curr & MP2733_INP_I_LIM_CONFIG_MASK) * 
@@ -257,7 +254,6 @@ static int mp2733_get_input_curr_lim(const struct device *dev,
 
 static int mp2733_set_input_curr_lim(const struct device *dev, int iindpm)
 {
-	printk("input curr set %d\n", iindpm);
 	const struct mp2733_config *const config = dev->config;
 	struct mp2733_data * data = dev->data;
 	uint8_t inp_val;
@@ -281,8 +277,7 @@ static int mp2733_get_input_volt_lim(const struct device *dev,
 	uint8_t inp_volt;
 	int ret;
 
-	ret = i2c_reg_read_byte_dt(&config->i2c, 
-			MP2733_INP_V_LIM, &inp_volt);
+	ret = i2c_reg_read_byte_dt(&config->i2c, MP2733_INP_V_LIM, &inp_volt);
 	if(ret < 0)
 	{
 		return ret;
@@ -388,8 +383,8 @@ static int mp2733_get_otg_dschg_volt(const struct device *dev,
 	uint8_t otg_dschg_volt;
 	int ret;
 
-	ret = i2c_reg_read_byte_dt(&config->i2c, 
-			MP2733_ADC_CTRL_OTG_CONF, &otg_dschg_volt);
+	ret = i2c_reg_read_byte_dt(&config->i2c, MP2733_ADC_CTRL_OTG_CONF,
+		       	&otg_dschg_volt);
 	if(ret < 0)
 	{
 		return ret;
@@ -430,10 +425,33 @@ static int mp2733_get_otg_dschg_curr(const struct device *dev,
 	{
 		return ret;
 	}
-	/*TODO find a way to retrieve the values for the bits enabled to get 
-	 * the curr value
-	 * */
-	*dschg_curr_ua = (dschg_curr & MP2733_IIN_DSCHG_I_CONFIG_MASK);
+	dschg_curr = dschg_curr & MP2733_IIN_DSCHG_I_CONFIG_MASK;
+
+	switch(dschg_curr){
+		case MP2733_IIN_DSCHG_I_800_MA:
+			*dschg_curr_ua = MP2733_IIN_DSCHG_I_DEF_8A;
+			break;
+		case MP2733_IIN_DSCHG_I_1100_MA:
+			*dschg_curr_ua = MP2733_IIN_DSCHG_I_DEF_11A;
+			break;
+		case MP2733_IIN_DSCHG_I_1500_MA:
+			*dschg_curr_ua = MP2733_IIN_DSCHG_I_DEF_15A;
+			break;
+		case MP2733_IIN_DSCHG_I_1800_MA:
+			*dschg_curr_ua = MP2733_IIN_DSCHG_I_DEF_18A;
+			break;
+		case MP2733_IIN_DSCHG_I_2100_MA:
+			*dschg_curr_ua = MP2733_IIN_DSCHG_I_DEF_21A;
+			break;
+		case MP2733_IIN_DSCHG_I_2400_MA:
+			*dschg_curr_ua = MP2733_IIN_DSCHG_I_DEF_24A;
+			break;
+		case MP2733_IIN_DSCHG_I_3000_MA:
+			*dschg_curr_ua = MP2733_IIN_DSCHG_I_DEF_30A;
+			break;
+		default:
+			*dschg_curr_ua = MP2733_IIN_DSCHG_I_DEF_UA;
+	}
 	return 0;
 
 }
@@ -441,9 +459,15 @@ static int mp2733_get_otg_dschg_curr(const struct device *dev,
 static int mp2733_set_otg_dschg_curr(const struct device *dev, int dschg_i)
 {
 	const struct mp2733_config *const config = dev->config;
+	uint8_t dschg_curr;
+
+	dschg_i = CLAMP(dschg_i , MP2733_IIN_DSCHG_I_MIN_UA,
+			MP2733_IIN_DSCHG_I_MAX_UA);
+	
+	dschg_curr = (dschg_i / MP2733_IIN_DSCHG_I_DEF_UA);
 	
 	return i2c_reg_update_byte_dt(&config->i2c, MP2733_ADC_CTRL_OTG_CONF, 
-			MP2733_IIN_DSCHG_I_CONFIG_MASK, MP2733_IIN_DSCHG_I_DEF_MASK);
+			MP2733_IIN_DSCHG_I_CONFIG_MASK, dschg_curr);
 }
 #endif 
 
@@ -554,8 +578,7 @@ static int mp2733_get_online_status(const struct device *dev, enum charger_onlin
 {
 	const struct mp2733_config *const config = dev->config;
 	uint8_t chrg_stat;
-	int online_stat;
-	int ret;
+	int online_stat, ret;
 
 	ret = i2c_reg_read_byte_dt(&config->i2c, MP2733_STATUS_IND, &chrg_stat);
 	if(ret)
@@ -740,6 +763,16 @@ static int mp2733_get_prop(const struct device *dev, charger_prop_t prop,
 		return mp2733_get_prechrg_curr(dev, &val->precharge_current_ua);
 	case CHARGER_PROP_CHARGE_TERM_CURRENT_UA:
 		return mp2733_get_term_curr(dev, &val->charge_term_current_ua);
+	case CHARGER_PROP_OTG_DSCHG_VOLTAGE_UV:
+		return mp2733_get_otg_dschg_volt(dev, &val->otg_dschg_voltage_uv);
+	case CHARGER_PROP_OTG_DSCHG_CURRENT_UA:
+		return mp2733_get_otg_dschg_curr(dev, &val->otg_dschg_current_ua);
+	case CHARGER_PROP_INPUT_REGULATION_CURRENT_UA:
+		return mp2733_get_input_curr_lim(dev, 
+				&val->input_current_regulation_current_ua);
+	case CHARGER_PROP_INPUT_REGULATION_VOLTAGE_UV:
+		return mp2733_get_input_volt_lim(dev, 
+				&val->input_voltage_regulation_voltage_uv);
 	case CHARGER_PROP_BATTERY_VOLTAGE_NOW:
 		return mp2733_get_vbatt_adc(dev, &val->battery_voltage_now_uv);
 	case CHARGER_PROP_BATTERY_CURRENT_NOW:
@@ -748,12 +781,8 @@ static int mp2733_get_prop(const struct device *dev, charger_prop_t prop,
 		return mp2733_get_vin_adc(dev, &val->input_voltage_now_uv);
 	case CHARGER_PROP_INPUT_CURRENT_NOW:
 		return mp2733_get_iin_adc(dev, &val->input_current_now_ua);
-	case CHARGER_PROP_INPUT_REGULATION_CURRENT_UA:
-		return mp2733_get_input_curr_lim(dev, 
-				&val->input_current_regulation_current_ua);
-	case CHARGER_PROP_INPUT_REGULATION_VOLTAGE_UV:
-		return mp2733_get_input_volt_lim(dev, 
-				&val->input_voltage_regulation_voltage_uv);
+	case CHARGER_PROP_SYS_VOLTAGE_NOW:
+		return mp2733_get_vsys_adc(dev, &val->vsys_voltage_now_uv);
 	default:
 		return -ENOTSUP;
 	}
@@ -776,14 +805,16 @@ static int mp2733_set_prop(const struct device *dev, charger_prop_t prop,
 		return mp2733_set_input_curr_lim(dev, val->input_current_regulation_current_ua);
 	case CHARGER_PROP_INPUT_REGULATION_VOLTAGE_UV:
 		return mp2733_set_input_volt_lim(dev, val->input_voltage_regulation_voltage_uv);
-		// TODO
+	case CHARGER_PROP_OTG_DSCHG_VOLTAGE_UV:
+		return mp2733_set_otg_dschg_volt(dev, &val->otg_dschg_voltage_uv);
+	case CHARGER_PROP_OTG_DSCHG_CURRENT_UA:
+		return mp2733_set_otg_dschg_curr(dev, &val->otg_dschg_current_ua);
 	case CHARGER_PROP_STATUS_NOTIFICATION:
 		data->charger_status_notifier = val->status_notification;
 		break;
 	case CHARGER_PROP_ONLINE_NOTIFICATION:
 		data->charger_online_notifier = val->online_notification;
 		break;
-		// TODO
 	default:
 		return -EINVAL;
 	}
@@ -819,13 +850,7 @@ static int mp2733_otg_mode_enable(const struct device * dev, const bool enable)
 	const struct mp2733_config *const config = dev->config;
 	struct mp2733_data *data = dev->data;
 	int ret;
-
-	if(config->otg_gpio.port != NULL) {
-		ret = gpio_pin_set_dt(&config->otg_gpio, enable);
-		if(ret) {
-			return ret;
-		}
-	}
+	
 	/* enabling ntc for otg mode */
 	ret = i2c_reg_update_byte_dt(&config->i2c, MP2733_NTC_CONF_THERM_REGUL,
 			MP2733_NTC_OTG_EN, MP2733_NTC_OTG_EN);
@@ -845,6 +870,12 @@ static int mp2733_otg_mode_enable(const struct device * dev, const bool enable)
 		return ret;
 	}
 
+	if(config->otg_gpio.port != NULL) {
+		ret = gpio_pin_set_dt(&config->otg_gpio, enable);
+		if(ret) {
+			return ret;
+		}
+	}
 	return i2c_reg_update_byte_dt(&config->i2c, MP2733_CHRG_CTRL_VSYS_CONF,
 			MP2733_CHRG_CONFIG_OTG_MODE, 
 			(enable ? MP2733_CHRG_CONFIG_OTG_MODE :0));
@@ -890,91 +921,247 @@ static int mp2733_hw_init(const struct device *dev)
 	const struct mp2733_config *const config = dev->config;
 	struct mp2733_data *data = dev->data;
 	int ret;
+	uint8_t val;
+
+	ret = i2c_reg_read_byte_dt(&config->i2c, MP2733_INP_V_LIM, &val);
+	if(ret){
+		return ret;
+	}
 
 	// charge control reg 2 is clear by reset
 	ret = i2c_reg_update_byte_dt(&config->i2c, MP2733_INP_V_LIM, MP2733_REG_RESET,
 			MP2733_REG_RESET);
-	if (ret) {
+	if (ret){
 		return ret;
 	}
 
 	/* watch dog disable */
 	ret = i2c_reg_update_byte_dt(&config->i2c, MP2733_TIMER_CONF, 
 			MP2733_WATCHDOG_TIMER_MASK, MP2733_WATCHDOG_TIMER_DIS);
-	if (ret) {
+	if (ret){
+		return ret;
+	}
+
+	/* USB detection enable */
+	ret = i2c_reg_update_byte_dt(&config->i2c, MP2733_INT_MASK_USB_DETCN, 
+			MP2733_USB_DET_EN, MP2733_USB_DET_EN);
+	if(ret){
 		return ret;
 	}
 
 	// const charge current set
 	ret = mp2733_set_ichrg_curr(dev, data->constant_charge_current_max_ua);
-	if (ret) {
+	if (ret){
 		return ret;
 	}
 
 	// const charge voltage set
 	ret = mp2733_set_chrg_volt(dev, data->constant_charge_voltage_max_uv);
-	if (ret) {
+	if (ret){
 		return ret;
 	}
 
 	// pre current prop set
 	ret = mp2733_set_prechrg_curr(dev, data->precharge_current_ua);
-	if (ret) {
+	if (ret){
 		return ret;
 	}
 
 	// term current prop set
 	ret = mp2733_set_term_curr(dev, data->charge_term_current_ua);
-	if (ret) {
+	if (ret){
 		return ret;
 	}
 
 	// input volt lim set
 	ret = mp2733_set_input_volt_lim(dev, data->input_voltage_min_uv);
-	if (ret) {
+	if (ret){
 		return ret;
 	}
 
 	// input current lim set
 	ret = mp2733_set_input_curr_lim(dev, data->input_current_max_ua);
-	if (ret) {
+	if (ret){
 		return ret;
 	}
 
 	// otg volt lim set
 	ret = mp2733_set_otg_dschg_volt(dev, data->otg_dschg_voltage_uv);
-	if(ret)
-	{
+	if(ret){
 		return ret;
 	}
 
 	// otg curr lim set	
 	ret = mp2733_set_otg_dschg_curr(dev, data->otg_dschg_current_ua);
-	if(ret)
-	{
+	if(ret){
 		return ret;
 	}
 	
 	// heat mgmt
 	ret = mp2733_set_heat_mgmt(dev);
-	if(ret)
-	{
+	if(ret){
+		return ret;
+	}
+
+	// battfet is turned on 
+	ret = i2c_reg_update_byte_dt(&config->i2c, MP2733_BATTFET_CONF, 
+			MP2733_BATTFET_DIS, 0);
+	if(ret){
 		return ret;
 	}
 
 	// adc setup
 	ret = i2c_reg_update_byte_dt(&config->i2c, MP2733_ADC_CTRL_OTG_CONF, MP2733_ADC_RATE, MP2733_ADC_RATE);
-	if(ret) {
+	if(ret){
 		return ret;
 	}
 	ret = i2c_reg_update_byte_dt(&config->i2c, MP2733_ADC_CTRL_OTG_CONF, MP2733_ADC_START, MP2733_ADC_START);
-	if(ret)
-	{
+	if(ret){
 		return ret;
 	}
 	return 0;
 }
 #endif
+
+#if 1 /* INT HANDLER */
+/* this api is used to enable the int pin as interrupt and disable it during the isr handling */
+static int mp2733_enable_interrupt_pin(const struct device *dev, bool enabled)
+{
+        const struct mp2733_config *const config = dev->config;
+        gpio_flags_t flags;
+        int ret;
+
+        flags = enabled ? GPIO_INT_EDGE_TO_ACTIVE : GPIO_INT_DISABLE;
+
+        ret = gpio_pin_interrupt_configure_dt(&config->int_gpio, flags);
+        if (ret < 0) {
+                LOG_ERR("Could not %s interrupt GPIO callback: %d", enabled ?
+			       	"enable" : "disable", ret);
+        }
+        
+	return ret;
+}
+
+static int mp2733_battfet_charge_disable(const struct device *dev)
+{
+	/* set charge_enable as false to stop charging and enable disc mode 
+	 * to isolate the battery from the system 
+	 */
+	const struct mp2733_config *const config = dev->config;	
+	int ret;
+
+	ret = mp2733_set_charge_enable(dev, false);
+	if(ret){
+		return ret;
+	}
+	
+	ret = mp2733_disc_mode_enable(dev, true);
+	if(ret){
+		return ret;
+	}
+	return 0;
+}
+
+/* this is the interrupt handler so need to check the reg and do the work according to the interrupt */ 
+static void mp2733_int_routine_work_handler(struct k_work *work)
+{
+        struct mp2733_data *data = CONTAINER_OF(work, struct mp2733_data, int_routine_work);
+	struct device *dev = data->dev;
+	struct mp2733_config * const config = dev->config;
+        union charger_propval val;
+        uint8_t reg;
+	int ret;
+
+#if 1 /* status and online notifier */
+        if (data->charger_status_notifier != NULL) {
+                ret = mp2733_get_charger_status(data->dev, &val.status);
+                if (!ret) {
+                        data->charger_status_notifier(val.status);
+                }
+        }
+
+        if (data->charger_online_notifier != NULL) {
+                ret = mp2733_get_online_status(data->dev, &val.online);
+                if (!ret) {
+                        data->charger_online_notifier(val.online);
+                }
+        }
+#endif
+
+#if 1 /* reading the status reg for otg mode enabling */
+	ret = i2c_reg_read_byte_dt(&config->i2c, MP2733_STATUS_IND, &reg);
+	if(ret){
+		return ret;
+	}
+	
+	if((reg & MP2733_STATUS_IND_VIN_MASK) & MP2733_OTG_MODE){
+		// enabling the otg mode if the input is detected as otg input
+		ret = mp2733_otg_mode_enable(dev, true);
+		if(ret){
+			return ret;
+		}	
+	}
+#endif
+
+#if 1 /* reading the fault reg */
+	ret = i2c_reg_read_byte_dt(&config->i2c, MP2733_FAULT_IND, &reg);
+	if(ret){
+		return ret;
+	}
+	if(reg){
+		ret = mp2733_battfet_charge_disable(dev);
+		if(ret){
+			return ret;
+		}
+	}
+#endif
+
+	(void)mp2733_enable_interrupt_pin(data->dev, true);
+}
+
+static void mp2733_gpio_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
+{
+        struct mp2733_data *data = CONTAINER_OF(cb, struct mp2733_data, gpio_cb);
+        int ret;
+
+        (void)mp2733_enable_interrupt_pin(data->dev, false);
+
+        ret = k_work_submit(&data->int_routine_work);
+        if (ret < 0) {
+                LOG_WRN("Could not submit int work: %d", ret);
+        }
+}
+
+static int mp2733_configure_interrupt(const struct device *dev)
+{
+        const struct mp2733_config *const config = dev->config;
+        struct mp2733_data *data = dev->data;
+        int ret;
+
+        k_work_init(&data->int_routine_work, mp2733_int_routine_work_handler);
+        if (!gpio_is_ready_dt(&config->int_gpio)) {
+                LOG_ERR("Interrupt GPIO device not ready");
+                return -ENODEV;
+        }
+
+        ret = gpio_pin_configure_dt(&config->int_gpio, GPIO_INPUT);
+        if (ret < 0) {
+                LOG_ERR("Could not configure interrupt GPIO");
+                return ret;
+        }
+
+        gpio_init_callback(&data->gpio_cb, mp2733_gpio_callback, BIT(config->int_gpio.pin));
+        ret = gpio_add_callback_dt(&config->int_gpio, &data->gpio_cb);
+        if (ret < 0) {
+                LOG_ERR("Could not add interrupt GPIO callback");
+                return ret;
+        }
+        
+        (void)mp2733_enable_interrupt_pin(data->dev, true);
+
+        return 0;
+}
+#endif /* INT HANDLER END */
 
 static int mp2733_init(const struct device *dev)
 {
@@ -985,7 +1172,7 @@ static int mp2733_init(const struct device *dev)
 
 	data->dev = dev;
 
-	/* charge enable pin config */
+	/* CE pin config */
 	if (config->ce_gpio.port != NULL) {
 		if (!gpio_is_ready_dt(&config->ce_gpio)) {
 			return -ENODEV;
@@ -999,7 +1186,7 @@ static int mp2733_init(const struct device *dev)
 		LOG_DBG("Assuming charge enable pin is pulled low");
 	}
 
-	/* otg pin config */
+	/* OTG pin config */
 	if (config->otg_gpio.port != NULL) {
 		if (!gpio_is_ready_dt(&config->otg_gpio)) {
 			return -ENODEV;
@@ -1016,27 +1203,27 @@ static int mp2733_init(const struct device *dev)
 	ret = mp2733_validate_dt(data);	
 	if(ret) 
 	{
+		LOG_ERR("Validate DT ERR : %d", ret);
 		return ret;
 	}
 
 	ret = mp2733_hw_init(dev);
 	if(ret)
 	{
+		LOG_ERR("HW INIT ERR : %d", ret);
 		return ret;
 	}
-	/*TODO*/
-#if 0 
+
+	/* INT pin config */
 	if (config->int_gpio.port != NULL) {
-                ret = bq2562x_configure_interrupt(dev);
+                ret = mp2733_configure_interrupt(dev);
                 if (ret) {
                         return ret;
                 }
         }
-#endif
 	return ret;
 
 }
-
 
 static DEVICE_API(charger, mp2733_driver_api) = {
 	.get_property = mp2733_get_prop,
@@ -1044,32 +1231,32 @@ static DEVICE_API(charger, mp2733_driver_api) = {
 	.charge_enable = mp2733_set_charge_enable,
 };
 
-#define MP2733_INIT(inst)                                                                         \
-	\
-	static const struct mp2733_config mp2733_config_##inst = {                               \
-		.i2c = I2C_DT_SPEC_INST_GET(inst),                                                 \
-		.ce_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, ce_gpios, {}),                           \
-		.int_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, int_gpios, {}),                         \
-		.otg_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, otg_gpios, {}),			\
-	};                                                                                         \
-	\
-	static struct mp2733_data mp2733_data_##inst = {                                         \
-		.constant_charge_current_max_ua =                                                  \
-		DT_INST_PROP(inst, constant_charge_current_max_microamp),                  \
-		.constant_charge_voltage_max_uv =                                                  \
-		DT_INST_PROP(inst, constant_charge_voltage_max_microvolt),                 \
-		.precharge_current_ua = DT_INST_PROP(inst, precharge_current_microamp),            \
+#define MP2733_INIT(inst)									  \
+												  \
+	static const struct mp2733_config mp2733_config_##inst = {				  \
+		.i2c = I2C_DT_SPEC_INST_GET(inst),						  \
+		.ce_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, ce_gpios, {}),			  \
+		.int_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, int_gpios, {}),			  \
+		.otg_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, otg_gpios, {}),			  \
+	};                                                                                        \
+												  \
+	static struct mp2733_data mp2733_data_##inst = {                                          \
+		.constant_charge_current_max_ua =                                                 \
+		DT_INST_PROP(inst, constant_charge_current_max_microamp),                  	  \
+		.constant_charge_voltage_max_uv =                                                 \
+		DT_INST_PROP(inst, constant_charge_voltage_max_microvolt),                 	  \
+		.min_sys_voltage_uv = DT_INST_PROP(inst, min_sys_voltage_microvolt),              \
+		.precharge_current_ua = DT_INST_PROP(inst, precharge_current_microamp),           \
 		.charge_term_current_ua = DT_INST_PROP(inst, termcharge_current_microamp),        \
-		.min_sys_voltage_uv = DT_INST_PROP(inst, min_sys_voltage_microvolt),            \
-		.input_voltage_min_uv = DT_INST_PROP(inst, input_voltage_limit_microvolt),      \
-		.input_current_max_ua = DT_INST_PROP(inst, input_current_limit_microamp),       \
-		.otg_dschg_voltage_uv = DT_INST_PROP(inst, input_voltage_dschg_otg_microvolt),	\
-		.otg_dschg_current_ua = DT_INST_PROP(inst, input_current_dschg_otg_microamp),	\
-		.thermal_regulation_threshold = DT_INST_PROP(inst, thermal_regulation_threshold) \
-	};                                                                                         \
-	\
-	DEVICE_DT_INST_DEFINE(inst, mp2733_init, NULL, &mp2733_data_##inst,                      \
-			&mp2733_config_##inst, POST_KERNEL, CONFIG_CHARGER_INIT_PRIORITY,   \
+		.input_current_max_ua = DT_INST_PROP(inst, input_current_limit_microamp),         \
+		.input_voltage_min_uv = DT_INST_PROP(inst, input_voltage_limit_microvolt),        \
+		.otg_dschg_current_ua = DT_INST_PROP(inst, input_current_dschg_otg_microamp),	  \
+		.otg_dschg_voltage_uv = DT_INST_PROP(inst, input_voltage_dschg_otg_microvolt),	  \
+		.thermal_regulation_threshold = DT_INST_PROP(inst, thermal_regulation_threshold)  \
+	};                                                                                        \
+												  \
+	DEVICE_DT_INST_DEFINE(inst, mp2733_init, NULL, &mp2733_data_##inst,                       \
+			&mp2733_config_##inst, POST_KERNEL, CONFIG_CHARGER_INIT_PRIORITY,         \
 			&mp2733_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(MP2733_INIT)
