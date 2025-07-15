@@ -20,12 +20,6 @@
 
 LOG_MODULE_REGISTER(mp_mp2733, CONFIG_CHARGER_LOG_LEVEL);
 
-/**
- * TODO the ic is pulling the sda pin to low , now i need to know how
- * to reset the state so that the ic shouldn't pull the pin to low 
- *
- *  */
-
 struct mp2733_config {
 	struct i2c_dt_spec i2c;
 	struct gpio_dt_spec ce_gpio;
