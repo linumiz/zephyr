@@ -315,6 +315,7 @@ int hy4245_access_flash_data(const struct device *dev,
 		if (ret < 0) {
 			goto err;
 		}
+
 		ret = hy4245_ctrl_status(dev, CTRL_STATUS_CSV);
 		if (ret < 0) {
 			goto err;
