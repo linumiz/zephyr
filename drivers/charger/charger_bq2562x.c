@@ -51,6 +51,8 @@ struct bq2562x_data {
 	uint32_t verchg_bat_offset;
 	uint32_t enable_dcp_bias;
 	uint32_t enable_savety_tmrs;
+	uint32_t timer2x_en;
+	uint32_t precharge_timer;
 	uint32_t auto_battery_discharging;
 	uint32_t vbus_ovp;
 	uint32_t peak_current_protection_threshold;
@@ -63,6 +65,8 @@ enum bq2562x_id {
 	BQ25620,
 	BQ25622,
 };
+
+static int bq2562x_disbale_watchdog(const struct device *dev);
 
 static bool bq2562x_get_charge_enable(const struct device *dev)
 {
@@ -95,6 +99,11 @@ static int bq2562x_set_charge_enable(const struct device *dev, const bool enable
 {
 	const struct bq2562x_config *const config = dev->config;
 	int ret;
+
+	ret = bq2562x_disbale_watchdog(dev);
+	if (ret < 0) {
+		return ret;
+	}
 
 	if (config->ce_gpio.port != NULL) {
 		ret = gpio_pin_set_dt(&config->ce_gpio, enable);
@@ -414,7 +423,7 @@ int bq2562x_set_adc_sampling(const struct device *dev, enum charger_battery_adc_
 				      FIELD_PREP(BIT(7), (enable ? 1 : 0)));
 }
 
-int bq2562x_set_dpdm_detection(const struct device *dev, enum charger_timer_state enable)
+int bq2562x_set_dpdm_detection(const struct device *dev, enum charger_dpdm_detection enable)
 {
 	const struct bq2562x_config *const config = dev->config;
 
@@ -862,11 +871,6 @@ static int bq2562x_set_heat_mgmt(const struct device *dev)
 		return ret;
 	}
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_VBUS_OVP, 1);
-	if (ret) {
-		return ret;
-	}
-
 	return bq2562x_set_min_sys_volt(dev, data->min_sys_voltage_uv);
 }
 
@@ -878,7 +882,17 @@ static int bq2562x_hw_init(const struct device *dev)
 	uint8_t value = 0;
 	uint8_t mask = 0;
 
-	value |= FIELD_PREP(BQ2562X_CHG_Q1_FULLON, data->q1_fullon);
+	/* It is common use to start with charging disabled and reset devices before initializing
+	 * it's settings. */
+	bq2562x_set_charge_enable(dev, false);
+	value = BQ2562X_CTRL2_REG_RST;
+	ret = i2c_reg_write_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, value);
+	if (ret != 0) {
+		return ret;
+	}
+	k_msleep(50); /* Give some time to execute the reset */
+
+	value = FIELD_PREP(BQ2562X_CHG_Q1_FULLON, data->q1_fullon);
 	value |= FIELD_PREP(BQ2562X_CHG_Q4_FULLON, data->q4_fullon);
 	value |= FIELD_PREP(BQ2562X_CHG_VINDPM_BAT_TRACK, data->vindpm_bat_track);
 	value |= FIELD_PREP(BQ2562X_CHG_VRECHG, data->verchg_bat_offset);
@@ -901,8 +915,7 @@ static int bq2562x_hw_init(const struct device *dev)
 	}
 
 	value = FIELD_PREP(BQ2562X_CTRL2_VBUS_OVP, data->vbus_ovp);
-	value |= BQ2562X_CTRL2_REG_RST;
-	mask = BQ2562X_CTRL2_VBUS_OVP | BQ2562X_CTRL2_REG_RST;
+	mask = BQ2562X_CTRL2_VBUS_OVP;
 
 	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, mask, value);
 	if (ret != 0) {
@@ -919,8 +932,11 @@ static int bq2562x_hw_init(const struct device *dev)
 	}
 
 	value = FIELD_PREP(BQ2562X_TIMER_DCP_BIAS, data->enable_dcp_bias);
+	value |= FIELD_PREP(BQ2562X_TIMER_TIMER2X_EN, data->timer2x_en);
 	value |= FIELD_PREP(BQ2562X_TIMER_SAFETY_TMRS, data->enable_savety_tmrs);
-	mask = BQ2562X_TIMER_DCP_BIAS | BQ2562X_TIMER_SAFETY_TMRS;
+	value |= FIELD_PREP(BQ2562X_TIMER_PRECHARGE_TMR, data->precharge_timer);
+	mask = BQ2562X_TIMER_DCP_BIAS | BQ2562X_TIMER_SAFETY_TMRS | BQ2562X_TIMER_PRECHARGE_TMR |
+	       BQ2562X_TIMER_TIMER2X_EN;
 
 	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_TIMER_CTRL, mask, value);
 	if (ret != 0) {
@@ -933,17 +949,22 @@ static int bq2562x_hw_init(const struct device *dev)
 		return ret;
 	}
 
-	ret = bq2562x_set_term_curr(dev, data->charge_term_current_ua);
-	if (ret) {
-		return ret;
-	}
-
 	ret = bq2562x_set_input_volt_lim(dev, data->input_voltage_min_uv);
 	if (ret) {
 		return ret;
 	}
 
 	ret = bq2562x_set_input_curr_lim(dev, data->input_current_max_ua);
+	if (ret) {
+		return ret;
+	}
+
+	ret = bq2562x_set_term_curr(dev, data->charge_term_current_ua);
+	if (ret) {
+		return ret;
+	}
+
+	ret = bq2562x_set_prechrg_curr(dev, data->precharge_current_ua);
 	if (ret) {
 		return ret;
 	}
@@ -1154,6 +1175,19 @@ static DEVICE_API(charger, bq2562x_driver_api) = {
 		.switching_converter_freq = DT_INST_PROP(inst, ti_switching_converter_freq),       \
 		.switching_converter_strength =                                                    \
 			DT_INST_PROP(inst, ti_switching_converter_strength),                       \
+		.q1_fullon = DT_INST_PROP(inst, ti_q1_fullon),                                     \
+		.q4_fullon = DT_INST_PROP(inst, ti_q4_fullon),                                     \
+		.vindpm_bat_track = DT_INST_PROP(inst, ti_vindpm_bat_track),                       \
+		.verchg_bat_offset = DT_INST_PROP(inst, ti_verchg_bat_offset),                     \
+		.enable_dcp_bias = DT_INST_PROP(inst, ti_enable_dcp_bias),                         \
+		.enable_savety_tmrs = DT_INST_PROP(inst, ti_enable_savety_tmrs),                   \
+		.timer2x_en = DT_INST_PROP(inst, ti_timer2x_en),                                   \
+		.precharge_timer = DT_INST_PROP(inst, ti_precharge_timer),                         \
+		.auto_battery_discharging = DT_INST_PROP(inst, ti_auto_battery_discharging),       \
+		.vbus_ovp = DT_INST_PROP(inst, ti_vbus_ovp),                                       \
+		.peak_current_protection_threshold =                                               \
+			DT_INST_PROP(inst, ti_peak_current_protection_threshold),                  \
+		.charge_rate_stage = DT_INST_PROP(inst, ti_charge_rate_stage),                     \
 	};                                                                                         \
                                                                                                    \
 	DEVICE_DT_INST_DEFINE(inst, bq2562x_init, NULL, &bq2562x_data_##inst,                      \

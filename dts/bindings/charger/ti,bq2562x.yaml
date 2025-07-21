@@ -51,7 +51,7 @@ properties:
 
   ti,min-sys-voltage-microvolt:
     type: int
-    default: 3600000
+    default: 3520000
     description: |
       Minimum system voltage in micro volts with a 100000 micro volt step.
 
@@ -93,7 +93,7 @@ properties:
 
   ti,switching-converter-strength:
     type: int
-    default: 0
+    default: 3
     enum:
       - 0
       - 1
@@ -104,29 +104,29 @@ properties:
       1: normal
       3: strong
 
-  q1-fullon:
+  ti,q1-fullon:
     type: int
     default: 0
     enum:
       - 0
       - 1
     description: |
-      Forces RBFET (Q1) into low resistance state (26 m次) , regardless of IINDPM setting.
+      Forces RBFET (Q1) into low resistance state (26 mO) , regardless of IINDPM setting.
       0: RBFET RDSON determined by IINDPM setting
-      1: RBFET RDSON is always 26 m次
+      1: RBFET RDSON is always 26 mO
 
-  q4-fullon:
+  ti,q4-fullon:
     type: int
     default: 0
     enum:
       - 0
       - 1
     description: |
-      Forces BATFET (Q4) into low resistance state (15 m次), regardless of ICHG setting.
+      Forces BATFET (Q4) into low resistance state (15 mO), regardless of ICHG setting.
       0: BATFET RDSON determined by charge current
-      1: BATFET RDSON is always 15 m次 
+      1: BATFET RDSON is always 15 mO 
 
-  vindpm-bat-track:
+  ti,vindpm-bat-track:
     type: int
     default: 0
     enum:
@@ -137,7 +137,7 @@ properties:
       0: Disable function
       1: VBAT + 400 mV
 
-  verchg-bat-offset:
+  ti,verchg-bat-offset:
     type: int
     default: 0
     enum:
@@ -148,9 +148,9 @@ properties:
       0: 100 mV
       1: 200 mV
 
-  enable-dcp-bias:
+  ti,enable-dcp-bias:
     type: int
-    default: 0
+    default: 1
     enum:
       - 0
       - 1
@@ -159,7 +159,7 @@ properties:
       0: Disable 600 mV bias on D+ pin
       1: Enable 600 mV bias on D+ pin if DCP detected 
 
-  enable-savety-tmrs:
+  ti,enable-savety-tmrs:
     type: int
     default: 1
     enum:
@@ -170,7 +170,29 @@ properties:
       0: Disable 
       1: Enable 
 
-  auto-battery-discharging:
+  ti,precharge_timer:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+    description: |
+      Set precharge safety timeout.
+      0: 2.5h
+      1: 0.62h 
+
+  ti,timer2x_en:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+    description: |
+      Allow timeout-doubling in DPM mode or thermal regulation.
+      0: Not allowed
+      1: allowed
+
+  ti,auto-battery-discharging:
     type: int
     default: 1
     enum:
@@ -181,7 +203,7 @@ properties:
       0: The charger does NOT apply a discharging current on BAT during battery OVP triggered 
       1: The charger does apply a discharging current on BAT during battery OVP triggered 
 
-  vbus-ovp:
+  ti,vbus-ovp:
     type: int
     default: 1
     enum:
@@ -192,7 +214,7 @@ properties:
       0: 6.3v
       1: 18.5v 
 
-  peak-current-protection-threshold:
+  ti,peak-current-protection-threshold:
     type: int
     default: 3
     enum:
@@ -207,7 +229,7 @@ properties:
       2: 6 A
       3: 12 A
 
-  charge-rate-stage:
+  ti,charge-rate-stage:
     type: int
     default: 0
     enum:

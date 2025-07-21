@@ -163,7 +163,7 @@ int bq2562x_set_adc_sampling(const struct device *dev, enum charger_battery_adc_
  *
  * @return 0 on success, negative error code on failure.
  */
-int bq2562x_set_dpdm_detection(const struct device *dev, enum charger_timer_state enable);
+int bq2562x_set_dpdm_detection(const struct device *dev, enum charger_dpdm_detection enable);
 
 /**
  * @brief Get the timer status of the bq2562x charger.
