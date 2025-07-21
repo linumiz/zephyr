@@ -17,6 +17,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/sys/util.h>
+#include <zephyr/drivers/charger/bq2562x.h>
 
 LOG_MODULE_REGISTER(ti_bq25620, CONFIG_CHARGER_LOG_LEVEL);
 
@@ -44,6 +45,18 @@ struct bq2562x_data {
 	uint32_t thermal_regulation_threshold;
 	uint32_t switching_converter_freq;
 	uint32_t switching_converter_strength;
+	uint32_t q1_fullon;
+	uint32_t q4_fullon;
+	uint32_t vindpm_bat_track;
+	uint32_t verchg_bat_offset;
+	uint32_t enable_dcp_bias;
+	uint32_t enable_savety_tmrs;
+	uint32_t timer2x_en;
+	uint32_t precharge_timer;
+	uint32_t auto_battery_discharging;
+	uint32_t vbus_ovp;
+	uint32_t peak_current_protection_threshold;
+	uint32_t charge_rate_stage;
 	enum charger_status state;
 	enum charger_online online;
 };
@@ -52,6 +65,8 @@ enum bq2562x_id {
 	BQ25620,
 	BQ25622,
 };
+
+static int bq2562x_disbale_watchdog(const struct device *dev);
 
 static bool bq2562x_get_charge_enable(const struct device *dev)
 {
@@ -84,6 +99,11 @@ static int bq2562x_set_charge_enable(const struct device *dev, const bool enable
 {
 	const struct bq2562x_config *const config = dev->config;
 	int ret;
+
+	ret = bq2562x_disbale_watchdog(dev);
+	if (ret < 0) {
+		return ret;
+	}
 
 	if (config->ce_gpio.port != NULL) {
 		ret = gpio_pin_set_dt(&config->ce_gpio, enable);
@@ -123,16 +143,11 @@ static int bq2562x_set_ichrg_curr(const struct device *dev, int chrg_curr)
 	int ret;
 
 	chrg_curr = CLAMP(chrg_curr, BQ2562X_ICHG_I_MIN_UA, chrg_curr_max);
-
-	(void)bq2562x_set_charge_enable(dev, 0);
-
 	chrg_curr = ((chrg_curr / BQ2562X_ICHG_I_STEP_UA) << BQ2562X_ICHG_I_SHIFT);
 	ichg[1] = (chrg_curr >> 8) & BQ2562X_ICHG_MSB_MSK;
 	ichg[0] = chrg_curr & BQ2562X_ICHG_LSB_MSK;
 
 	ret = i2c_burst_write_dt(&config->i2c, BQ2562X_CHRG_I_LIM_LSB, ichg, ARRAY_SIZE(ichg));
-
-	(void)bq2562x_set_charge_enable(dev, 1);
 
 	return ret;
 }
@@ -277,17 +292,12 @@ static int bq2562x_set_prechrg_curr(const struct device *dev, int pre_current)
 	int ret;
 
 	pre_current = CLAMP(pre_current, BQ2562X_PRECHRG_I_MIN_UA, BQ2562X_PRECHRG_I_MAX_UA);
-
-	(void)bq2562x_set_charge_enable(dev, 0);
-
 	pre_current = (pre_current / BQ2562X_PRECHRG_I_STEP_UA) << BQ2562X_PRECHRG_I_SHIFT;
 	prechrg_curr[1] = (pre_current >> 8) & BQ2562X_PRECHRG_I_MSB_MSK;
 	prechrg_curr[0] = pre_current & BQ2562X_PRECHRG_I_LSB_MSK;
 
 	ret = i2c_burst_write_dt(&config->i2c, BQ2562X_PRECHRG_CTRL_LSB, prechrg_curr,
 				 ARRAY_SIZE(prechrg_curr));
-
-	(void)bq2562x_set_charge_enable(dev, 1);
 
 	return ret;
 }
@@ -322,6 +332,103 @@ static int bq2562x_set_term_curr(const struct device *dev, int term_current)
 	iterm[0] = term_current & BQ2562X_TERMCHRG_I_LSB_MSK;
 
 	return i2c_burst_write_dt(&config->i2c, BQ2562X_TERM_CTRL_LSB, iterm, ARRAY_SIZE(iterm));
+}
+
+static int bq2562x_disbale_watchdog(const struct device *dev)
+{
+	const struct bq2562x_config *const config = dev->config;
+
+	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, BQ2562X_WATCHDOG_MASK,
+				      FIELD_PREP(BQ2562X_WATCHDOG_MASK, BQ2562X_WATCHDOG_DIS));
+}
+
+int bq2562x_set_charge_current_threshold(const struct device *dev,
+					 enum charger_current_threshold current_threshold)
+{
+	const struct bq2562x_config *const config = dev->config;
+	uint8_t reg_value = 0;
+
+	switch (current_threshold) {
+	case CHARGER_CURRENT_THRESHOLD_1_5_A:
+		reg_value = 0;
+		break;
+	case CHARGER_CURRENT_THRESHOLD_3_A:
+		reg_value = 1;
+		break;
+	case CHARGER_CURRENT_THRESHOLD_6_A:
+		reg_value = 2;
+		break;
+	case CHARGER_CURRENT_THRESHOLD_12_A:
+		reg_value = 3;
+		break;
+	default:
+		reg_value = 3;
+		break;
+	}
+
+	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_4, BQ2562X_CTRL4_IBAT_PEAK,
+				      FIELD_PREP(GENMASK(7, 6), reg_value));
+}
+
+int bq2562x_set_charge_rate(const struct device *dev, enum charger_rate charge_rate)
+{
+	const struct bq2562x_config *const config = dev->config;
+	uint8_t reg_value = 0;
+
+	switch (charge_rate) {
+	case CHARGER_RATE_1_C:
+		reg_value = 0;
+		break;
+	case CHARGER_RATE_2_C:
+		reg_value = 1;
+		break;
+	case CHARGER_RATE_4_C:
+		reg_value = 2;
+		break;
+	case CHARGER_RATE_6_C:
+		reg_value = 3;
+		break;
+	default:
+		break;
+	}
+	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_4, BQ2562X_CTRL4_RATE,
+				      FIELD_PREP(GENMASK(1, 0), reg_value));
+}
+
+int bq2562x_set_battery_recharge_threshold_offset(const struct device *dev,
+						  enum charger_recharge_threshold_offset offset)
+{
+	const struct bq2562x_config *const config = dev->config;
+	uint8_t reg_value = 0;
+
+	switch (offset) {
+	case CHARGER_VREG_100_MV:
+		reg_value = 0;
+		break;
+	case CHARGER_VREG_200_MV:
+		reg_value = 1;
+		break;
+	default:
+		break;
+	}
+	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_0, BQ2562X_CHG_VRECHG,
+				      FIELD_PREP(BIT(0), reg_value));
+}
+
+int bq2562x_set_adc_sampling(const struct device *dev, enum charger_battery_adc_sampling enable)
+{
+	const struct bq2562x_config *const config = dev->config;
+
+	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_ADC_CTRL, BQ2562X_ADC_EN,
+				      FIELD_PREP(BIT(7), (enable ? 1 : 0)));
+}
+
+int bq2562x_set_dpdm_detection(const struct device *dev, enum charger_dpdm_detection enable)
+{
+	const struct bq2562x_config *const config = dev->config;
+
+	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_TIMER_CTRL, BQ2562X_TIMER_FORCE_INDET,
+				      FIELD_PREP(BIT(6), (enable ? 1 : 0)));
 }
 
 static int bq2562x_get_vbat_adc(const struct device *dev, uint32_t *vbat)
@@ -599,6 +706,49 @@ static int bq2562x_get_usb_type(const struct device *dev, enum charger_usb_type 
 	return 0;
 }
 
+int bq2562x_get_timer_status(const struct device *dev, enum charger_timer_state *state)
+{
+	const struct bq2562x_config *const config = dev->config;
+	uint8_t chrg_stat_0;
+	int ret;
+
+	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_CHRG_STAT_0, &chrg_stat_0);
+	if (ret) {
+		return ret;
+	}
+
+	if ((chrg_stat_0 & BQ2562X_CHG_TMR_STATE) > 0) {
+		*state = CHARGER_TMR_STATE_TIMER_EXPIRED;
+	} else {
+		*state = CHARGER_TMR_STATE_NORMAL;
+	}
+
+	return 0;
+}
+
+int bq2562x_get_tdie_adc(const struct device *dev, int32_t *temperature)
+{
+	const struct bq2562x_config *const config = dev->config;
+	uint8_t tdie_adc[2] = {0};
+	uint16_t temp;
+	int ret;
+
+	ret = i2c_burst_read_dt(&config->i2c, BQ2562X_ADC_TDIE_LSB, tdie_adc, ARRAY_SIZE(tdie_adc));
+	if (ret) {
+		return ret;
+	}
+
+	temp = sys_get_le16(tdie_adc);
+	if (temp & BIT(11)) {
+		temp = ~temp + 1;
+		*temperature = ((temp & BQ2562X_ADC_TDIE_MASK) / 2) * -1;
+	} else {
+		*temperature = (temp & BQ2562X_ADC_TDIE_MASK) / 2;
+	}
+
+	return 0;
+}
+
 static int bq2562x_get_prop(const struct device *dev, charger_prop_t prop,
 			    union charger_propval *val)
 {
@@ -643,7 +793,13 @@ static int bq2562x_get_prop(const struct device *dev, charger_prop_t prop,
 static int bq2562x_set_prop(const struct device *dev, charger_prop_t prop,
 			    const union charger_propval *val)
 {
+	int ret = 0;
 	struct bq2562x_data *data = dev->data;
+
+	ret = bq2562x_disbale_watchdog(dev);
+	if (ret < 0) {
+		return ret;
+	}
 
 	switch (prop) {
 	case CHARGER_PROP_CONSTANT_CHARGE_CURRENT_UA:
@@ -722,42 +878,73 @@ static int bq2562x_hw_init(const struct device *dev)
 {
 	const struct bq2562x_config *const config = dev->config;
 	struct bq2562x_data *data = dev->data;
-	int ret;
+	int ret = 0;
+	uint8_t value = 0;
+	uint8_t mask = 0;
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_REG_RST,
-				     BQ2562X_CTRL2_REG_RST);
-	if (ret) {
+	/* It is common use to start with charging disabled and reset devices before initializing
+	 * it's settings. */
+	bq2562x_set_charge_enable(dev, false);
+	value = BQ2562X_CTRL2_REG_RST;
+	ret = i2c_reg_write_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, value);
+	if (ret != 0) {
+		return ret;
+	}
+	k_msleep(50); /* Give some time to execute the reset */
+
+	value = FIELD_PREP(BQ2562X_CHG_Q1_FULLON, data->q1_fullon);
+	value |= FIELD_PREP(BQ2562X_CHG_Q4_FULLON, data->q4_fullon);
+	value |= FIELD_PREP(BQ2562X_CHG_VINDPM_BAT_TRACK, data->vindpm_bat_track);
+	value |= FIELD_PREP(BQ2562X_CHG_VRECHG, data->verchg_bat_offset);
+
+	mask = BQ2562X_CHG_Q1_FULLON | BQ2562X_CHG_Q4_FULLON | BQ2562X_CHG_VINDPM_BAT_TRACK |
+	       BQ2562X_CHG_VRECHG;
+	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_0, mask, value);
+
+	if (ret != 0) {
+		return ret;
+	}
+
+	value = FIELD_PREP(BQ2562X_CHG_AUTO_IBATDIS, data->auto_battery_discharging);
+	value |= FIELD_PREP(BQ2562X_WATCHDOG_MASK, BQ2562X_WATCHDOG_DIS);
+	mask = BQ2562X_CHG_AUTO_IBATDIS | BQ2562X_WATCHDOG_MASK;
+
+	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, mask, value);
+	if (ret != 0) {
+		return ret;
+	}
+
+	value = FIELD_PREP(BQ2562X_CTRL2_VBUS_OVP, data->vbus_ovp);
+	mask = BQ2562X_CTRL2_VBUS_OVP;
+
+	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, mask, value);
+	if (ret != 0) {
+		return ret;
+	}
+
+	value = FIELD_PREP(BQ2562X_CTRL4_IBAT_PEAK, data->peak_current_protection_threshold);
+	value |= FIELD_PREP(BQ2562X_CTRL4_RATE, data->charge_rate_stage);
+	mask = BQ2562X_CTRL4_IBAT_PEAK | BQ2562X_CTRL4_RATE;
+
+	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_4, mask, value);
+	if (ret != 0) {
+		return ret;
+	}
+
+	value = FIELD_PREP(BQ2562X_TIMER_DCP_BIAS, data->enable_dcp_bias);
+	value |= FIELD_PREP(BQ2562X_TIMER_TIMER2X_EN, data->timer2x_en);
+	value |= FIELD_PREP(BQ2562X_TIMER_SAFETY_TMRS, data->enable_savety_tmrs);
+	value |= FIELD_PREP(BQ2562X_TIMER_PRECHARGE_TMR, data->precharge_timer);
+	mask = BQ2562X_TIMER_DCP_BIAS | BQ2562X_TIMER_SAFETY_TMRS | BQ2562X_TIMER_PRECHARGE_TMR |
+	       BQ2562X_TIMER_TIMER2X_EN;
+
+	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_TIMER_CTRL, mask, value);
+	if (ret != 0) {
 		return ret;
 	}
 
 	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_NTC_CTRL_0, BQ2562X_NTC_MASK,
-				     BQ2562X_NTC_MASK);
-	if (ret) {
-		return ret;
-	}
-
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, BQ2562X_WATCHDOG_MASK,
-				     BQ2562X_WATCHDOG_DIS);
-	if (ret) {
-		return ret;
-	}
-
-	ret = bq2562x_set_ichrg_curr(dev, data->constant_charge_current_max_ua);
-	if (ret) {
-		return ret;
-	}
-
-	ret = bq2562x_set_chrg_volt(dev, data->constant_charge_voltage_max_uv);
-	if (ret) {
-		return ret;
-	}
-
-	ret = bq2562x_set_prechrg_curr(dev, data->precharge_current_ua);
-	if (ret) {
-		return ret;
-	}
-
-	ret = bq2562x_set_term_curr(dev, data->charge_term_current_ua);
+				     FIELD_PREP(BIT(7), BQ2562X_NTC_DIS));
 	if (ret) {
 		return ret;
 	}
@@ -768,6 +955,16 @@ static int bq2562x_hw_init(const struct device *dev)
 	}
 
 	ret = bq2562x_set_input_curr_lim(dev, data->input_current_max_ua);
+	if (ret) {
+		return ret;
+	}
+
+	ret = bq2562x_set_term_curr(dev, data->charge_term_current_ua);
+	if (ret) {
+		return ret;
+	}
+
+	ret = bq2562x_set_prechrg_curr(dev, data->precharge_current_ua);
 	if (ret) {
 		return ret;
 	}
@@ -978,6 +1175,19 @@ static DEVICE_API(charger, bq2562x_driver_api) = {
 		.switching_converter_freq = DT_INST_PROP(inst, ti_switching_converter_freq),       \
 		.switching_converter_strength =                                                    \
 			DT_INST_PROP(inst, ti_switching_converter_strength),                       \
+		.q1_fullon = DT_INST_PROP(inst, ti_q1_fullon),                                     \
+		.q4_fullon = DT_INST_PROP(inst, ti_q4_fullon),                                     \
+		.vindpm_bat_track = DT_INST_PROP(inst, ti_vindpm_bat_track),                       \
+		.verchg_bat_offset = DT_INST_PROP(inst, ti_verchg_bat_offset),                     \
+		.enable_dcp_bias = DT_INST_PROP(inst, ti_enable_dcp_bias),                         \
+		.enable_savety_tmrs = DT_INST_PROP(inst, ti_enable_savety_tmrs),                   \
+		.timer2x_en = DT_INST_PROP(inst, ti_timer2x_en),                                   \
+		.precharge_timer = DT_INST_PROP(inst, ti_precharge_timer),                         \
+		.auto_battery_discharging = DT_INST_PROP(inst, ti_auto_battery_discharging),       \
+		.vbus_ovp = DT_INST_PROP(inst, ti_vbus_ovp),                                       \
+		.peak_current_protection_threshold =                                               \
+			DT_INST_PROP(inst, ti_peak_current_protection_threshold),                  \
+		.charge_rate_stage = DT_INST_PROP(inst, ti_charge_rate_stage),                     \
 	};                                                                                         \
                                                                                                    \
 	DEVICE_DT_INST_DEFINE(inst, bq2562x_init, NULL, &bq2562x_data_##inst,                      \
