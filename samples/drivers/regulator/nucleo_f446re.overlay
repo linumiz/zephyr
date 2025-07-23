@@ -1,0 +1,69 @@
+&i2c1 {
+    status = "okay";
+
+    mp5416@69 {
+        compatible = "mps,mp5416";
+        reg = <0x69>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        buck1: buck1 {
+            regulator-name = "buck1";
+            regulator-min-microvolt = <600000>;
+            regulator-max-microvolt = <2187500>;
+            status = "okay";
+        };
+
+        buck2: buck2 {
+            regulator-name = "buck2";
+            regulator-min-microvolt = <800000>;
+            regulator-max-microvolt = <3975000>;
+            status = "okay";
+        };
+
+        buck3: buck3 {
+            regulator-name = "buck3";
+            regulator-min-microvolt = <600000>;
+            regulator-max-microvolt = <2187500>;
+            status = "okay";
+        };
+
+        buck4: buck4 {
+            regulator-name = "buck4";
+            regulator-min-microvolt = <800000>;
+            regulator-max-microvolt = <3975000>;
+            status = "okay";
+        };
+
+        ldo1: ldo1 {
+            regulator-name = "ldo1";
+            regulator-min-microvolt = <1800000>;
+            regulator-max-microvolt = <1800000>;
+            status = "okay";
+        };
+
+        ldo2: ldo2 {
+            regulator-name = "ldo2";
+            regulator-min-microvolt = <3300000>;
+            regulator-max-microvolt = <3300000>;
+            status = "okay";
+        };
+
+        ldo3: ldo3 {
+            regulator-name = "ldo3";
+            regulator-min-microvolt = <3300000>;
+            regulator-max-microvolt = <3300000>;
+            status = "okay";
+        };
+
+        ldo4: ldo4 {
+            regulator-name = "ldo4";
+            regulator-min-microvolt = <1100000>;
+            regulator-max-microvolt = <1100000>;
+            status = "okay";
+        };
+
+        
+    };
+};
+

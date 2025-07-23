@@ -1,0 +1,20 @@
+
+config REGULATOR_MP5416
+        bool "MP5416 DC/DC and LDO regulator support"
+        default y
+        # depends on DT_HAS_MPS_MP5416_ENABLED
+        select I2C
+        help
+          Enable support for the MP5416 PMIC, which includes
+          4 buck converters and 4 LDO regulators, controllable over I2C.
+
+if REGULATOR_MP5416
+
+config REGULATOR_MP5416_INIT_PRIORITY
+        int "MP5416 regulator driver init priority"
+        default 85
+        help
+          Init priority for the MPS MP5416 regulator driver.
+          It must be greater than I2C init priority.
+
+endif # REGULATOR_MP5416

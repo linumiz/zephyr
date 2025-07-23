@@ -1,0 +1,82 @@
+description: |
+  MPS MP5416 PMIC
+
+  The PMIC has four buck regulators and five LDOs.
+  Control is available via I2C. Regulator control includes voltage setting,
+  enabling/disabling, discharge configuration, and soft start delays.
+
+  Example:
+
+  pmic@69 {
+    compatible = "mps,mp5416";
+    reg = <0x69>;
+    ...
+    BUCK1 {
+      /* all properties for BUCK1 */
+    };
+    BUCK2 {
+      /* all properties for BUCK2 */
+    };
+    BUCK3 {
+      /* all properties for BUCK3 */
+    };
+    BUCK4 {
+      /* all properties for BUCK4 */
+    };
+    LDO1 {
+      /* all properties for LDO1 */
+    };
+    LDO2 {
+      /* all properties for LDO2 */
+    };
+    LDO3 {
+      /* all properties for LDO3 */
+    };
+    LDO4 {
+      /* all properties for LDO4 */
+    };
+    LDO5 {
+      /* all properties for LDO5 */
+    };
+  };
+
+compatible: "mps,mp5416"
+
+include: [i2c-device.yaml, regulator.yaml]
+
+child-binding:
+  description: |
+    Regulator node for each output rail of MP5416 (BUCK1–4, LDO1–5)
+
+  include:
+    - name: regulator.yaml
+      property-allowlist:
+        - regulator-name
+        - regulator-min-microvolt
+        - regulator-max-microvolt
+        - regulator-init-microvolt
+        - regulator-boot-on
+        - regulator-always-on
+        - regulator-active-discharge
+        - regulator-enable-ramp-delay
+        - regulator-disable-ramp-delay
+
+  properties:
+    enable-inverted:
+      type: boolean
+      description: |
+        If the enable bit must be cleared to turn on the regulator, add this flag.
+
+    mps,ilim-microamp:
+      type: int
+      description: |
+        Optional current limit in microamps for buck regulators (ignored for LDOs).
+        Supported values may vary per BUCK (refer to datasheet).
+
+    mps,dvs-slew-rate:
+      type: int
+      enum: [32000, 16000, 8000, 4000]
+      description: |
+        Slew rate for dynamic voltage scaling on BUCKs (in uV/us).
+        Ignored for LDOs.
+
