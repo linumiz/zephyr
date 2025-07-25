@@ -10,6 +10,10 @@
 #include <freq.h>
 
 /{
+	chosen {
+		zephyr,entropy = &trng;
+	};
+
 	cpus {
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -140,6 +144,14 @@
 			clk-div = <1>;
 			status = "disabled";
 		};
+
+		trng: trng@40444000 {
+			compatible = "ti,mspm0-trng";
+			reg = <0x40444000 0x2000>;
+			interrupts = <1 0>;
+			status = "disabled";
+		};
+
 	};
 };
 

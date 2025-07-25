@@ -1,0 +1,21 @@
+description: |
+  Texas Instruments MSPM0 Series True Random Number Generator (TRNG).
+  This peripheral provides a hardware-based source of entropy with built-in
+  health monitoring.
+
+compatible: "ti,mspm0-trng"
+
+include: base.yaml
+properties:
+  reg:
+    type: array
+    description: MMIO register space
+    required: true
+
+  interrupts:
+    type: array
+    description: |
+      Interrupt specification. For MSPM0, this requires two cells.
+      The first cell is the NVIC IRQ line (17 for INT_GROUP1).
+      The second cell is the interrupt priority (0-3, where 0 is highest).
+    required: true
