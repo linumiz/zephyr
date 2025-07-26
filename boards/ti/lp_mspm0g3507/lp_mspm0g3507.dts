@@ -125,3 +125,7 @@
 	ti,pwm-mode = "EDGE_ALIGN";
 	ti,period = <1000>;
 };
+
+&dac {
+	status = "okay";
+};

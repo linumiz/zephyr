@@ -140,6 +140,13 @@
 			clk-div = <1>;
 			status = "disabled";
 		};
+
+		dac: dac@40018000 {
+			compatible = "ti,mspm0-dac";
+			reg = <0x40018000 0x2000>;
+			status = "disabled";
+		};
+
 	};
 };
 
