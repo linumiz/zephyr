@@ -53,6 +53,7 @@ struct bq2562x_data {
 	uint32_t enable_savety_tmrs;
 	uint32_t timer2x_en;
 	uint32_t precharge_timer;
+	uint32_t fast_charge_timer;
 	uint32_t auto_battery_discharging;
 	uint32_t vbus_ovp;
 	uint32_t peak_current_protection_threshold;
@@ -966,8 +967,9 @@ static int bq2562x_hw_init(const struct device *dev)
 	value |= FIELD_PREP(BQ2562X_TIMER_TIMER2X_EN, data->timer2x_en);
 	value |= FIELD_PREP(BQ2562X_TIMER_SAFETY_TMRS, data->enable_savety_tmrs);
 	value |= FIELD_PREP(BQ2562X_TIMER_PRECHARGE_TMR, data->precharge_timer);
+	value |= FIELD_PREP(BQ2562X_TIMER_FAST_CHARGE_TMR, data->fast_charge_timer);
 	mask = BQ2562X_TIMER_DCP_BIAS | BQ2562X_TIMER_SAFETY_TMRS | BQ2562X_TIMER_PRECHARGE_TMR |
-	       BQ2562X_TIMER_TIMER2X_EN;
+	       BQ2562X_TIMER_FAST_CHARGE_TMR | BQ2562X_TIMER_TIMER2X_EN;
 
 	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_TIMER_CTRL, mask, value);
 	if (ret != 0) {
@@ -1214,6 +1216,7 @@ static DEVICE_API(charger, bq2562x_driver_api) = {
 		.enable_savety_tmrs = DT_INST_PROP(inst, ti_enable_savety_tmrs),                   \
 		.timer2x_en = DT_INST_PROP(inst, ti_timer2x_en),                                   \
 		.precharge_timer = DT_INST_PROP(inst, ti_precharge_timer),                         \
+		.fast_charge_timer = DT_INST_PROP(inst, ti_fast_charge_timer),                     \
 		.auto_battery_discharging = DT_INST_PROP(inst, ti_auto_battery_discharging),       \
 		.vbus_ovp = DT_INST_PROP(inst, ti_vbus_ovp),                                       \
 		.peak_current_protection_threshold =                                               \

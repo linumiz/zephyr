@@ -172,7 +172,7 @@ properties:
 
   ti,precharge_timer:
     type: int
-    default: 1
+    default: 0
     enum:
       - 0
       - 1
@@ -180,6 +180,17 @@ properties:
       Set precharge safety timeout.
       0: 2.5h
       1: 0.62h 
+
+  ti,fast_charge_timer:
+    type: int
+    default: 0
+    enum:
+      - 0
+      - 1
+    description: |
+      Set fast charge safety timeout.
+      0: 12h
+      1: 24h 
 
   ti,timer2x_en:
     type: int
