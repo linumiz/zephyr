@@ -66,8 +66,6 @@ enum bq2562x_id {
 	BQ25622,
 };
 
-static int bq2562x_disbale_watchdog(const struct device *dev);
-
 static bool bq2562x_get_charge_enable(const struct device *dev)
 {
 	const struct bq2562x_config *const config = dev->config;
@@ -100,7 +98,7 @@ static int bq2562x_set_charge_enable(const struct device *dev, const bool enable
 	const struct bq2562x_config *const config = dev->config;
 	int ret;
 
-	ret = bq2562x_disbale_watchdog(dev);
+	ret = bq2562x_config_watchdog(dev, CHARGER_WDT_DISABLE);
 	if (ret < 0) {
 		return ret;
 	}
@@ -334,14 +332,47 @@ static int bq2562x_set_term_curr(const struct device *dev, int term_current)
 	return i2c_burst_write_dt(&config->i2c, BQ2562X_TERM_CTRL_LSB, iterm, ARRAY_SIZE(iterm));
 }
 
-static int bq2562x_disbale_watchdog(const struct device *dev)
+int bq2562x_config_watchdog(const struct device *dev, enum charger_watchdog_state watchdog_state)
 {
 	const struct bq2562x_config *const config = dev->config;
+	uint8_t reg_value = 0;
+
+	switch (watchdog_state) {
+	case CHARGER_WDT_DISABLE:
+		reg_value = 0;
+		break;
+	case CHARGER_WDT_50S:
+		reg_value = 1;
+		break;
+	case CHARGER_WDT_100S:
+		reg_value = 2;
+		break;
+	case CHARGER_WDT_200S:
+		reg_value = 3;
+		break;
+	default:
+		reg_value = 0;
+		break;
+	}
 
 	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, BQ2562X_WATCHDOG_MASK,
-				      FIELD_PREP(BQ2562X_WATCHDOG_MASK, BQ2562X_WATCHDOG_DIS));
+				      FIELD_PREP(BQ2562X_WATCHDOG_MASK, reg_value));
 }
 
+int bq2562x_config_ntc_feedback(const struct device *dev, enum charger_ntc_state state)
+{
+	const struct bq2562x_config *const config = dev->config;
+	uint8_t reg_value = 0;
+
+	if (state == CHARGER_NTC_IGNORE) {
+		reg_value = CHARGER_NTC_IGNORE;
+	} else {
+		reg_value = CHARGER_NTC_NOT_IGNORE;
+	}
+
+	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_NTC_CTRL_0, BQ2562X_NTC_MASK,
+				      FIELD_PREP(BIT(7), reg_value));
+}
 int bq2562x_set_charge_current_threshold(const struct device *dev,
 					 enum charger_current_threshold current_threshold)
 {
@@ -796,7 +827,7 @@ static int bq2562x_set_prop(const struct device *dev, charger_prop_t prop,
 	int ret = 0;
 	struct bq2562x_data *data = dev->data;
 
-	ret = bq2562x_disbale_watchdog(dev);
+	ret = bq2562x_config_watchdog(dev, CHARGER_WDT_DISABLE);
 	if (ret < 0) {
 		return ret;
 	}

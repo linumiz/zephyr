@@ -95,6 +95,30 @@ enum charger_timer_state {
 };
 
 /**
+ * @brief Watchdog timer status
+ */
+enum charger_watchdog_state {
+	/*watchdog timer is disabled*/
+	CHARGER_WDT_DISABLE = 0,
+	/*watchdog 50s timer is enabled*/
+	CHARGER_WDT_50S,
+	/*watchdog 100S timer is enabled*/
+	CHARGER_WDT_100S,
+	/*watchdog 200S timer is enabled*/
+	CHARGER_WDT_200S,
+};
+
+/**
+ * @brief config the NTC feedback state
+ */
+enum charger_ntc_state {
+	/*the TS feedback state is not ignored*/
+	CHARGER_NTC_NOT_IGNORE = 0,
+	/*the TS feedback state is ignored*/
+	CHARGER_NTC_IGNORE,
+};
+
+/**
  * @brief Set the charge current threshold for the bq2562x charger.
  *
  * This function configures the charge current threshold on the bq2562x charger
@@ -192,6 +216,39 @@ int bq2562x_get_timer_status(const struct device *dev, enum charger_timer_state 
  * @return 0 on success, negative error code on failure.
  */
 int bq2562x_get_tdie_adc(const struct device *dev, int32_t *temperature);
+
+/**
+ * @brief Set the watchdog timer state for the bq2562x charger
+ *
+ * This function configures the watchdog timer functionality of the bq2562x
+ * charger device. The watchdog timer can be disabled or set to different timeout
+ * periods (50s, 100s, or 200s) to monitor system operation and trigger protective
+ * actions if the timer expires without being reset.
+ *
+ * @param dev Pointer to the device structure representing the bq2562x charger
+ * @param watchdog_state The desired watchdog timer state to set
+ *
+ * @retval 0 If successful
+ * @retval -ENODEV If the device is not available or not ready
+ * @retval -EIO If there was an I/O error while communicating with the device
+ * @retval -EINVAL If an invalid watchdog state is provided
+ */
+int bq2562x_config_watchdog(const struct device *dev, enum charger_watchdog_state watchdog_state);
+
+/**
+ * @brief Disable the watchdog timer for the bq2562x charger
+ *
+ * This function disables the watchdog timer functionality of the bq2562x
+ * charger device. When disabled, the watchdog timer will not trigger any
+ * protective actions even if not reset within the normal timeout period.
+ *
+ * @param dev Pointer to the device structure representing the bq2562x charger
+ *
+ * @retval 0 If successful
+ * @retval -ENODEV If the device is not available or not ready
+ * @retval -EIO If there was an I/O error while communicating with the device
+ */
+int bq2562x_config_ntc_feedback(const struct device *dev, enum charger_ntc_state state);
 
 #ifdef __cplusplus
 }
