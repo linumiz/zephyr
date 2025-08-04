@@ -11,19 +11,19 @@
 #ifndef ZEPHYR_INCLUDE_DRIVERS_HY4245_H_
 #define ZEPHYR_INCLUDE_DRIVERS_HY4245_H_
 
-/**
- * @brief Charger Interface
- * @defgroup charger_interface Charger Interface
- * @ingroup io_interfaces
- * @{
- */
-
 #include <zephyr/device.h>
 #include <zephyr/drivers/fuel_gauge.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
+/**
+ * @brief Charger Interface
+ * @defgroup charger_interface Charger Interface
+ * @ingroup io_interfaces
+ * @{
+ */
 
 /**
  * @brief Set the HY4245 sensor into calibration mode.
@@ -81,6 +81,10 @@ int hy4245_access_flash_data(const struct device *dev, uint8_t subclass, uint8_t
  * failed.
  */
 int hy4245_reset(const struct device *dev);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }
