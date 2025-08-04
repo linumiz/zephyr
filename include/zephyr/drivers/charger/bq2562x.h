@@ -12,19 +12,19 @@
 #ifndef ZEPHYR_INCLUDE_DRIVERS_BQ2562X_H_
 #define ZEPHYR_INCLUDE_DRIVERS_BQ2562X_H_
 
-/**
- * @brief Charger Interface
- * @defgroup charger_interface Charger Interface
- * @ingroup io_interfaces
- * @{
- */
-
 #include <zephyr/device.h>
 #include <zephyr/drivers/charger.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
+/**
+ * @brief Charger Interface
+ * @defgroup charger_interface Charger Interface
+ * @ingroup io_interfaces
+ * @{
+ */
 
 /**
  * @brief Charger current protection threshold
@@ -236,19 +236,26 @@ int bq2562x_get_tdie_adc(const struct device *dev, int32_t *temperature);
 int bq2562x_config_watchdog(const struct device *dev, enum charger_watchdog_state watchdog_state);
 
 /**
- * @brief Disable the watchdog timer for the bq2562x charger
+ * @brief Configure the NTC feedback state for the bq2562x charger.
  *
- * This function disables the watchdog timer functionality of the bq2562x
- * charger device. When disabled, the watchdog timer will not trigger any
- * protective actions even if not reset within the normal timeout period.
+ * This function configures the NTC (Negative Temperature Coefficient) feedback
+ * state of the bq2562x charger device. When enabled, the NTC feedback is used
+ * for temperature monitoring and control during charging. When disabled, the
+ * NTC feedback state is ignored by the charger.
  *
- * @param dev Pointer to the device structure representing the bq2562x charger
+ * @param dev Pointer to the device structure representing the bq2562x charger.
+ * @param state The desired NTC feedback state to configure.
  *
  * @retval 0 If successful
  * @retval -ENODEV If the device is not available or not ready
  * @retval -EIO If there was an I/O error while communicating with the device
+ * @retval -EINVAL If an invalid NTC state is provided
  */
 int bq2562x_config_ntc_feedback(const struct device *dev, enum charger_ntc_state state);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }
