@@ -13,15 +13,14 @@
 
 /* The devicetree node identifier for the "led0" alias. */
 #define LED0_NODE DT_ALIAS(led0)
-#define LED1_NODE DT_ALIAS(led1)
+//#define LED1_NODE DT_ALIAS(led1)
 
 /*
  * A build error on this line means your board is unsupported.
  * See the sample documentation for information on how to fix this.
  */
-static const struct gpio_dt_spec led[2] = {
+static const struct gpio_dt_spec led[1] = {
 						GPIO_DT_SPEC_GET(LED0_NODE, gpios),
-						GPIO_DT_SPEC_GET(LED1_NODE, gpios),
 					};
 
 int main(void)
