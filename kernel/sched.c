@@ -33,7 +33,7 @@ struct k_spinlock _sched_spinlock;
 /* Storage to "complete" the context switch from an invalid/incomplete thread
  * context (ex: exiting an ISR that aborted arch_current_thread())
  */
-__incoherent struct k_thread _thread_dummy;
+//__incoherent struct k_thread _thread_dummy;
 
 static ALWAYS_INLINE void update_cache(int preempt_ok);
 static void halt_thread(struct k_thread *thread, uint8_t new_state);
@@ -1329,7 +1329,7 @@ static void halt_thread(struct k_thread *thread, uint8_t new_state)
 #ifdef CONFIG_USE_SWITCH
 			arch_current_thread()->switch_handle = arch_current_thread();
 #endif
-			z_dummy_thread_init(&_thread_dummy);
+//			z_dummy_thread_init(&_thread_dummy);
 
 		}
 
