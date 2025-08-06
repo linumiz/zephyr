@@ -12,6 +12,7 @@
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/logging/log.h>
 #include <string.h>
+#include <zephyr/drivers/fuel_gauge/hy4245.h>
 
 LOG_MODULE_REGISTER(HY4245);
 
@@ -34,6 +35,7 @@ LOG_MODULE_REGISTER(HY4245);
 #define HY4245_SUBCMD_CTRL_STATUS 	0x00
 #define HY4245_SUBCMD_CTRL_CHIPID	0x55
 #define HY4245_SUBCMD_CTRL_CALIB_MODE	0x40
+#define HY4245_SUBCMD_CTRL_RESET      0x41
 
 #define HY4245_EXTCMD_SUBCLASS		0x3E
 #define HY4245_EXTCMD_BLOCK		0x3F
@@ -262,7 +264,7 @@ int hy4245_access_flash_data(const struct device *dev,
 			     bool is_read)
 {
 	int ret;
-	uint8_t cmd[] = { HY4245_EXTCMD_BLKDATA_CHECKSUM };
+	uint8_t cmd[2] = {HY4245_EXTCMD_BLKDATA_CHECKSUM};
 	const struct hy4245_config *cfg = dev->config;
 	struct hy4245_data *drvdata = dev->data;
 	uint8_t checksum = 0;
@@ -303,15 +305,32 @@ int hy4245_access_flash_data(const struct device *dev,
 	/* as per data sheet 10msec delay */
 	k_sleep(K_MSEC(10));
 
+	for (int i = 0; i < count; i++) {
+		checksum += data[i];
+	}
+
+	if (!is_read) {
+		cmd[1] = checksum;
+		ret = i2c_write_dt(&cfg->i2c, cmd, sizeof(cmd));
+		if (ret < 0) {
+			goto err;
+		}
+
+		ret = hy4245_ctrl_status(dev, CTRL_STATUS_CSV);
+		if (ret < 0) {
+			goto err;
+		}
+
+		if ((ret & CTRL_STATUS_CSV) != CTRL_STATUS_CSV) {
+			goto err;
+		}
+	}
 	ret = i2c_write_read_dt(&cfg->i2c, cmd, 1, &resp, sizeof(resp));
 	if (ret < 0) {
 		LOG_ERR("checksum read error %d", ret);
 		goto err;
 	}
 
-	for (int i = 0; i < count; i++) {
-		checksum += data[i];
-	}
 	checksum = 0xFF - checksum;
 
 	if (checksum != resp) {
@@ -322,6 +341,14 @@ int hy4245_access_flash_data(const struct device *dev,
 err:
 	k_mutex_unlock(&drvdata->mutex);
 	return ret;
+}
+
+int hy4245_reset(const struct device *dev)
+{
+	uint8_t cmd[3] = {HY4245_CMD_CTRL, HY4245_SUBCMD_CTRL_RESET};
+	const struct hy4245_config *cfg = dev->config;
+
+	return i2c_write_dt(&cfg->i2c, cmd, sizeof(cmd));
 }
 
 static int hy4245_get_prop(const struct device *dev, fuel_gauge_prop_t prop,
