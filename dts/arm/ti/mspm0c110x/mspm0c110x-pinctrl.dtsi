@@ -24,4 +24,20 @@
 		drive-strength = <20>;
 		input-enable;
 	};
+
+	/omit-if-no-ref/ spi0_sclk_pa11: spi0_sclk_pa11 {
+		pinmux = <MSP_PINMUX(2, MSPM0_PIN_FUNCTION_2)>;
+		drive-open-drain;
+	};
+
+	/omit-if-no-ref/ spi0_pico_pa18: spi1_pico_pa18 {
+		pinmux = <MSP_PINMUX(19, MSPM0_PIN_FUNCTION_3)>;
+		drive-open-drain;
+	};
+
+	/omit-if-no-ref/ spi0_poci_pa16: spi0_poci_pa16 {
+		pinmux = <MSP_PINMUX(17, MSPM0_PIN_FUNCTION_3)>;
+		input-enable;
+		drive-open-drain;
+	};
 };

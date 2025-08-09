@@ -71,3 +71,17 @@
 &sysclock {
 	status = "okay";
 };
+
+&i2c0 {
+	status = "okay";
+	pinctrl-0 = <&i2c0_sda_pa0_pull_up &i2c0_scl_pa1_pull_up>;
+	pinctrl-names = "default";
+};
+
+&spi0 {
+	status = "disabled";
+	pinctrl-0 = <&spi0_sclk_pa11 &spi0_pico_pa18 &spi0_poci_pa16>;
+	pinctrl-names = "default";
+	#address-cells = <1>;
+	#size-cells = <0>;
+};
