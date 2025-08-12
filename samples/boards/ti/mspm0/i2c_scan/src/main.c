@@ -9,7 +9,12 @@
 int main(void)
 {
 	uint8_t cnt = 0, first = 0x04, last = 0x77, attempt = 0;
-	char *name = "i2c@3ff53000";
+	/* address of i2c controller in
+	 *	stm32 : i2c1 -> i2c@40005400
+	 *	esp32 : i2c0 -> i2c@3ff53000
+	 * change the string to respective i2c controller address
+	 * */
+	char *name = "i2c@40005400";
 	const struct device *dev = device_get_binding(name);
 	if (!dev) {
 		printk("I2C: Device driver %s not found.", name);
@@ -26,7 +31,7 @@ int main(void)
 					continue;
 				}
 
-#if 1
+#if 1 /* Device skipping */
 				if (i + j == 0x54)
 					continue;
 #endif

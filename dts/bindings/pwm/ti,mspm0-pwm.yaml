@@ -88,7 +88,8 @@ properties:
     description: |
       TIMCLK clock source prescaler value.
       Valid range [0 ... 255].
-
+  ti,pulse-cycle:
+    type: int
   ti,clk-div:
     type: int
     required: true

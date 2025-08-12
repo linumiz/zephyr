@@ -256,7 +256,7 @@
 
 			gpioc: gpio@400a4000 {
 				compatible = "ti,mspm0-gpio";
-				reg = <0x400a2000 0x2000>;
+				reg = <0x400a4000 0x2000>;
 				interrupts = <1 0>;
 				status = "disabled";
 				gpio-controller;
