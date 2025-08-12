@@ -21,6 +21,8 @@
 
 LOG_MODULE_REGISTER(ti_bq25620, CONFIG_CHARGER_LOG_LEVEL);
 
+#define BQ2562X_TIMEOUT_MS 50
+
 struct bq2562x_config {
 	struct i2c_dt_spec i2c;
 	struct gpio_dt_spec ce_gpio;
@@ -876,6 +878,26 @@ static int bq2562x_validate_dt(struct bq2562x_data *data)
 		data->input_current_max_ua = BQ2562X_IINDPM_I_DEF_UA;
 	}
 
+	if (!IN_RANGE(data->constant_charge_current_max_ua, BQ2562X_ICHG_I_MIN_UA,
+		      BQ2562X_ICHG_I_MAX_UA)) {
+		data->constant_charge_current_max_ua = BQ2562X_ICHG_I_DEF_UA;
+	}
+
+	if (!IN_RANGE(data->constant_charge_voltage_max_uv, BQ2562X_VREG_V_MIN_UV,
+		      BQ2562X_VREG_V_MAX_UV)) {
+		data->constant_charge_voltage_max_uv = BQ2562X_VREG_V_DEF_UV;
+	}
+
+	if (!IN_RANGE(data->precharge_current_ua, BQ2562X_PRECHRG_I_MIN_UA,
+		      BQ2562X_PRECHRG_I_MAX_UA)) {
+		data->precharge_current_ua = BQ2562X_PRECHRG_I_DEF_UA;
+	}
+
+	if (!IN_RANGE(data->charge_term_current_ua, BQ2562X_TERMCHRG_I_MIN_UA,
+		      BQ2562X_TERMCHRG_I_MAX_UA)) {
+		data->charge_term_current_ua = BQ2562X_TERMCHRG_I_DEF_UA;
+	}
+
 	return 0;
 }
 
@@ -922,7 +944,7 @@ static int bq2562x_hw_init(const struct device *dev)
 	if (ret != 0) {
 		return ret;
 	}
-	k_msleep(50); /* Give some time to execute the reset */
+	k_msleep(BQ2562X_TIMEOUT_MS); /* Give some time to execute the reset */
 
 	value = FIELD_PREP(BQ2562X_CHG_Q1_FULLON, data->q1_fullon);
 	value |= FIELD_PREP(BQ2562X_CHG_Q4_FULLON, data->q4_fullon);
@@ -1070,6 +1092,7 @@ static void bq2562x_gpio_callback(const struct device *dev, struct gpio_callback
 
 	ret = k_work_submit(&data->int_routine_work);
 	if (ret < 0) {
+		(void)bq2562x_enable_interrupt_pin(data->dev, true);
 		LOG_WRN("Could not submit int work: %d", ret);
 	}
 }
