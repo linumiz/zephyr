@@ -83,3 +83,18 @@
 	pinctrl-0 = <&uart0_tx_pa10 &uart0_rx_pa11>;
 	pinctrl-names = "default";
 };
+
+&spi1 {
+	pinctrl-0 = <&spi1_sclk_pa17 &spi1_pico_pb08 &spi1_poci_pb07 &spi1_cs0_pb06>;
+	pinctrl-names = "default";
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+	ads1310: ads1310@0 {
+		compatible = "ti,ads131m02";
+		reg = <0>;
+		#io-channel-cells = <1>;
+		drdy-gpios = <&gpiob 18 (GPIO_ACTIVE_LOW)>;
+		spi-max-frequency = <8000000>;
+	};
+};
