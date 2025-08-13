@@ -26,6 +26,7 @@
 	ckm: clock-module {
 		compatible = "ti,mspm0-clk";
 		#clock-cells = <1>;
+		clock-frequency = <DT_FREQ_M(32)>;
 	};
 
 	clocks: clocks {
@@ -144,6 +145,22 @@
 			compatible = "ti,mspm0-uart";
 			reg = <0x40108000 0x2000>;
 			current-speed = <115200>;
+			clocks = <&ckm MSPM0_CLOCK_ULPCLK>;
+			clk-div = <1>;
+			status = "disabled";
+		};
+
+		spi0: spi@40468000 {
+			compatible = "ti,mspm0-spi";
+			reg = <0x40468000 0x2000>;
+			clocks = <&ckm MSPM0_CLOCK_ULPCLK>;
+			clk-div = <1>;
+			status = "disabled";
+		};
+
+		spi1: spi@4046a000 {
+			compatible = "ti,mspm0-spi";
+			reg = <0x4046a000 0x2000>;
 			clocks = <&ckm MSPM0_CLOCK_ULPCLK>;
 			clk-div = <1>;
 			status = "disabled";
