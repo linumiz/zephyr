@@ -9,6 +9,7 @@
 
 #include <ti/mspm0/g/mspm0g3507.dtsi>
 #include <ti/mspm0/g/mspm0g1x0x_g3x0x-pinctrl.dtsi>
+#include <zephyr/dt-bindings/adc/mspm0_adc.h>
 #include <zephyr/dt-bindings/clock/mspm0_clock.h>
 #include <zephyr/dt-bindings/gpio/gpio.h>
 #include <zephyr/dt-bindings/pwm/pwm.h>

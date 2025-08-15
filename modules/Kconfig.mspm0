@@ -17,3 +17,6 @@ config USE_MSPM0_DL_TIMER
 
 config USE_MSPM0_DL_VREF
 	bool
+
+config USE_MSPM0_DL_ADC
+	bool
