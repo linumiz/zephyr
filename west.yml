@@ -21,6 +21,8 @@ manifest:
   remotes:
     - name: upstream
       url-base: https://github.com/zephyrproject-rtos
+    - name: linumiz
+      url-base: https://github.com/linumiz
     - name: babblesim
       url-base: https://github.com/BabbleSim
 
@@ -253,7 +255,8 @@ manifest:
       groups:
         - hal
     - name: hal_ti
-      revision: pull/51/head
+      remote: linumiz
+      revision: dev/ti/mspm0-cxx
       path: modules/hal/ti
       groups:
         - hal
