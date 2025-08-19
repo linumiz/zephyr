@@ -68,7 +68,6 @@ struct i2c_mspm0_config {
 struct i2c_mspm0_data {
 	volatile enum i2c_mspm0_state state; /* Current state of I2C transmission */
 	struct i2c_msg msg;		/* Cache msg */
-	uint16_t addr;			/* Cache slave address */
 #ifdef CONFIG_I2C_MSPM0_MULTI_TARGET_ADDRESS
 	uint16_t secondaryAddr;	/* Secondary slave address */
 	uint16_t secondaryDontCareMask; /* Secondary don't care mask. Muxed with
@@ -77,11 +76,12 @@ struct i2c_mspm0_data {
 #endif
 	uint32_t count;			/* Count for progress in I2C transmission */
 	uint32_t dev_config;	/* Configuration last passed */
-	uint32_t is_target;
+#if defined(CONFIG_I2C_TARGET)
 	const struct i2c_target_callbacks *target_callbacks;
 	struct i2c_target_config *target_config;
 	int target_tx_valid;
 	int target_rx_valid;
+#endif
 	struct k_sem i2c_busy_sem;
 };
 
@@ -156,6 +156,7 @@ static int i2c_mspm0_get_config(const struct device *dev, uint32_t *dev_config)
 	return 0;
 }
 
+#if defined(CONFIG_I2C_TARGET)
 static int i2c_mspm0_reset_peripheral_target(const struct device *dev){
 	const struct i2c_mspm0_config *config = dev->config;
 	struct i2c_mspm0_data *data = dev->data;
@@ -205,6 +206,7 @@ static int i2c_mspm0_reset_peripheral_target(const struct device *dev){
 
 	return 0;
 }
+#endif
 
 static int i2c_mspm0_reset_peripheral_controller(const struct device *dev){
 	const struct i2c_mspm0_config *config = dev->config;
@@ -250,12 +252,11 @@ static int i2c_mspm0_receive(const struct device *dev, struct i2c_msg msg, uint1
 
 	/* Update cached msg and addr */
 	data->msg = msg;
-	data->addr = addr;
 
 	/* Send a read request to Target */
 	data->count = 0;
 	data->state = I2C_MSPM0_RX_STARTED;
-	DL_I2C_startControllerTransfer(config->base, data->addr,
+	DL_I2C_startControllerTransfer(config->base, addr,
 				       DL_I2C_CONTROLLER_DIRECTION_RX, data->msg.len);
 
 
@@ -281,7 +282,6 @@ static int i2c_mspm0_transmit(const struct device *dev, struct i2c_msg msg, uint
 
 	/* Update cached msg and addr */
 	data->msg = msg;
-	data->addr = addr;
 
 	/* Update the state */
 	data->state = I2C_MSPM0_IDLE;
@@ -315,7 +315,7 @@ static int i2c_mspm0_transmit(const struct device *dev, struct i2c_msg msg, uint
 		 DL_I2C_CONTROLLER_STATUS_IDLE))
 		;
 
-	DL_I2C_startControllerTransfer(config->base, data->addr,
+	DL_I2C_startControllerTransfer(config->base, addr,
 					DL_I2C_CONTROLLER_DIRECTION_TX, data->msg.len);
 
 	while (!(DL_I2C_getControllerStatus(config->base) & DL_I2C_CONTROLLER_STATUS_IDLE));
@@ -347,11 +347,13 @@ static int i2c_mspm0_transfer(const struct device *dev, struct i2c_msg *msgs, ui
 
 	k_sem_take(&data->i2c_busy_sem, K_FOREVER);
 
+#if defined(CONFIG_I2C_TARGET)
 	if (data->is_target) {
 		/* currently target is registered. Controller is disabled */
 		k_sem_give(&data->i2c_busy_sem);
 		return -EBUSY;
 	}
+#endif
 
 #ifdef CONFIG_PM_DEVICE_RUNTIME
 	(void)pm_device_runtime_get(dev);
@@ -384,6 +386,7 @@ static int i2c_mspm0_transfer(const struct device *dev, struct i2c_msg *msgs, ui
 	return ret;
 }
 
+#if defined(CONFIG_I2C_TARGET)
 static int i2c_mspm0_target_register(const struct device *dev,
 					  struct i2c_target_config *target_config)
 {
@@ -400,7 +403,7 @@ static int i2c_mspm0_target_register(const struct device *dev,
 
 #ifndef CONFIG_I2C_MSPM0_MULTI_TARGET_ADDRESS
 	if(target_config->flags & I2C_TARGET_FLAGS_SECONDARY_ADDR){
-		return -ENTOSUP;
+		return -ENOTSUP;
 	}
 #endif
 
@@ -523,6 +526,7 @@ static int i2c_mspm0_target_unregister(const struct device *dev,
 	k_sem_give(&data->i2c_busy_sem);
 	return 0;
 }
+#endif
 
 static void i2c_mspm0_isr(const struct device *dev)
 {
@@ -580,6 +584,7 @@ static void i2c_mspm0_isr(const struct device *dev)
 	case DL_I2C_IIDX_CONTROLLER_EVENT1_DMA_DONE:
 	case DL_I2C_IIDX_CONTROLLER_EVENT2_DMA_DONE:
 		break;
+#if defined(CONFIG_I2C_TARGET)
 	/* target interrupts */
 	case DL_I2C_IIDX_TARGET_START:
 		if (k_sem_take(&data->i2c_busy_sem, K_NO_WAIT) != 0 && data->state == I2C_MSPM0_IDLE) {
@@ -712,17 +717,18 @@ static void i2c_mspm0_isr(const struct device *dev)
 	case DL_I2C_IIDX_TARGET_EVENT1_DMA_DONE:
 	case DL_I2C_IIDX_TARGET_EVENT2_DMA_DONE:
 		break;
+#endif
 	/* Timeout Interrupts */
 	case DL_I2C_IIDX_TIMEOUT_A:
 		data->state = I2C_MSPM0_TIMEOUT;
 
-		if(!data->is_target){
-			// Controller behavior
-			DL_I2C_disableInterrupt(config->base, TI_MSPM0_CONTROLLER_INTERRUPTS);
-			DL_I2C_clearInterruptStatus(config->base, TI_MSPM0_CONTROLLER_INTERRUPTS);
-			DL_I2C_flushControllerTXFIFO(config->base);
+		// Controller behavior
+		DL_I2C_disableInterrupt(config->base, TI_MSPM0_CONTROLLER_INTERRUPTS);
+		DL_I2C_clearInterruptStatus(config->base, TI_MSPM0_CONTROLLER_INTERRUPTS);
+		DL_I2C_flushControllerTXFIFO(config->base);
 
-		} else {
+#if defined(CONFIG_I2C_TARGET)
+		else {
 			// Target Behavior
 			data->target_config->flags |= I2C_TARGET_FLAGS_ERROR_TIMEOUT;
 
@@ -746,6 +752,7 @@ static void i2c_mspm0_isr(const struct device *dev)
 			}
 			k_sem_give(&data->i2c_busy_sem);
 		}
+#endif
 		break;
 	default:
 		break;
@@ -822,8 +829,10 @@ static const struct i2c_driver_api i2c_mspm0_driver_api = {
 	.configure = i2c_mspm0_configure,
 	.get_config = i2c_mspm0_get_config,
 	.transfer = i2c_mspm0_transfer,
+#if defined(CONFIG_I2C_TARGET)
 	.target_register = i2c_mspm0_target_register,
 	.target_unregister = i2c_mspm0_target_unregister,
+#endif
 };
 
 #ifdef CONFIG_PM_DEVICE
@@ -835,18 +844,10 @@ static int i2c_mspm0_pm_action(const struct device *dev, enum pm_device_action a
 
 	switch (action) {
 	case PM_DEVICE_ACTION_RESUME:
-		if (!data->is_target) {
-			DL_I2C_enableController(config->base);
-		} else {
-			DL_I2C_disableTargetWakeup(config->base);
-		}
+		DL_I2C_enableController(config->base);
 		break;
 	case PM_DEVICE_ACTION_SUSPEND:
-		if (!data->is_target) {
-			DL_I2C_disableController(config->base);
-		} else {
-			DL_I2C_enableTargetWakeup(config->base);
-		}
+		DL_I2C_disableController(config->base);
 		break;
 	default:
 		return -ENOTSUP;
@@ -889,9 +890,7 @@ static int i2c_mspm0_pm_action(const struct device *dev, enum pm_device_action a
 		}	\
 	};		\
 	\
-	static struct i2c_mspm0_data i2c_mspm0_data_##index = { 	\
-		.secondaryAddr = 0x00, \
-	};	\
+	static struct i2c_mspm0_data i2c_mspm0_data_##index; 	\
 	\
 	PM_DEVICE_DT_INST_DEFINE(index, i2c_mspm0_pm_action);			\
 	I2C_DEVICE_DT_INST_DEFINE(index, i2c_mspm0_init, PM_DEVICE_DT_INST_GET(index),				\

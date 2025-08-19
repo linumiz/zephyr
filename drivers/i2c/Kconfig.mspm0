@@ -17,6 +17,6 @@ config I2C_CONTROLLER_TIMEOUT
 
 config I2C_MSPM0_MULTI_TARGET_ADDRESS
 	bool "I2C Multi Target Address"
-	default y
+	default n
 	help 
 	  Enable a target peripheral to respond to multiple addresses, including an address range. 
