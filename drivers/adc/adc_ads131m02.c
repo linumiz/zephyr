@@ -199,39 +199,61 @@ static int ads131m02_reg_write(const struct device *dev, uint16_t addr,
 static inline int ads131m02_configure_gain(const struct device *dev,
 					   const struct adc_channel_cfg *channel_cfg)
 {
+	int ret;
 	uint16_t gain_cfg;
+	uint8_t read_data[3] = {0};
+
+	ret  = ads131m02_reg_read(dev, ADS131M02_GAIN_REG, read_data,
+				  sizeof(read_data));
+	if (ret != 0) {
+		return ret;
+	}
+
+	gain_cfg = sys_get_be16(read_data);
+
+	switch (channel_cfg->channel_id)
+	{
+	case 0:
+		gain_cfg = gain_cfg & 0xFFF8;
+		break;
+	case 1:
+		gain_cfg = gain_cfg & 0xFF8F;
+		break;
+	default:
+		break;
+	}
 
 	switch (channel_cfg->gain) {
 	case ADC_GAIN_1:
-		gain_cfg = ADS131M02_GET_GAIN(channel_cfg->channel_id,
+		gain_cfg |= ADS131M02_GET_GAIN(channel_cfg->channel_id,
 					      ADS131M02_GAIN_1);
 		break;
 	case ADC_GAIN_2:
-		gain_cfg = ADS131M02_GET_GAIN(channel_cfg->channel_id,
+		gain_cfg |= ADS131M02_GET_GAIN(channel_cfg->channel_id,
 					      ADS131M02_GAIN_2);
 		break;
 	case ADC_GAIN_4:
-		gain_cfg = ADS131M02_GET_GAIN(channel_cfg->channel_id,
+		gain_cfg |= ADS131M02_GET_GAIN(channel_cfg->channel_id,
 					      ADS131M02_GAIN_4);
 		break;
 	case ADC_GAIN_8:
-		gain_cfg = ADS131M02_GET_GAIN(channel_cfg->channel_id,
+		gain_cfg |= ADS131M02_GET_GAIN(channel_cfg->channel_id,
 					      ADS131M02_GAIN_8);
 		break;
 	case ADC_GAIN_16:
-		gain_cfg = ADS131M02_GET_GAIN(channel_cfg->channel_id,
+		gain_cfg |= ADS131M02_GET_GAIN(channel_cfg->channel_id,
 					      ADS131M02_GAIN_16);
 		break;
 	case ADC_GAIN_32:
-		gain_cfg = ADS131M02_GET_GAIN(channel_cfg->channel_id,
+		gain_cfg |= ADS131M02_GET_GAIN(channel_cfg->channel_id,
 					      ADS131M02_GAIN_32);
 		break;
 	case ADC_GAIN_64:
-		gain_cfg = ADS131M02_GET_GAIN(channel_cfg->channel_id,
+		gain_cfg |= ADS131M02_GET_GAIN(channel_cfg->channel_id,
 					      ADS131M02_GAIN_64);
 		break;
 	case ADC_GAIN_128:
-		gain_cfg = ADS131M02_GET_GAIN(channel_cfg->channel_id,
+		gain_cfg |= ADS131M02_GET_GAIN(channel_cfg->channel_id,
 					      ADS131M02_GAIN_128);
 		break;
 	default:
@@ -357,6 +379,10 @@ static int ads131m02_validate_buffer_size(const struct adc_sequence *sequence)
 {
 	size_t needed = sizeof(int32_t);
 
+	if(sequence->channels == (BIT(1)|BIT(0))){
+		needed = 2 * needed;
+	}
+
 	if (sequence->options) {
 		needed *= (1 + sequence->options->extra_samplings);
 	}
@@ -374,7 +400,7 @@ static int ads131m02_validate_sequence(const struct adc_sequence *sequence)
 		return -EINVAL;
 	}
 
-	if (sequence->channels != BIT(0) && sequence->channels != BIT(1)) {
+	if (sequence->channels != BIT(0) && sequence->channels != BIT(1) && sequence->channels != (BIT(0) | BIT(1))) {
 		LOG_ERR("invalid channel");
 		return -EINVAL;
 	}
@@ -434,8 +460,21 @@ static int ads131m02_wait_drdy(const struct device *dev)
 			  ADC_CONTEXT_WAIT_FOR_COMPLETION_TIMEOUT);
 }
 
+static int32_t ads131m02_normalize_count24(const uint8_t *tReg)
+{
+	int32_t adc_count = sys_get_be24(tReg);
+
+	/* adc data is given in binary two's complement format */
+	/* for negative values - fill leading bits with 1 (sign extension) */
+	if ((((uint32_t)adc_count) & 0x00800000UL) == 0x00800000UL)
+	{
+		adc_count = (int32_t)(((uint32_t)adc_count) | 0xFF800000UL);
+	}
+	return adc_count;
+}
+
 static int ads131m02_read_sample(const struct device *dev,
-				 uint32_t channels, uint32_t *buffer)
+				 uint32_t channels, int32_t *buffer)
 {
 	int ret;
 	uint16_t int_status;
@@ -449,14 +488,25 @@ static int ads131m02_read_sample(const struct device *dev,
 	}
 
 	int_status = sys_get_be16(&rx_buf[0]);
-	if ((int_status & ADS131M02_DRDY_CH0_MASK) && (channels & BIT(0))) {
-		*buffer = sys_get_be24(&rx_buf[3]);
-	} else if ((int_status & ADS131M02_DRDY_CH1_MASK) &&
-		   (channels & BIT(1))) {
-		*buffer = sys_get_be24(&rx_buf[6]);
-	} else {
-		LOG_INF("No ADC Data Available");
+	switch (channels){
+		case (BIT(1) | BIT(0)):
+			buffer[0] = ads131m02_normalize_count24(&rx_buf[3]);
+			buffer[1] = ads131m02_normalize_count24(&rx_buf[6]);
+			return 0;
+		case BIT(0):
+			if (int_status & ADS131M02_DRDY_CH0_MASK){
+				*buffer = sys_get_be24(&rx_buf[3]);
+				return 0;
+			}
+			break;
+		case BIT(1):
+			if(int_status & ADS131M02_DRDY_CH1_MASK){
+				*buffer = sys_get_be24(&rx_buf[6]);
+				return 0;
+			}
+			break;
 	}
+	LOG_INF("No ADC Data Available");
 
 	return 0;
 }
