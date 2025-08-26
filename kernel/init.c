@@ -759,9 +759,6 @@ FUNC_NORETURN void z_cstart(void)
 
 	LOG_CORE_INIT();
 
-#if defined(CONFIG_MULTITHREADING)
-//	z_dummy_thread_init(&_thread_dummy);
-#endif /* CONFIG_MULTITHREADING */
 	/* do any necessary initialization of static devices */
 	z_device_state_init();
 
@@ -773,6 +770,11 @@ FUNC_NORETURN void z_cstart(void)
 #endif
 	/* perform basic hardware initialization */
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_1);
+#if defined(CONFIG_MULTITHREADING)
+	struct k_thread *_thread_dummy = malloc(sizeof(struct k_thread));
+	z_dummy_thread_init(_thread_dummy);
+#endif /* CONFIG_MULTITHREADING */
+
 #if defined(CONFIG_SMP)
 	arch_smp_init();
 #endif
@@ -793,6 +795,7 @@ FUNC_NORETURN void z_cstart(void)
 
 #ifdef CONFIG_MULTITHREADING
 	switch_to_main_thread(prepare_multithreading());
+	free(_thread_dummy);
 #else
 #ifdef ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING
 	/* Custom ARCH-specific routine to switch to main()
