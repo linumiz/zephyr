@@ -1,0 +1,16 @@
+# Copyright (c) 2025 Linumiz GmbH
+# SPDX-License-Identifier: Apache-2.0
+
+config USB_BC12_BQ25620
+	bool "TI BQ25620"
+	default y
+	depends on DT_HAS_TI_BQ25620_BC_ENABLED
+	depends on DT_HAS_TI_BQ2562X_ENABLED
+	select MFD
+	help
+	  Enable MFD-based driver for the TI BQ25620 Battery Charger.
+
+config BC12_BQ25620_INIT_PRIORITY
+	int "TI BQ25620 driver initialization priority"
+	default 90
+	depends on USB_BC12_BQ25620

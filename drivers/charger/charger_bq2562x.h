@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Linumiz
+ * Copyright 2025 Linumiz GmbH
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -7,8 +7,6 @@
 #ifndef ZEPHYR_DRIVERS_CHARGER_BQ2562X_H_
 #define ZEPHYR_DRIVERS_CHARGER_BQ2562X_H_
 
-#define BQ2562X_RESERVED_LSB     0x00
-#define BQ2562X_RESERVED_MSB     0x01
 #define BQ2562X_CHRG_I_LIM_LSB   0x02
 #define BQ2562X_CHRG_I_LIM_MSB   0x03
 #define BQ2562X_CHRG_V_LIM_LSB   0x04
@@ -17,10 +15,6 @@
 #define BQ2562X_INPUT_I_LIM_MSB  0x07
 #define BQ2562X_INPUT_V_LIM_LSB  0x08
 #define BQ2562X_INPUT_V_LIM_MSB  0x09
-#define BQ2562X_IOTG_LSB         0x0a
-#define BQ2562X_IOTG_MSB         0x0b
-#define BQ2562X_VOTG_LSB         0x0c
-#define BQ2562X_VOTG_MSB         0x0d
 #define BQ2562X_MIN_SYS_V_LSB    0x0e
 #define BQ2562X_MIN_SYS_V_MSB    0x0f
 #define BQ2562X_PRECHRG_CTRL_LSB 0x10
@@ -28,31 +22,18 @@
 #define BQ2562X_TERM_CTRL_LSB    0x12
 #define BQ2562X_TERM_CTRL_MSB    0x13
 #define BQ2562X_CHRG_CTRL_0      0x14
-#define BQ2562X_TIMER_CTRL       0x15
-#define BQ2562X_CHRG_CTRL_1      0x16
 #define BQ2562X_CHRG_CTRL_2      0x17
-#define BQ2562X_CHRG_CTRL_3      0x18
-#define BQ2562X_CHRG_CTRL_4      0x19
 #define BQ2562X_NTC_CTRL_0       0x1a
 #define BQ2562X_NTC_CTRL_1       0x1b
 #define BQ2562X_NTC_CTRL_2       0x1c
 #define BQ2562X_CHRG_STAT_0      0x1d
 #define BQ2562X_CHRG_STAT_1      0x1e
-#define BQ2562X_FAULT_STAT_0     0x1f
-#define BQ2562X_CHRG_FLAG_0      0x20
-#define BQ2562X_CHRG_FLAG_1      0x21
-#define BQ2562X_FAULT_FLAG_0     0x22
 #define BQ2562X_CHRG_MSK_0       0x23
 #define BQ2562X_CHRG_MSK_1       0x24
 #define BQ2562X_FAULT_MSK_0      0x25
 #define BQ2562X_ADC_CTRL         0x26
-#define BQ2562X_FN_DISABE_0      0x27
-#define BQ2562X_ADC_IBUS_LSB     0x28
-#define BQ2562X_ADC_IBUS_MSB     0x29
 #define BQ2562X_ADC_IBAT_LSB     0x2a
 #define BQ2562X_ADC_IBAT_MSB     0x2b
-#define BQ2562X_ADC_VBUS_LSB     0x2c
-#define BQ2562X_ADC_VBUS_MSB     0x2d
 #define BQ2562X_ADC_VPMID_LSB    0x2e
 #define BQ2562X_ADC_VPMID_MSB    0x2f
 #define BQ2562X_ADC_VBAT_LSB     0x30
@@ -63,7 +44,6 @@
 #define BQ2562X_ADC_TS_MSB       0x35
 #define BQ2562X_ADC_TDIE_LSB     0x36
 #define BQ2562X_ADC_TDIE_MSB     0x37
-#define BQ2562X_PART_INFO        0x38
 
 /* REG0x02_Charge_Current_Limit */
 #define BQ2562X_ICHG_I_MIN_UA  80000
@@ -133,11 +113,6 @@
 #define BQ2562X_CHG_CTL_ITRICKLE_DEF_UA 20000
 #define BQ2562X_CHG_CTL_ITRICKLE_MAX_UA 80000
 
-/* REG0x16_Charger_Control_1 */
-#define BQ2562X_CHRG_EN       BIT(5)
-#define BQ2562X_WATCHDOG_MASK GENMASK(1, 0)
-#define BQ2562X_WATCHDOG_DIS  0
-
 /* REG0x17_Charger_Control_2 */
 #define BQ2562X_CTRL2_REG_RST       BIT(7)
 #define BQ2562X_CTRL2_TREG          BIT(6)
@@ -148,38 +123,6 @@
 #define BQ2562X_NTC_MASK BIT(7)
 #define BQ2562X_NTC_DIS  1
 
-/* REG0x1E_Charger_Status_1 */
-#define BQ2562X_CHG_STAT_MSK  GENMASK(4, 3)
-#define BQ2562X_NOT_CHRGING   0
-#define BQ2562X_TRICKLE_CHRG  1
-#define BQ2562X_TAPER_CHRG    2
-#define BQ2562X_TOP_OFF_CHRG  3
-#define BQ2562X_PRECHG_MAX_UA 620000
-
-#define BQ2562X_VBUS_STAT_MSK GENMASK(2, 0)
-#define BQ2562X_USB_SDP       BIT(0)
-#define BQ2562X_USB_CDP       BIT(1)
-#define BQ2562X_USB_DCP       (BIT(1) | BIT(0))
-#define BQ2562X_UNKNOWN_500MA BIT(2)
-#define BQ2562X_NON_STANDARD  (BIT(2) | BIT(0))
-#define BQ2562X_HVDCP         (BIT(2) | BIT(1))
-#define BQ2562X_OTG_MODE      (BIT(2) | BIT(1) | BIT(0))
-
-/* REG0x1F_FAULT_Status_0 */
-#define BQ2562X_TEMP_TS_NORMAL          0x00
-#define BQ2562X_TEMP_COLD               BIT(0)
-#define BQ2562X_TEMP_HOT                BIT(1)
-#define BQ2562X_TEMP_COOL               (BIT(1) | BIT(0))
-#define BQ2562X_TEMP_WARM               BIT(2)
-#define BQ2562X_TEMP_PRECOOL            (BIT(2) | BIT(0))
-#define BQ2562X_TEMP_PREWARM            (BIT(2) | BIT(1))
-#define BQ2562X_TEMP_PIN_BIAS_REF_FAULT (BIT(2) | BIT(1) | BIT(0))
-#define BQ2562X_TEMP_MASK               GENMASK(2, 0)
-#define BQ2562X_TSHUT_STAT              BIT(3)
-#define BQ2562X_OTG_FAULT_STAT          BIT(4)
-#define BQ2562X_SYS_FAULT_STAT          BIT(5)
-#define BQ2562X_BAT_FAULT_STAT          BIT(6)
-#define BQ2562X_VBUS_FAULT_STAT         BIT(7)
 
 /* REG0x23_Charger_Mask_0 */
 #define BQ2562X_CHG_MSK_0_CLR GENMASK(6, 0)
@@ -195,25 +138,14 @@
 #define BQ2562X_ADC_EN     BIT(7)
 #define BQ2562X_ADC_SAMPLE GENMASK(5, 4)
 
-/* REG0x28_IBUS_ADC */
-#define BQ2562X_ADC_IBUS_SHIFT   1
-#define BQ2562X_ADC_CURR_STEP_UA 2000
-
 /* REG0x2A_IBAT_ADC */
 #define BQ2562X_ADC_IBAT_STEP_UV 4000
 #define BQ2562X_ADC_IBAT_SHIFT   2
 #define BQ2562X_ADC_IBAT_MASK    GENMASK(15, 2)
 
-/* REG0x2C_VBUS_ADC */
-#define BQ2562X_ADC_VBUS_STEP_UV 3970
-#define BQ2562X_ADC_VBUS_SHIFT   2
-
 /* REG0x30_VBAT_ADC */
 #define BQ2562X_ADC_VBAT_STEP_UV 1990
 #define BQ2562X_ADC_VBAT_MASK    GENMASK(12, 1)
 #define BQ2562X_ADC_VBAT_SHIFT   1
-
-/* REG0x38_Part_Information */
-#define BQ2562X_PART_NO_MASK GENMASK(5, 3)
 
 #endif /* ZEPHYR_DRIVERS_CHARGER_BQ2562X_H_ */

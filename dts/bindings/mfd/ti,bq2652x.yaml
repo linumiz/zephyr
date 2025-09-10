@@ -1,0 +1,22 @@
+# Copyright 2025 Linumiz GmbH
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  BQ25620/BQ25622 is a single cell buck battery charger with OTG support.
+
+  The device has a single child node for the charger. For example:
+
+  bq25620@6b {
+    compatible = "ti,bq2562x";
+    reg = <0x6b>;
+    int-gpio = <&gpio0 18 GPIO_ACTIVE_LOW>;
+  };
+
+compatible: "ti,bq2562x"
+
+include: [i2c-device.yaml]
+
+properties:
+  int-gpios:
+    type: phandle-array
+    description: Interrupt pin

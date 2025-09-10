@@ -7,8 +7,7 @@ description: |
   The device has a single child node for the charger. For example:
 
   bq25620@6b {
-    compatible = "ti,bq2562x";
-    reg = <0x6b>;
+    compatible = "ti,bq2562x-charger";
 
     ce-gpios = <&gpioa 3 GPIO_ACTIVE_LOW>;
     constant-charge-current-max-microamp = <1040000>;
@@ -19,9 +18,9 @@ description: |
     ti,input-voltage-limit-microvolt = <4600000>;
   };
 
-compatible: "ti,bq2562x"
+compatible: "ti,bq2562x-charger"
 
-include: [battery.yaml, i2c-device.yaml]
+include: [battery.yaml]
 
 properties:
   constant-charge-current-max-microamp:
@@ -43,10 +42,6 @@ properties:
   ce-gpios:
     type: phandle-array
     description: Active low, charge enable pin
-
-  int-gpios:
-    type: phandle-array
-    description: Interrupt pin
 
   ti,min-sys-voltage-microvolt:
     type: int

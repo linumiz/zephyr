@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define DT_DRV_COMPAT ti_bq2562x
+#define DT_DRV_COMPAT ti_bq2562x_charger
 
 #include "charger_bq2562x.h"
 
@@ -13,25 +13,24 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/charger.h>
 #include <zephyr/drivers/gpio.h>
-#include <zephyr/drivers/i2c.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/sys/util.h>
 
-LOG_MODULE_REGISTER(ti_bq25620, CONFIG_CHARGER_LOG_LEVEL);
+#include <zephyr/drivers/mfd/mfd_bq2562x.h>
+
+LOG_MODULE_REGISTER(ti_bq25620_charger, CONFIG_CHARGER_LOG_LEVEL);
 
 struct bq2562x_config {
-	struct i2c_dt_spec i2c;
+	const struct device *mfd;
 	struct gpio_dt_spec ce_gpio;
-	struct gpio_dt_spec int_gpio;
 };
 
 struct bq2562x_data {
 	const struct device *dev;
-	struct gpio_callback gpio_cb;
+	struct bq2562x_mfd_callback bq2562x_cb;
 	charger_status_notifier_t charger_status_notifier;
 	charger_online_notifier_t charger_online_notifier;
-	struct k_work int_routine_work;
 	uint32_t constant_charge_current_max_ua;
 	uint32_t constant_charge_voltage_max_uv;
 	uint32_t precharge_current_ua;
@@ -48,11 +47,6 @@ struct bq2562x_data {
 	enum charger_online online;
 };
 
-enum bq2562x_id {
-	BQ25620,
-	BQ25622,
-};
-
 static bool bq2562x_get_charge_enable(const struct device *dev)
 {
 	const struct bq2562x_config *const config = dev->config;
@@ -65,7 +59,7 @@ static bool bq2562x_get_charge_enable(const struct device *dev)
 		ce_pin = gpio_pin_get_dt(&config->ce_gpio);
 	}
 
-	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, &chrg_ctrl_0);
+	ret = mfd_bq2562x_reg_read_byte_dt(config->mfd, BQ2562X_CHRG_CTRL_1, &chrg_ctrl_0);
 	if (ret) {
 		return ret;
 	}
@@ -92,8 +86,8 @@ static int bq2562x_set_charge_enable(const struct device *dev, const bool enable
 		}
 	}
 
-	return i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, BQ2562X_CHRG_EN,
-				      enable ? BQ2562X_CHRG_EN : 0);
+	return mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_CHRG_CTRL_1, BQ2562X_CHRG_EN,
+					      (enable ? BQ2562X_CHRG_EN : 0));
 }
 
 /* Charge Current Limit */
@@ -103,7 +97,7 @@ static int bq2562x_get_ichrg_curr(const struct device *dev, uint32_t *current_ua
 	uint8_t ichg[2];
 	int ret;
 
-	ret = i2c_burst_read_dt(&config->i2c, BQ2562X_CHRG_I_LIM_LSB, ichg, ARRAY_SIZE(ichg));
+	ret = mfd_bq2562x_burst_read_dt(config->mfd, BQ2562X_CHRG_I_LIM_LSB, ichg, ARRAY_SIZE(ichg));
 	if (ret) {
 		return ret;
 	}
@@ -130,7 +124,7 @@ static int bq2562x_set_ichrg_curr(const struct device *dev, uint32_t chrg_curr)
 	ichg[1] = (chrg_curr >> 8) & BQ2562X_ICHG_MSB_MSK;
 	ichg[0] = chrg_curr & BQ2562X_ICHG_LSB_MSK;
 
-	ret = i2c_burst_write_dt(&config->i2c, BQ2562X_CHRG_I_LIM_LSB, ichg, ARRAY_SIZE(ichg));
+	ret = mfd_bq2562x_burst_write_dt(config->mfd, BQ2562X_CHRG_I_LIM_LSB, ichg, ARRAY_SIZE(ichg));
 
 	(void)bq2562x_set_charge_enable(dev, 1);
 
@@ -144,7 +138,7 @@ static int bq2562x_get_chrg_volt(const struct device *dev, uint32_t *voltage_uv)
 	uint8_t chrg_volt[2] = {0};
 	int ret;
 
-	ret = i2c_burst_read_dt(&config->i2c, BQ2562X_CHRG_V_LIM_LSB, chrg_volt,
+	ret = mfd_bq2562x_burst_read_dt(config->mfd, BQ2562X_CHRG_V_LIM_LSB, chrg_volt,
 				ARRAY_SIZE(chrg_volt));
 	if (ret) {
 		return ret;
@@ -169,7 +163,7 @@ static int bq2562x_set_chrg_volt(const struct device *dev, uint32_t chrg_volt)
 	volt[1] = (chrg_volt >> 8) & BQ2562X_VREG_MSB_MSK;
 	volt[0] = chrg_volt & BQ2562X_VREG_LSB_MSK;
 
-	return i2c_burst_write_dt(&config->i2c, BQ2562X_CHRG_V_LIM_LSB, volt, ARRAY_SIZE(volt));
+	return mfd_bq2562x_burst_write_dt(config->mfd, BQ2562X_CHRG_V_LIM_LSB, volt, ARRAY_SIZE(volt));
 }
 
 /* Input Current Limit */
@@ -179,7 +173,7 @@ static int bq2562x_get_input_curr_lim(const struct device *dev, uint32_t *curren
 	uint8_t ilim[2] = {0};
 	int ret;
 
-	ret = i2c_burst_read_dt(&config->i2c, BQ2562X_INPUT_I_LIM_LSB, ilim, ARRAY_SIZE(ilim));
+	ret = mfd_bq2562x_burst_read_dt(config->mfd, BQ2562X_INPUT_I_LIM_LSB, ilim, ARRAY_SIZE(ilim));
 	if (ret) {
 		return ret;
 	}
@@ -201,7 +195,7 @@ static int bq2562x_set_input_curr_lim(const struct device *dev, int iindpm)
 	ilim[0] = iindpm & BQ2562X_IINDPM_LSB_MSK;
 	ilim[1] = (iindpm >> 8) & BQ2562X_IINDPM_MSB_MSK;
 
-	return i2c_burst_write_dt(&config->i2c, BQ2562X_INPUT_I_LIM_LSB, ilim, ARRAY_SIZE(ilim));
+	return mfd_bq2562x_burst_write_dt(config->mfd, BQ2562X_INPUT_I_LIM_LSB, ilim, ARRAY_SIZE(ilim));
 }
 
 /* Input Voltage Limit */
@@ -211,7 +205,7 @@ static int bq2562x_get_input_volt_lim(const struct device *dev, uint32_t *voltag
 	uint8_t vlim[2] = {0};
 	int ret;
 
-	ret = i2c_burst_read_dt(&config->i2c, BQ2562X_INPUT_V_LIM_LSB, vlim, ARRAY_SIZE(vlim));
+	ret = mfd_bq2562x_burst_read_dt(config->mfd, BQ2562X_INPUT_V_LIM_LSB, vlim, ARRAY_SIZE(vlim));
 	if (ret) {
 		return ret;
 	}
@@ -233,7 +227,7 @@ static int bq2562x_set_input_volt_lim(const struct device *dev, int vindpm)
 	vlim[1] = (vindpm >> 8) & BQ2562X_VINDPM_MSB_MSK;
 	vlim[0] = vindpm & BQ2562X_VINDPM_LSB_MSK;
 
-	return i2c_burst_write_dt(&config->i2c, BQ2562X_INPUT_V_LIM_LSB, vlim, ARRAY_SIZE(vlim));
+	return mfd_bq2562x_burst_write_dt(config->mfd, BQ2562X_INPUT_V_LIM_LSB, vlim, ARRAY_SIZE(vlim));
 }
 
 /* Minimal System Voltage */
@@ -248,7 +242,7 @@ static int bq2562x_set_min_sys_volt(const struct device *dev, int vsysmin)
 	vlim[1] = (vsysmin >> 8) & BQ2562X_VSYSMIN_V_MSB_MSK;
 	vlim[0] = vsysmin & BQ2562X_VSYSMIN_V_LSB_MSK;
 
-	return i2c_burst_write_dt(&config->i2c, BQ2562X_MIN_SYS_V_LSB, vlim, ARRAY_SIZE(vlim));
+	return mfd_bq2562x_burst_write_dt(config->mfd, BQ2562X_MIN_SYS_V_LSB, vlim, ARRAY_SIZE(vlim));
 }
 
 /* Pre-charge Control */
@@ -258,7 +252,7 @@ static int bq2562x_get_prechrg_curr(const struct device *dev, uint32_t *current_
 	uint8_t prechrg_curr[2] = {0};
 	int ret;
 
-	ret = i2c_burst_read_dt(&config->i2c, BQ2562X_PRECHRG_CTRL_LSB, prechrg_curr,
+	ret = mfd_bq2562x_burst_read_dt(config->mfd, BQ2562X_PRECHRG_CTRL_LSB, prechrg_curr,
 				ARRAY_SIZE(prechrg_curr));
 	if (ret) {
 		return ret;
@@ -284,7 +278,7 @@ static int bq2562x_set_prechrg_curr(const struct device *dev, int pre_current)
 	prechrg_curr[1] = (pre_current >> 8) & BQ2562X_PRECHRG_I_MSB_MSK;
 	prechrg_curr[0] = pre_current & BQ2562X_PRECHRG_I_LSB_MSK;
 
-	ret = i2c_burst_write_dt(&config->i2c, BQ2562X_PRECHRG_CTRL_LSB, prechrg_curr,
+	ret = mfd_bq2562x_burst_write_dt(config->mfd, BQ2562X_PRECHRG_CTRL_LSB, prechrg_curr,
 				 ARRAY_SIZE(prechrg_curr));
 
 	(void)bq2562x_set_charge_enable(dev, 1);
@@ -299,7 +293,7 @@ static int bq2562x_get_term_curr(const struct device *dev, uint32_t *current_ua)
 	uint8_t iterm[2] = {0};
 	int ret;
 
-	ret = i2c_burst_read_dt(&config->i2c, BQ2562X_TERM_CTRL_LSB, iterm, ARRAY_SIZE(iterm));
+	ret = mfd_bq2562x_burst_read_dt(config->mfd, BQ2562X_TERM_CTRL_LSB, iterm, ARRAY_SIZE(iterm));
 	if (ret) {
 		return ret;
 	}
@@ -321,7 +315,7 @@ static int bq2562x_set_term_curr(const struct device *dev, int term_current)
 	iterm[1] = (term_current >> 8) & BQ2562X_TERMCHRG_I_MSB_MSK;
 	iterm[0] = term_current & BQ2562X_TERMCHRG_I_LSB_MSK;
 
-	return i2c_burst_write_dt(&config->i2c, BQ2562X_TERM_CTRL_LSB, iterm, ARRAY_SIZE(iterm));
+	return mfd_bq2562x_burst_write_dt(config->mfd, BQ2562X_TERM_CTRL_LSB, iterm, ARRAY_SIZE(iterm));
 }
 
 static int bq2562x_get_vbat_adc(const struct device *dev, uint32_t *vbat)
@@ -330,7 +324,7 @@ static int bq2562x_get_vbat_adc(const struct device *dev, uint32_t *vbat)
 	uint8_t vbat_adc[2] = {0};
 	int ret;
 
-	ret = i2c_burst_read_dt(&config->i2c, BQ2562X_ADC_VBAT_LSB, vbat_adc, ARRAY_SIZE(vbat_adc));
+	ret = mfd_bq2562x_burst_read_dt(config->mfd, BQ2562X_ADC_VBAT_LSB, vbat_adc, ARRAY_SIZE(vbat_adc));
 	if (ret) {
 		return ret;
 	}
@@ -347,7 +341,7 @@ static int bq2562x_get_vbus_adc(const struct device *dev, uint32_t *volt)
 	uint8_t vbus_adc[2] = {0};
 	int ret;
 
-	ret = i2c_burst_read_dt(&config->i2c, BQ2562X_ADC_VBUS_LSB, vbus_adc, ARRAY_SIZE(vbus_adc));
+	ret = mfd_bq2562x_burst_read_dt(config->mfd, BQ2562X_ADC_VBUS_LSB, vbus_adc, ARRAY_SIZE(vbus_adc));
 	if (ret) {
 		return ret;
 	}
@@ -365,7 +359,7 @@ static int bq2562x_get_ibat_adc(const struct device *dev, int32_t *ibat)
 	uint16_t temp;
 	int ret;
 
-	ret = i2c_burst_read_dt(&config->i2c, BQ2562X_ADC_IBAT_LSB, ibat_adc, ARRAY_SIZE(ibat_adc));
+	ret = mfd_bq2562x_burst_read_dt(config->mfd, BQ2562X_ADC_IBAT_LSB, ibat_adc, ARRAY_SIZE(ibat_adc));
 	if (ret) {
 		return ret;
 	}
@@ -388,7 +382,7 @@ static int bq2562x_get_ibus_adc(const struct device *dev, int32_t *ibus)
 	uint16_t temp;
 	int ret;
 
-	ret = i2c_burst_read_dt(&config->i2c, BQ2562X_ADC_IBUS_LSB, ibus_adc, ARRAY_SIZE(ibus_adc));
+	ret = mfd_bq2562x_burst_read_dt(config->mfd, BQ2562X_ADC_IBUS_LSB, ibus_adc, ARRAY_SIZE(ibus_adc));
 	if (ret) {
 		return ret;
 	}
@@ -411,7 +405,7 @@ static int bq2562x_get_online_status(const struct device *dev, enum charger_onli
 	int online_status;
 	int ret;
 
-	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_CHRG_STAT_1, &chrg_stat_1);
+	ret = mfd_bq2562x_reg_read_byte_dt(config->mfd, BQ2562X_CHRG_STAT_1, &chrg_stat_1);
 	if (ret) {
 		return ret;
 	}
@@ -432,7 +426,7 @@ static int bq2562x_get_health(const struct device *dev, enum charger_health *hea
 	uint8_t fault;
 	int ret;
 
-	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_FAULT_STAT_0, &fault);
+	ret = mfd_bq2562x_reg_read_byte_dt(config->mfd, BQ2562X_FAULT_STAT_0, &fault);
 	if (ret) {
 		return ret;
 	}
@@ -480,7 +474,7 @@ static int bq2562x_get_charger_type(const struct device *dev, enum charger_charg
 	int32_t ibat, itrickle_max;
 	int ret;
 
-	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_CHRG_STAT_1, &chrg_stat_1);
+	ret = mfd_bq2562x_reg_read_byte_dt(config->mfd, BQ2562X_CHRG_STAT_1, &chrg_stat_1);
 	if (ret) {
 		return ret;
 	}
@@ -503,7 +497,7 @@ static int bq2562x_get_charger_type(const struct device *dev, enum charger_charg
 				break;
 			}
 
-			ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_0, &chrg_ctl);
+			ret = mfd_bq2562x_reg_read_byte_dt(config->mfd, BQ2562X_CHRG_CTRL_0, &chrg_ctl);
 			if (ret) {
 				break;
 			}
@@ -537,7 +531,7 @@ static int bq2562x_get_charger_status(const struct device *dev, enum charger_sta
 	uint8_t type, status;
 	int ret;
 
-	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_CHRG_STAT_1, &chrg_stat_1);
+	ret = mfd_bq2562x_reg_read_byte_dt(config->mfd, BQ2562X_CHRG_STAT_1, &chrg_stat_1);
 	if (ret) {
 		return ret;
 	}
@@ -657,19 +651,19 @@ static int bq2562x_set_heat_mgmt(const struct device *dev)
 	struct bq2562x_data *data = dev->data;
 	int ret;
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_SET_CONV_STRN,
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_SET_CONV_STRN,
 				     data->switching_converter_strength << 2);
 	if (ret) {
 		return ret;
 	}
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_SET_CONV_FREQ,
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_SET_CONV_FREQ,
 				     data->switching_converter_freq << 4);
 	if (ret) {
 		return ret;
 	}
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_TREG,
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_TREG,
 				     data->thermal_regulation_threshold << 6);
 	if (ret) {
 		return ret;
@@ -684,19 +678,19 @@ static int bq2562x_hw_init(const struct device *dev)
 	struct bq2562x_data *data = dev->data;
 	int ret;
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_REG_RST,
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_CHRG_CTRL_2, BQ2562X_CTRL2_REG_RST,
 				     BQ2562X_CTRL2_REG_RST);
 	if (ret) {
 		return ret;
 	}
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_NTC_CTRL_0, BQ2562X_NTC_MASK,
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_NTC_CTRL_0, BQ2562X_NTC_MASK,
 				     BQ2562X_NTC_MASK);
 	if (ret) {
 		return ret;
 	}
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_CTRL_1, BQ2562X_WATCHDOG_MASK,
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_CHRG_CTRL_1, BQ2562X_WATCHDOG_MASK,
 				     BQ2562X_WATCHDOG_DIS);
 	if (ret) {
 		return ret;
@@ -738,12 +732,12 @@ static int bq2562x_hw_init(const struct device *dev)
 	}
 
 	/* ADC 12 bit resolution */
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_ADC_CTRL, BQ2562X_ADC_SAMPLE, 0);
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_ADC_CTRL, BQ2562X_ADC_SAMPLE, 0);
 	if (ret) {
 		return ret;
 	}
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_ADC_CTRL, BQ2562X_ADC_EN,
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_ADC_CTRL, BQ2562X_ADC_EN,
 				     BQ2562X_ADC_EN);
 	if (ret) {
 		return ret;
@@ -752,26 +746,9 @@ static int bq2562x_hw_init(const struct device *dev)
 	return 0;
 }
 
-static int bq2562x_enable_interrupt_pin(const struct device *dev, bool enabled)
+static void bq2562x_int_work_handler(const struct device *dev)
 {
-	const struct bq2562x_config *const config = dev->config;
-	gpio_flags_t flags;
-	int ret;
-
-	flags = enabled ? GPIO_INT_EDGE_TO_ACTIVE : GPIO_INT_DISABLE;
-
-	ret = gpio_pin_interrupt_configure_dt(&config->int_gpio, flags);
-	if (ret < 0) {
-		LOG_ERR("Could not %s interrupt GPIO callback: %d", enabled ? "enable" : "disable",
-			ret);
-	}
-
-	return ret;
-}
-
-static void bq2562x_int_routine_work_handler(struct k_work *work)
-{
-	struct bq2562x_data *data = CONTAINER_OF(work, struct bq2562x_data, int_routine_work);
+	struct bq2562x_data *data = dev->data;
 	union charger_propval val;
 	int ret;
 
@@ -788,20 +765,6 @@ static void bq2562x_int_routine_work_handler(struct k_work *work)
 			data->charger_online_notifier(val.online);
 		}
 	}
-	(void)bq2562x_enable_interrupt_pin(data->dev, true);
-}
-
-static void bq2562x_gpio_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
-{
-	struct bq2562x_data *data = CONTAINER_OF(cb, struct bq2562x_data, gpio_cb);
-	int ret;
-
-	(void)bq2562x_enable_interrupt_pin(data->dev, false);
-
-	ret = k_work_submit(&data->int_routine_work);
-	if (ret < 0) {
-		LOG_WRN("Could not submit int work: %d", ret);
-	}
 }
 
 static int bq2562x_configure_interrupt(const struct device *dev)
@@ -810,48 +773,32 @@ static int bq2562x_configure_interrupt(const struct device *dev)
 	struct bq2562x_data *data = dev->data;
 	int ret;
 
-	k_work_init(&data->int_routine_work, bq2562x_int_routine_work_handler);
-	if (!gpio_is_ready_dt(&config->int_gpio)) {
-		LOG_ERR("Interrupt GPIO device not ready");
-		return -ENODEV;
-	}
-
-	ret = gpio_pin_configure_dt(&config->int_gpio, GPIO_INPUT);
-	if (ret < 0) {
-		LOG_ERR("Could not configure interrupt GPIO");
-		return ret;
-	}
-
-	gpio_init_callback(&data->gpio_cb, bq2562x_gpio_callback, BIT(config->int_gpio.pin));
-	ret = gpio_add_callback_dt(&config->int_gpio, &data->gpio_cb);
-	if (ret < 0) {
-		LOG_ERR("Could not add interrupt GPIO callback");
-		return ret;
-	}
-
 	/* enable status and online interrupt */
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_MSK_0, BQ2562X_CHG_MSK_0_CLR,
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_CHRG_MSK_0, BQ2562X_CHG_MSK_0_CLR,
 				     BQ2562X_CHG_MSK_0_CLR);
 	if (ret) {
 		return ret;
 	}
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_FAULT_MSK_0, BQ2562X_FAULT_MSK_0_CLR,
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_FAULT_MSK_0, BQ2562X_FAULT_MSK_0_CLR,
 				     BQ2562X_FAULT_MSK_0_CLR);
 	if (ret) {
 		return ret;
 	}
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_MSK_1, BQ2562X_CHG_MSK, 0);
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_CHRG_MSK_1, BQ2562X_CHG_MSK, 0);
 	if (ret) {
 		return ret;
 	}
 
-	ret = i2c_reg_update_byte_dt(&config->i2c, BQ2562X_CHRG_MSK_1, BQ2562X_VBUS_MSK, 0);
+	ret = mfd_bq2562x_reg_update_byte_dt(config->mfd, BQ2562X_CHRG_MSK_1, BQ2562X_VBUS_MSK, 0);
 	if (ret) {
 		return ret;
 	}
-	(void)bq2562x_enable_interrupt_pin(data->dev, true);
+
+	data->bq2562x_cb.cb = bq2562x_int_work_handler;
+	data->bq2562x_cb.dev = dev;
+	mfd_bq2562x_register_interrupt_callback(config->mfd, &data->bq2562x_cb);
 
 	return 0;
 }
@@ -860,20 +807,9 @@ static int bq2562x_init(const struct device *dev)
 {
 	const struct bq2562x_config *const config = dev->config;
 	struct bq2562x_data *data = dev->data;
-	uint8_t val;
 	int ret;
 
 	data->dev = dev;
-	ret = i2c_reg_read_byte_dt(&config->i2c, BQ2562X_PART_INFO, &val);
-	if (ret) {
-		return ret;
-	}
-
-	val = FIELD_GET(BQ2562X_PART_NO_MASK, val);
-	if (val == BQ25622) {
-		return -ENOTSUP;
-	}
-
 	/* charge enable */
 	if (config->ce_gpio.port != NULL) {
 		if (!gpio_is_ready_dt(&config->ce_gpio)) {
@@ -899,11 +835,9 @@ static int bq2562x_init(const struct device *dev)
 		return ret;
 	}
 
-	if (config->int_gpio.port != NULL) {
-		ret = bq2562x_configure_interrupt(dev);
-		if (ret) {
-			return ret;
-		}
+	ret = bq2562x_configure_interrupt(dev);
+	if (ret) {
+		return ret;
 	}
 
 	return ret;
@@ -915,33 +849,32 @@ static DEVICE_API(charger, bq2562x_driver_api) = {
 	.charge_enable = bq2562x_set_charge_enable,
 };
 
-#define BQ2562X_INIT(inst)                                                                         \
-                                                                                                   \
-	static const struct bq2562x_config bq2562x_config_##inst = {                               \
-		.i2c = I2C_DT_SPEC_INST_GET(inst),                                                 \
-		.ce_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, ce_gpios, {}),                           \
-		.int_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, int_gpios, {}),                         \
-	};                                                                                         \
-                                                                                                   \
-	static struct bq2562x_data bq2562x_data_##inst = {                                         \
-		.constant_charge_current_max_ua =                                                  \
-			DT_INST_PROP(inst, constant_charge_current_max_microamp),                  \
-		.constant_charge_voltage_max_uv =                                                  \
-			DT_INST_PROP(inst, constant_charge_voltage_max_microvolt),                 \
-		.precharge_current_ua = DT_INST_PROP(inst, precharge_current_microamp),            \
-		.charge_term_current_ua = DT_INST_PROP(inst, charge_term_current_microamp),        \
-		.min_sys_voltage_uv = DT_INST_PROP(inst, ti_min_sys_voltage_microvolt),            \
-		.input_voltage_min_uv = DT_INST_PROP(inst, ti_input_voltage_limit_microvolt),      \
-		.input_current_max_ua = DT_INST_PROP(inst, ti_input_current_limit_microamp),       \
-		.thermal_regulation_threshold =                                                    \
-			DT_INST_PROP(inst, ti_thermal_regulation_threshold),                       \
-		.switching_converter_freq = DT_INST_PROP(inst, ti_switching_converter_freq),       \
-		.switching_converter_strength =                                                    \
-			DT_INST_PROP(inst, ti_switching_converter_strength),                       \
-	};                                                                                         \
-                                                                                                   \
-	DEVICE_DT_INST_DEFINE(inst, bq2562x_init, NULL, &bq2562x_data_##inst,                      \
-			      &bq2562x_config_##inst, POST_KERNEL, CONFIG_CHARGER_INIT_PRIORITY,   \
+#define BQ2562X_INIT(n)										\
+												\
+	static const struct bq2562x_config bq2562x_config_##n = {				\
+		.mfd = DEVICE_DT_GET(DT_INST_PARENT(n)),					\
+		.ce_gpio = GPIO_DT_SPEC_INST_GET_OR(n, ce_gpios, {}),				\
+	};											\
+												\
+	static struct bq2562x_data bq2562x_data_##n = {						\
+		.constant_charge_current_max_ua =						\
+			DT_INST_PROP(n, constant_charge_current_max_microamp),			\
+		.constant_charge_voltage_max_uv =						\
+			DT_INST_PROP(n, constant_charge_voltage_max_microvolt),			\
+		.precharge_current_ua = DT_INST_PROP(n, precharge_current_microamp),		\
+		.charge_term_current_ua = DT_INST_PROP(n, charge_term_current_microamp),	\
+		.min_sys_voltage_uv = DT_INST_PROP(n, ti_min_sys_voltage_microvolt),		\
+		.input_voltage_min_uv = DT_INST_PROP(n, ti_input_voltage_limit_microvolt),	\
+		.input_current_max_ua = DT_INST_PROP(n, ti_input_current_limit_microamp),	\
+		.thermal_regulation_threshold =							\
+			DT_INST_PROP(n, ti_thermal_regulation_threshold),			\
+		.switching_converter_freq = DT_INST_PROP(n, ti_switching_converter_freq),	\
+		.switching_converter_strength =							\
+			DT_INST_PROP(n, ti_switching_converter_strength),			\
+	};											\
+												\
+	DEVICE_DT_INST_DEFINE(n, bq2562x_init, NULL, &bq2562x_data_##n,				\
+			      &bq2562x_config_##n, POST_KERNEL, CONFIG_CHARGER_INIT_PRIORITY,	\
 			      &bq2562x_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(BQ2562X_INIT)
