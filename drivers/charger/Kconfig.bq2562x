@@ -4,7 +4,8 @@
 config CHARGER_BQ2562X
 	bool "BQ2562X Battery Charger"
 	default y
+	depends on DT_HAS_TI_BQ2562X_CHARGER_ENABLED
 	depends on DT_HAS_TI_BQ2562X_ENABLED
-	select I2C
+	select MFD
 	help
-	  Enable I2C-based driver for the TI BQ2562X Battery Charger.
+	  Enable MFD-based driver for the TI BQ2562X Battery Charger.
