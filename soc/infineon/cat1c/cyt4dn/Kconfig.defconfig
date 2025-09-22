@@ -1,0 +1,17 @@
+# Copyright (c) 2025 Linumiz GmbH
+# SPDX-License-Identifier: Apache-2.0
+
+# Infineon CAT1C based MCU default configuration
+
+if SOC_SERIES_CYT4DN
+
+config NUM_IRQS
+	default 798
+
+config SYS_CLOCK_HW_CYCLES_PER_SEC
+	default $(dt_node_int_prop_int,/cpus/cpu@0,clock-frequency)
+
+config BUILD_OUTPUT_HEX
+	default y
+
+endif # SOC_SERIES_CYT4DN 
