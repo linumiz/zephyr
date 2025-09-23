@@ -1,0 +1,30 @@
+/*
+ * Copyright (c) 2025 Linumiz GmbH
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <arm/infineon/cat1c/cyt4dn/cyt4dn.dtsi>
+#include <arm/infineon/cat1c/cyt4dn/system_clocks.dtsi>
+#include <arm/infineon/cat1c/cyt4dn/cyt4dn_m7.dtsi>
+#include <arm/infineon/cat1c/cyt4dn/memory_partition.dtsi>
+#include "kit_t2g_c2d6m_lite_common.dtsi"
+
+/ {
+
+	model = "Infineon Evaluation board for CYT4DNJBZS M7";
+	compatible = "infineon,kit_t2g_c2d6m_lite", "infineon,cyt4dn";
+
+	aliases {
+		uart-7 = &uart7;
+	};
+
+	chosen {
+		zephyr,sram = &cm7_0_code;
+		zephyr,flash = &cm7_0_data;
+		zephyr,dtcm = &dtcm;
+		zephyr,itcm = &itcm;
+		zephyr,console = &uart7;
+		zephyr,shell-uart = &uart7;
+	};
+};
