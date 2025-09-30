@@ -2,12 +2,14 @@ manifest:
   remotes:
     - name: upstream
       url-base: https://github.com/zephyrproject-rtos
+    - name: linumiz_canopen
+      url-base: https://github.com/linumiz
   # zephyr-keep-sorted-start re(^\s+\- name:)
   projects:
     - name: canopennode
-      revision: dec12fa3f0d790cafa8414a4c2930ea71ab72ffd
+      revision: f42a6e696300d4433cce4cc8ed7efcaf2f969801
       path: modules/lib/canopennode
-      remote: upstream
+      remote: linumiz_canopen
       groups:
         - optional
     - name: chre
