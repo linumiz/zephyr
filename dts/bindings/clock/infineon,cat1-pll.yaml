@@ -1,0 +1,40 @@
+# Copyright (c) 2025 Linumiz GmbH 
+#
+# SPDX-License-Identifier: Apache-2.0
+
+description: Infineon CAT1C PLL Driver
+
+compatible: "infineon,cat1-pll"
+
+include: [base.yaml, clock-controller.yaml]
+
+properties:
+  clocks:
+    required: true
+    description: |
+      Clock reference source
+
+  ifx,pll-instance:
+    type: int
+    description: PLL instance of pll node 
+    required: true
+
+  p-div:
+    type: int
+    required: true
+    description: |
+      pdiv is the feedback-divider of the output.
+
+  q-div:
+    type: int
+    required: true
+    description: |
+      qdiv functions as a refernce-divider value.
+
+  output-div:
+    type: int
+    description: |
+      Output Divider of the pll clock out.
+
+  "#clock-cells":
+    const: 0
