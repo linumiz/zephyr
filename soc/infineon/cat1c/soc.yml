@@ -69,10 +69,13 @@ family:
       - name: m7_0
       - name: m7_1
     - name: cyt4bfcche
+<<<<<<< HEAD
 
   - name: cyt4dn
     socs:
     - name: cyt4dnjbzs 
+=======
+>>>>>>> 06b5198b3a0 (soc: infineon: xmc7200: extend CYT4BFxx MPNs support)
       cpuclusters:
       - name: m0p
       - name: m7_0
