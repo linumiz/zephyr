@@ -24,22 +24,30 @@ struct fixed_rate_clock_config {
 	uint32_t id; /* ifx_cat1_clock_block */
 };
 
+#define IFX_SYSTEM_CLOCK	IFX_CAT1_CLOCK_BLOCK_ECO
+#define IFX_ECO_CSUM		18UL
+#define IFX_ECO_ISR		50UL
+#define IFX_ECO_DRIVERLEVEL	100UL
+#define IFX_ECO_ENABLETIMEOUT	1000 /* 1 ms */
+
 static int fixed_rate_clk_init(const struct device *dev)
 {
 	const struct fixed_rate_clock_config *const config = dev->config;
 
 	switch (config->id) {
 
-	case IFX_CAT1_CLOCK_BLOCK_IMO:
-		break;
-
 	case IFX_CAT1_CLOCK_BLOCK_FLL:
 		break;
 
-	case IFX_CAT1_CLOCK_BLOCK_IHO:
-		Cy_SysClk_IhoEnable();
-		break;
+	case 2: /* ECO */
+		int ret = Cy_SysClk_EcoConfigure(config->rate, IFX_ECO_CSUM, IFX_ECO_ISR,
+						 IFX_ECO_DRIVERLEVEL);
 
+		if (ret != 0) {
+			return ret;
+		}
+
+		return Cy_SysClk_EcoEnable(IFX_ECO_ENABLETIMEOUT);
 	default:
 		break;
 	}
@@ -54,6 +62,6 @@ static int fixed_rate_clk_init(const struct device *dev)
 	};                                                                                         \
 	DEVICE_DT_INST_DEFINE(idx, fixed_rate_clk_init, NULL, NULL,                                \
 			      &fixed_rate_clock_config_##idx, PRE_KERNEL_1,                        \
-			      CONFIG_CLOCK_CONTROL_INIT_PRIORITY, NULL);
+			     CONFIG_CLOCK_CONTROL_INIT_PRIORITY, NULL);
 
 DT_INST_FOREACH_STATUS_OKAY(FIXED_CLK_INIT)
