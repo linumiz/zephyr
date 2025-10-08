@@ -25,7 +25,7 @@ endif()
 
 if (CONFIG_SOC_FAMILY_INFINEON_CAT1 AND NOT CONFIG_SOC_FAMILY_PSOC6_LEGACY)
   ## Add mtb-hal-cat1 sources for CAT1 devices
-  add_subdirectory(mtb-hal-cat1)
+#  add_subdirectory(mtb-hal-cat1)
 
   ## Add catcm0p sleep images for CM0 Devices
   if(CONFIG_SOC_PSOC6_CM0P_IMAGE_SLEEP)
@@ -35,7 +35,7 @@ if (CONFIG_SOC_FAMILY_INFINEON_CAT1 AND NOT CONFIG_SOC_FAMILY_PSOC6_LEGACY)
   ## Add abstraction-rtos sources
   add_subdirectory(abstraction-rtos)
 
-  add_subdirectory(serial-flash)
+#  add_subdirectory(serial-flash)
 
 endif()
 
