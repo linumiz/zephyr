@@ -8,6 +8,8 @@
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn-pinctrl.dtsi>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
+#define IFX_PERI_GRP_INST_SEL(grpnum, instnum)  ((grpnum << 8U ) | (instnum << 16U))
+
 / {
 	aliases {
 		uart-7 = &uart7;
@@ -58,16 +60,13 @@ uart7: &scb7 {
 	compatible = "infineon,cat1-uart-pdl";
 	status = "okay";
 	current-speed = <115200>;
-	clocks = <&peri0_group1_8bit>;
+	clocks = <&clk_hf2>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x010F>;
 
 	/* UART pins */
 	pinctrl-0 = <&p9_0_scb7_uart_rx &p9_1_scb7_uart_tx>;
 	pinctrl-names = "default";
-};
-
-&peri0_group1_8bit {
-	status = "okay";
-	scb-block = <7>;
 };
 
 &gpio_prt0 {
@@ -102,28 +101,16 @@ uart7: &scb7 {
 	status = "okay";
 };
 
-&path_mux0 {
+&pll0 {
 	status = "okay";
 };
 
-&path_mux1 {
-	status = "okay";
-};
-
-&path_mux2 {
-	status = "okay";
-};
-
-&path_mux3 {
-	status = "okay";
-};
-
-&path_mux7 {
+&pll6 {
 	status = "okay";
 };
 
 &clk_hf0 {
-	status = "okay";
+	status = "disabled";
 };
 
 &clk_hf1 {
@@ -135,5 +122,35 @@ uart7: &scb7 {
 };
 
 &clk_hf3 {
-	status = "okay";
+	status = "disabled";
+};
+&clk_hf4 {
+	status = "disabled";
+};
+&clk_hf5 {
+	status = "disabled";
+};
+&clk_hf6 {
+	status = "disabled";
+};
+&clk_hf7 {
+	status = "disabled";
+};
+&clk_hf8 {
+	status = "disabled";
+};
+&clk_hf9 {
+	status = "disabled";
+};
+&clk_hf10 {
+	status = "disabled";
+};
+&clk_hf11 {
+	status = "disabled";
+};
+&clk_hf12 {
+	status = "disabled";
+};
+&clk_hf13 {
+	status = "disabled";
 };
