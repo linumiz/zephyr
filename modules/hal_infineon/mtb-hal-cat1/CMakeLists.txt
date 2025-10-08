@@ -68,15 +68,7 @@ zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_XMC7200_176_TEQFP
 zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_XMC7200_272_BGA
   ${hal_cat1c_dir}/source/pin_packages/cyhal_xmc7200_272_bga.c)
 zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_XMC7200_320_BGA
-<<<<<<< HEAD
-<<<<<<< HEAD
-  ${hal_cat1c_dir}/source/pin_packages/cyhal_xmc7200_320_bga.c)
-=======
   ${hal_cat1c_dir}/source/pin_packages/cyhal_xmc7200_320_bga.c.c)
->>>>>>> 06b5198b3a0 (soc: infineon: xmc7200: extend CYT4BFxx MPNs support)
-=======
-  ${hal_cat1c_dir}/source/pin_packages/cyhal_xmc7200_320_bga.c.c)
->>>>>>> 06b5198b3a0 (soc: infineon: xmc7200: extend CYT4BFxx MPNs support)
 
 zephyr_library_sources_ifdef(CONFIG_SOC_DIE_CYW20829
   ${hal_cat1b_dir}/source/triggers/cyhal_triggers_cyw20829.c)
