@@ -15,7 +15,7 @@
 			device_type = "cpu";
 			compatible = "arm,cortex-m7";
 			reg = <0>;
-			clock-frequency = <350000000>;
+			clock-frequency = <320000000>;
 		};
 	};
 
