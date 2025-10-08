@@ -16,6 +16,7 @@
 #include <zephyr/irq.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/drivers/pinctrl.h>
+#include <zephyr/drivers/clock_control.h>
 #include <zephyr/kernel.h>
 
 #include <cy_scb_uart.h>
@@ -44,7 +45,8 @@ struct ifx_cat1_uart_data {
 	struct ifx_cat1_resource_inst hw_resource;
 	struct ifx_cat1_clock clock;
 #if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C)
-	uint8_t clock_peri_group;
+	uint32_t clock_peri_group;
+	uint32_t clock_id;
 #endif
 
 #if CONFIG_UART_INTERRUPT_DRIVEN
@@ -328,17 +330,35 @@ static int ifx_cat1_uart_configure(const struct device *dev, const struct uart_c
 	data->scb_config.parity = convert_uart_parity_z_to_cy(cfg->parity);
 	data->scb_config.enableCts = data->cts_enabled;
 
-	Cy_SCB_UART_Init(config->reg_addr, &(data->scb_config), NULL);
-	Cy_SCB_UART_Enable(config->reg_addr);
 	/* Configure the baud rate */
-	result = ifx_cat1_uart_set_baud(dev, cfg->baudrate);
+//	result = ifx_cat1_uart_set_baud(dev, cfg->baudrate);
 
+	uint32_t clock_frequency;
+	int ret = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf2)), NULL, &clock_frequency);
+	if (ret < 0) {
+		return ret;
+	}
+
+	uint32_t clk_scb = IFX_CAT1_UART_OVERSAMPLE_MIN * cfg->baudrate;
+	uint16_t div = (int)clock_frequency / clk_scb;
+
+	Cy_SysClk_PeriPclkDisableDivider(data->clock_peri_group, CY_SYSCLK_DIV_8_BIT, 0U);
+	Cy_SysClk_PeriPclkSetDivider(data->clock_peri_group, CY_SYSCLK_DIV_8_BIT, 0U, div);
+	Cy_SysClk_PeriPclkEnableDivider(data->clock_peri_group, CY_SYSCLK_DIV_8_BIT, 0U);
+	Cy_SysClk_PeriPclkAssignDivider(data->clock_id, CY_SYSCLK_DIV_8_BIT, 0U);
+
+	ret = Cy_SCB_UART_Init(config->reg_addr, &(data->scb_config), &data->context);
+	if (ret != 0) {
+		return ret;
+	}
+
+	Cy_SCB_UART_Enable(config->reg_addr);
 	/* Enable RTS/CTS flow control */
 	if ((result == CY_RSLT_SUCCESS) && cfg->flow_ctrl) {
 		Cy_SCB_UART_EnableCts(config->reg_addr);
 	}
 
-	return (result == CY_RSLT_SUCCESS) ? 0 : -ENOTSUP;
+	return 0;
 };
 
 static int ifx_cat1_uart_config_get(const struct device *dev, struct uart_config *cfg)
@@ -591,8 +611,8 @@ static const cy_stc_scb_uart_config_t _uart_default_config = {
 	.smartCardRetryOnNack = false,
 	.irdaInvertRx = false,
 	.irdaEnableLowPowerReceiver = false,
-	.halfDuplexMode = false,
-	.oversample = 8,
+//	.halfDuplexMode = false,
+	.oversample = IFX_CAT1_UART_OVERSAMPLE_MIN,
 	.enableMsbFirst = false,
 	.dataWidth = 8UL,
 	.parity = CY_SCB_UART_PARITY_NONE,
@@ -848,6 +868,7 @@ static int ifx_cat1_uart_init(const struct device *dev)
 
 	data->scb_config = _uart_default_config;
 
+#if 0
 	result = (cy_rslt_t)Cy_SCB_UART_Init(config->reg_addr, &(data->scb_config),
 					     &(data->context));
 
@@ -862,6 +883,7 @@ static int ifx_cat1_uart_init(const struct device *dev)
 	} else {
 		return -ENOTSUP;
 	}
+#endif
 
 #if (CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_UART_INTERRUPT_DRIVEN)
 	/* Enable the UART interrupt */
@@ -870,9 +892,7 @@ static int ifx_cat1_uart_init(const struct device *dev)
 #endif
 
 	/* Perform initial Uart configuration */
-	ret = ifx_cat1_uart_configure(dev, &config->dt_cfg);
-
-	return ret;
+	return ifx_cat1_uart_configure(dev, &config->dt_cfg);
 }
 
 static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
@@ -941,7 +961,9 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 		IRQ_CONNECT(DT_INST_IRQN(n), DT_INST_IRQ(n, priority), ifx_cat1_uart_irq_handler,  \
 			    DEVICE_DT_INST_GET(n), 0);                                             \
 	}                                                                                          \
-	static struct ifx_cat1_uart_data ifx_cat1_uart##n##_data = {UART_PERI_CLOCK_INIT(n)};      \
+	static struct ifx_cat1_uart_data ifx_cat1_uart##n##_data = {				   \
+			.clock_peri_group = DT_INST_PROP(n, ifx_peri_group),			   \
+			.clock_id = DT_INST_PROP(n, ifx_peri_clk),};				   \
                                                                                                    \
 	static struct ifx_cat1_uart_config ifx_cat1_uart##n##_cfg = {                              \
 		.dt_cfg.baudrate = DT_INST_PROP(n, current_speed),                                 \

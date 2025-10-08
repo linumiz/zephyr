@@ -8,3 +8,14 @@ description: Infineon CAT1 UART
 compatible: "infineon,cat1-uart-pdl"
 
 include: infineon,cat1-uart.yaml
+
+properties:
+  ifx,peri-clk:
+    type: int
+    description:
+      Clock selection for peripheral
+
+  ifx,peri-group:
+    type: int
+    description:
+      Peripheral clock divider group and inst for scb uart
