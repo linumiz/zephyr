@@ -6,7 +6,7 @@ zephyr_include_directories(.)
 zephyr_sources_ifdef(CONFIG_CPU_CORTEX_M0PLUS soc_m0p.c)
 zephyr_sources_ifdef(CONFIG_CPU_CORTEX_M7 soc_m7.c)
 
-zephyr_sources_ifdef(CONFIG_BOARD_LATE_INIT_HOOK init_system.c)
+#zephyr_sources_ifdef(CONFIG_BOARD_LATE_INIT_HOOK init_system.c)
 
 set(SOC_LINKER_SCRIPT ${ZEPHYR_BASE}/include/zephyr/arch/arm/cortex_m/scripts/linker.ld CACHE INTERNAL "")
 
