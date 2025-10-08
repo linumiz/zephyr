@@ -17,20 +17,7 @@ LOG_MODULE_REGISTER(ifx_clock_control, CONFIG_CLOCK_CONTROL_LOG_LEVEL);
 
 #define DT_DRV_COMPAT	infineon_cat1_clock
 
-#define IFX_PLL_ENABLETIMEOUT	1000 /* 1 ms */
-#if 0
-#if DT_NODE_HAS_COMPAT_STATUS(DT_NODELABEL(clk_eco), fixed_clock, okay)
-#define IFX_SYSTEM_CLOCK	IFX_CAT1_CLOCK_BLOCK_ECO
-#define IFX_FREQ		DT_PROP(DT_NODELABEL(clk_eco), clock_frequency)
-#define IFX_ECO_CSUM		18UL
-#define IFX_ECO_ISR		50UL
-#define IFX_ECO_DRIVERLEVEL	100UL
-#define IFX_ECO_ENABLETIMEOUT	1000 /* 1 ms */
-#elif DT_NODE_HAS_COMPAT_STATUS(DT_NODELABEL(clk_imo), fixed_clock, okay)
-#define IFX_SYSTEM_CLOCK	IFX_CAT1_CLOCK_BLOCK_IMO
-#define IFX_FREQ		DT_PROP(DT_NODELABEL(clk_imo), clock_frequency)
-#endif
-#endif
+#define IFX_PLL_ENABLETIMEOUT	10000 /* 10 ms */
 
 struct ifx_clock_config {
 	uint32_t clock_frequency;
@@ -40,6 +27,7 @@ struct ifx_clock_config {
 	uint8_t q_div;
 	uint8_t output_div;
 	uint8_t pll_instance;
+	uint8_t pll_source;
 };
 
 struct ifx_clock_data {
@@ -69,9 +57,18 @@ static int ifx_setup_pll(const struct device *dev)
 	const struct ifx_clock_config *cfg = dev->config;
 	cy_stc_pll_manual_config_t pll_config = {0};
 
+	if (cfg->pll_source == -1) {
+		return -EINVAL;
+	}
+	ret = Cy_SysClk_ClkPathSetSource(cfg->pll_instance, cfg->pll_source);
+	if (ret != 0) {
+		return ret;
+	}
+
 	pll_config.feedbackDiv = cfg->p_div;
 	pll_config.referenceDiv = cfg->q_div;
 	pll_config.outputDiv = cfg->output_div;
+	pll_config.lfMode = false;
 	pll_config.outputMode = CY_SYSCLK_FLLPLL_OUTPUT_AUTO;
 
 	ret = Cy_SysClk_PllDisable(cfg->pll_instance);
@@ -117,47 +114,12 @@ static int ifx_config_hfclk(const struct device *dev)
 	return Cy_SysClk_ClkHfEnable(cfg->clock_instance);
 }
 
-#if 0
-static int ifx_init_system_clock(const struct device *dev)
-{
-	int ret;
-
-	switch (IFX_SYSTEM_CLOCK) {
-	case IFX_CAT1_CLOCK_BLOCK_ECO:
-		ret = Cy_SysClk_EcoConfigure(IFX_FREQ, IFX_ECO_CSUM, IFX_ECO_ISR,
-			  		     IFX_ECO_DRIVERLEVEL);
-
-		if (ret != 0) {
-			return ret;
-		}
-
-		return Cy_SysClk_EcoEnable(IFX_ECO_ENABLETIMEOUT);
-	case IFX_CAT1_CLOCK_BLOCK_IMO:
-		Cy_SysClk_ImoEnable();
-		ret = 0;
-		break;
-	default:
-		ret = -ENOTSUP;
-	}
-
-	return ret;
-}
-#endif
-
 static int ifx_clock_init(const struct device *dev)
 {
 	int ret;
 	struct ifx_clock_data *data = dev->data;
 
 	k_mutex_init(&data->lock);
-#if 0
-	ret = ifx_init_system_clock(dev);
-	if (ret != 0) {
-		LOG_ERR("System clock init failed %d\n", ret);
-		return ret;
-	}
-#endif
-
 	ret = ifx_setup_pll(dev);
 	if (ret != 0) {
 		LOG_ERR("PLL config failed %d\n", ret);
@@ -169,8 +131,6 @@ static int ifx_clock_init(const struct device *dev)
 		return ret;
 	}
 
-//	SystemCoreClockUpdate();	
-
 	return 0;
 }
 
@@ -179,10 +139,11 @@ static DEVICE_API(clock_control, clock_control_ifx_cat1_api) = {
 };
 
 #define IFX_CLK_INIT(idx)							\
-	static const struct ifx_clock_config ifx_clock_config_##idx = {	\
+	static const struct ifx_clock_config ifx_clock_config_##idx = {		\
 		.clock_frequency = DT_INST_PROP(idx, clock_frequency),		\
 		.clock_instance = DT_INST_PROP(idx, ifx_hf_instance),		\
-		.pll_instance = DT_INST_PROP_BY_PHANDLE(idx, clocks, ifx_pll_instance),		\
+		.pll_instance = DT_INST_PROP_BY_PHANDLE(idx, clocks, ifx_pll_instance),	\
+		.pll_source = DT_PROP_OR(DT_CLOCKS_CTLR(DT_INST_CLOCKS_CTLR(idx)), clock_block, -1), \
 		.p_div = DT_INST_PROP_BY_PHANDLE(idx, clocks, p_div),		\
 		.q_div = DT_INST_PROP_BY_PHANDLE(idx, clocks, q_div),		\
 		.output_div = DT_INST_PROP_BY_PHANDLE(idx, clocks, output_div),	\
