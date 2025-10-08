@@ -43,6 +43,32 @@ if (CONFIG_SOC_FAMILY_INFINEON_CAT1 AND NOT CONFIG_SOC_FAMILY_PSOC6_LEGACY)
 
 endif()
 
+if(CONFIG_SOC_FAMILY_INFINEON_EDGE)
+  if(CONFIG_CPU_CORTEX_M33 AND CONFIG_TRUSTED_EXECUTION_SECURE)
+    # Use secure device in cy_device_headers
+    zephyr_library_compile_definitions(COMPONENT_SECURE_DEVICE)
+  endif()
+
+  zephyr_library_compile_definitions_ifdef(CONFIG_CPU_CORTEX_M33 COMPONENT_CM33)
+  zephyr_library_compile_definitions_ifdef(CONFIG_CPU_CORTEX_M33 CORE_NAME_CM33_0)
+  zephyr_library_compile_definitions_ifdef(CONFIG_CPU_CORTEX_M55 COMPONENT_CM55)
+  zephyr_library_compile_definitions_ifdef(CONFIG_CPU_CORTEX_M55 CORE_NAME_CM55_0)
+
+  add_subdirectory(mtb-srf)
+  add_subdirectory(serial-memory)
+  add_subdirectory(zephyr-ifx-cycfg)
+  add_subdirectory(mtb-dsl-pse8xxgp)
+endif()
+
+if(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+  zephyr_library_compile_definitions_ifdef(CONFIG_SOC_XMC7200_CORE_NAME_M7_0 CORE_NAME_CM7_0)
+  zephyr_library_compile_definitions_ifdef(CONFIG_SOC_XMC7200_CORE_NAME_M7_1 CORE_NAME_CM7_1)
+endif()
+
+if(CONFIG_SOC_SERIES_PSC3)
+  add_subdirectory(zephyr-ifx-cycfg)
+endif()
+
 ## Add Wi-Fi assets for AIROC devices
 if (CONFIG_WIFI_AIROC)
   add_subdirectory(wifi-host-driver)
