@@ -414,6 +414,7 @@
 			compatible = "infineon,cat1-scb-pdl";
 			reg = <0x40670000 0x10000>;
 			interrupts = <141 6>;
+			system-interrupts = <141 6>;
 			status = "disabled";
 		};
 
