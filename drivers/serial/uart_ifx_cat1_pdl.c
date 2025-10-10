@@ -888,7 +888,7 @@ static int ifx_cat1_uart_init(const struct device *dev)
 #if (CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_UART_INTERRUPT_DRIVEN)
 	/* Enable the UART interrupt */
 	enable_sys_int(config->irq_num, config->irq_priority,
-		       (void (*)(const void *))(void *)config->uart_handle_events_func, &data->obj);
+		       (void (*)(const void *))(void *)config->uart_handle_events_func, dev);
 #endif
 
 	/* Perform initial Uart configuration */
@@ -956,11 +956,6 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 		ifx_cat1_uart_cb_wrapper(DEVICE_DT_INST_GET(n), event);                            \
 	}                                                                                          \
                                                                                                    \
-	static void ifx_cat1_uart_irq_config_func_##n(const struct device *dev)                    \
-	{                                                                                          \
-		IRQ_CONNECT(DT_INST_IRQN(n), DT_INST_IRQ(n, priority), ifx_cat1_uart_irq_handler,  \
-			    DEVICE_DT_INST_GET(n), 0);                                             \
-	}                                                                                          \
 	static struct ifx_cat1_uart_data ifx_cat1_uart##n##_data = {				   \
 			.clock_peri_group = DT_INST_PROP(n, ifx_peri_group),			   \
 			.clock_id = DT_INST_PROP(n, ifx_peri_clk),};				   \
@@ -973,7 +968,6 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 		.dt_cfg.flow_ctrl = DT_INST_PROP(n, hw_flow_control),                              \
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),                                         \
 		.reg_addr = (CySCB_Type *)DT_INST_REG_ADDR(n),                                     \
-		.irq_config_func = ifx_cat1_uart_irq_config_func_##n,                              \
 		.uart_handle_events_func = uart_handle_events_func_##n,                            \
 		IRQ_INFO(n)};                                                                      \
                                                                                                    \
