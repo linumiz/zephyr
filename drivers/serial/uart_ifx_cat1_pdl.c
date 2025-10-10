@@ -47,6 +47,8 @@ struct ifx_cat1_uart_data {
 #if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C)
 	uint32_t clock_peri_group;
 	uint32_t clock_id;
+	uint8_t peri_div_type;
+	uint8_t peri_div_type_inst;
 #endif
 
 #if CONFIG_UART_INTERRUPT_DRIVEN
@@ -342,10 +344,10 @@ static int ifx_cat1_uart_configure(const struct device *dev, const struct uart_c
 	uint32_t clk_scb = IFX_CAT1_UART_OVERSAMPLE_MIN * cfg->baudrate;
 	uint16_t div = (int)clock_frequency / clk_scb;
 
-	Cy_SysClk_PeriPclkDisableDivider(data->clock_peri_group, CY_SYSCLK_DIV_8_BIT, 0U);
-	Cy_SysClk_PeriPclkSetDivider(data->clock_peri_group, CY_SYSCLK_DIV_8_BIT, 0U, div);
-	Cy_SysClk_PeriPclkEnableDivider(data->clock_peri_group, CY_SYSCLK_DIV_8_BIT, 0U);
-	Cy_SysClk_PeriPclkAssignDivider(data->clock_id, CY_SYSCLK_DIV_8_BIT, 0U);
+	Cy_SysClk_PeriPclkDisableDivider(data->clock_peri_group, data->peri_div_type, data->peri_div_type_inst);
+	Cy_SysClk_PeriPclkSetDivider(data->clock_peri_group, data->peri_div_type, data->peri_div_type_inst, div);
+	Cy_SysClk_PeriPclkEnableDivider(data->clock_peri_group, data->peri_div_type, data->peri_div_type_inst);
+	Cy_SysClk_PeriPclkAssignDivider(data->clock_id, data->peri_div_type, data->peri_div_type_inst);
 
 	ret = Cy_SCB_UART_Init(config->reg_addr, &(data->scb_config), &data->context);
 	if (ret != 0) {
@@ -958,7 +960,9 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
                                                                                                    \
 	static struct ifx_cat1_uart_data ifx_cat1_uart##n##_data = {				   \
 			.clock_peri_group = DT_INST_PROP(n, ifx_peri_group),			   \
-			.clock_id = DT_INST_PROP(n, ifx_peri_clk),};				   \
+			.clock_id = DT_INST_PROP(n, ifx_peri_clk),				   \
+			.peri_div_type = DT_INST_PROP(n, ifx_peri_div),				   \
+			.peri_div_type_inst = DT_INST_PROP(n, ifx_peri_div_inst),};		   \
                                                                                                    \
 	static struct ifx_cat1_uart_config ifx_cat1_uart##n##_cfg = {                              \
 		.dt_cfg.baudrate = DT_INST_PROP(n, current_speed),                                 \
