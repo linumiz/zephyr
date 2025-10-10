@@ -33,6 +33,9 @@ void enable_sys_int(uint32_t int_num, uint32_t priority, void (*isr)(const void 
 	} else {
 		k_fatal_halt(K_ERR_CPU_EXCEPTION);
 	}
+
+	NVIC_ClearPendingIRQ(int_num);
+	NVIC_EnableIRQ(priority);
 }
 
 __attribute__((section(".itcm"))) void sys_int_handler(uint32_t intrNum)
