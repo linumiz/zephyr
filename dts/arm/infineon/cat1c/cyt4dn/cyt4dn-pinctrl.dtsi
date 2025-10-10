@@ -20,6 +20,15 @@
 				pinmux = <DT_CAT1_PINMUX(9, 1, HSIOM_SEL_ACT_14)>;
 				drive-push-pull;
 			};
+			/omit-if-no-ref/ p29_0_scb9_uart_rx: p29_0_scb9_uart_rx {
+				pinmux = <DT_CAT1_PINMUX(29, 0, HSIOM_SEL_ACT_14)>;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p29_1_scb9_uart_tx: p29_1_scb9_uart_tx {
+				pinmux = <DT_CAT1_PINMUX(29, 1, HSIOM_SEL_ACT_14)>;
+				drive-push-pull;
+			};
 		};
 	};
 };
