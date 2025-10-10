@@ -17,7 +17,5 @@
 	chosen {
 		zephyr,sram = &m0p_code;
 		zephyr,flash = &m0p_data;
-		zephyr,console = &uart7;
-		zephyr,shell-uart = &uart7;
 	};
 };
