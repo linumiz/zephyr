@@ -8,67 +8,6 @@
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn-pinctrl.dtsi>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
-#define IFX_PERI_GRP_INST_SEL(grpnum, instnum)  ((grpnum << 8U ) | (instnum << 16U))
-
-/ {
-	aliases {
-		uart-7 = &uart7;
-		led0 = &user_led0;
-		led1 = &user_led1;
-		led2 = &user_led2;
-		sw0 = &user_bt0;
-		sw1 = &user_bt1;
-	};
-
-	leds {
-		compatible = "gpio-leds";
-
-		user_led0: led_0 {
-			label = "LED_0";
-			gpios = <&gpio_prt7 5 GPIO_ACTIVE_HIGH>;
-		};
-
-		user_led1: led_1 {
-			label = "LED_1";
-			gpios = <&gpio_prt7 6 GPIO_ACTIVE_HIGH>;
-		};
-
-		user_led2: led_2 {
-			label = "LED_2";
-			gpios = <&gpio_prt7 7 GPIO_ACTIVE_HIGH>;
-		};
-	};
-
-	gpio_keys {
-		compatible = "gpio-keys";
-
-		user_bt0: user_btn0 {
-			label = "SW_1";
-			gpios = <&gpio_prt0 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-			zephyr,code = <INPUT_KEY_0>;
-		};
-
-		user_bt1: user_btn1 {
-			label = "SW_2";
-			gpios = <&gpio_prt0 3 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-			zephyr,code = <INPUT_KEY_1>;
-		};
-	};
-};
-
-uart7: &scb7 {
-	compatible = "infineon,cat1-uart-pdl";
-	status = "okay";
-	current-speed = <115200>;
-	clocks = <&clk_hf2>;
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x010F>;
-
-	/* UART pins */
-	pinctrl-0 = <&p9_0_scb7_uart_rx &p9_1_scb7_uart_tx>;
-	pinctrl-names = "default";
-};
-
 &gpio_prt0 {
 	status = "okay";
 };
