@@ -440,7 +440,7 @@
 		};
 
 		scb11: scb@406b0000 {
-			compatible = "infineon,cat1-scb";
+			compatible = "infineon,cat1-scb-pdl";
 			reg = <0x406B0000 0x10000>;
 			system-interrupts = <145 6>;
 			status = "disabled";
