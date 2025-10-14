@@ -13,10 +13,11 @@
 
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/pinctrl.h>
-#include <zephyr/drivers/clock_control/clock_control_ifx_cat1.h>
-#include <zephyr/dt-bindings/clock/ifx_clock_source_common.h>
+#include <zephyr/drivers/clock_control.h>
 
+#include <zephyr/drivers/clock_control/clock_control_ifx_cat1.h>
 #include <zephyr/logging/log.h>
+
 LOG_MODULE_REGISTER(i2c_infineon_cat1, CONFIG_I2C_LOG_LEVEL);
 
 #include "cy_scb_i2c.h"
@@ -61,7 +62,10 @@ struct ifx_cat1_i2c_data {
 	uint32_t async_pending;
 	struct ifx_cat1_clock clock;
 #if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(COMPONENT_CAT1D)
-	uint8_t clock_peri_group;
+	uint32_t clock_peri_group;
+	uint32_t clock_id;
+	uint8_t peri_div_type;
+	uint8_t peri_div_type_inst;
 #endif
 	struct i2c_target_config *p_target_config;
 	uint8_t i2c_target_wr_byte;
@@ -226,7 +230,6 @@ void ifx_cat1_i2c_register_callback(const struct device *dev,
 	data->irq_cause = 0;
 }
 
-#ifdef USE_I2C_SET_PERI_DIVIDER
 uint32_t _i2c_set_peri_divider(const struct device *dev, uint32_t freq, bool is_slave)
 {
 /* Peripheral clock values for different I2C speeds according PDL API Reference Guide */
@@ -262,16 +265,20 @@ uint32_t _i2c_set_peri_divider(const struct device *dev, uint32_t freq, bool is_
 	struct ifx_cat1_i2c_data *data = dev->data;
 	const struct ifx_cat1_i2c_config *const config = dev->config;
 	CySCB_Type *base = config->base;
-	uint32_t block_num = _get_hw_block_num(config->base);
+
 	uint32_t data_rate = 0;
 	uint32_t peri_freq = 0;
-	cy_rslt_t status;
+	uint32_t hf_clock_frequency;
+	uint32_t divider;
+	uint32_t actual_scb_clock;
+	int ret;
 
 	/* Return the actual data rate on success, 0 otherwise */
 	if (freq == 0) {
 		return 0;
 	}
 
+	/* Determine target SCB peripheral clock based on I2C speed and mode */
 	if (freq <= CY_SCB_I2C_STD_DATA_RATE) {
 		peri_freq = is_slave ? _SCB_PERI_CLOCK_SLAVE_STD : _SCB_PERI_CLOCK_MASTER_STD;
 	} else if (freq <= CY_SCB_I2C_FST_DATA_RATE) {
@@ -284,31 +291,42 @@ uint32_t _i2c_set_peri_divider(const struct device *dev, uint32_t freq, bool is_
 		return 0;
 	}
 
-	if (_ifx_cat1_utils_peri_pclk_assign_divider(_ifx_cat1_scb_get_clock_index(block_num),
-						     &data->clock) == CY_SYSCLK_SUCCESS) {
-		status = ifx_cat1_clock_set_enabled(&data->clock, false, false);
-		if (status == CY_RSLT_SUCCESS) {
-			status = ifx_cat1_clock_set_frequency(&data->clock, peri_freq, NULL);
-		}
+	ret = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf2)),
+	                              NULL, &hf_clock_frequency);
+	if (ret < 0) {
+		LOG_ERR("Failed to get HF clock frequency");
+		return 0;
+	}
 
-		if (status == CY_RSLT_SUCCESS) {
-			status = ifx_cat1_clock_set_enabled(&data->clock, true, false);
-		}
+	divider = (hf_clock_frequency + (peri_freq / 2)) / peri_freq;
 
-		if (status == CY_RSLT_SUCCESS) {
-			data_rate =
-				(is_slave)
-					? Cy_SCB_I2C_GetDataRate(
-						  base, ifx_cat1_clock_get_frequency(&data->clock))
-					: Cy_SCB_I2C_SetDataRate(
-						  base, freq,
-						  ifx_cat1_clock_get_frequency(&data->clock));
-		}
+	actual_scb_clock = hf_clock_frequency / divider;
+
+	Cy_SysClk_PeriPclkDisableDivider(data->clock_peri_group,
+	                                 data->peri_div_type,
+	                                 data->peri_div_type_inst);
+
+	Cy_SysClk_PeriPclkSetDivider(data->clock_peri_group,
+	                             data->peri_div_type,
+	                             data->peri_div_type_inst,
+	                             divider);
+
+	Cy_SysClk_PeriPclkEnableDivider(data->clock_peri_group,
+	                                data->peri_div_type,
+	                                data->peri_div_type_inst);
+
+	Cy_SysClk_PeriPclkAssignDivider(data->clock_id,
+	                                data->peri_div_type,
+	                                data->peri_div_type_inst);
+
+	if (is_slave) {
+		data_rate = Cy_SCB_I2C_GetDataRate(base, actual_scb_clock);
+	} else {
+		data_rate = Cy_SCB_I2C_SetDataRate(base, freq, actual_scb_clock);
 	}
 
 	return data_rate;
 }
-#endif
 
 static int ifx_cat1_i2c_configure(const struct device *dev, uint32_t dev_config)
 {
@@ -352,6 +370,14 @@ static int ifx_cat1_i2c_configure(const struct device *dev, uint32_t dev_config)
 		return -EIO;
 	}
 
+	ret = _i2c_set_peri_divider(dev, data->frequencyhal_hz,
+			      (_i2c_default_config.i2cMode == CY_SCB_I2C_SLAVE));
+	if (ret == 0) {
+		LOG_ERR("Failed to configure I2C peripheral clock");
+		k_sem_give(&data->operation_sem);
+		return -EIO;
+	}
+
 	_i2c_default_config.slaveAddress = data->slave_address;
 
 	/* Configure the I2C resource to be master */
@@ -361,12 +387,6 @@ static int ifx_cat1_i2c_configure(const struct device *dev, uint32_t dev_config)
 		k_sem_give(&data->operation_sem);
 		return -EIO;
 	}
-
-#ifdef USE_I2C_SET_PERI_DIVIDER
-	_i2c_set_peri_divider(dev, CAT1_I2C_SPEED_STANDARD_HZ,
-			      (_i2c_default_config.i2cMode == CY_SCB_I2C_SLAVE));
-
-#endif
 
 	Cy_SCB_I2C_Enable(config->base);
 	irq_enable(config->irq_num);
@@ -464,6 +484,7 @@ static int ifx_cat1_i2c_transfer(const struct device *dev, struct i2c_msg *msg, 
 	if (!num_msgs) {
 		return 0;
 	}
+
 
 	/* Acquire semaphore (block I2C transfer for another thread) */
 	ret = k_sem_take(&data->operation_sem, K_FOREVER);
@@ -678,41 +699,33 @@ static const struct i2c_driver_api i2c_cat1_driver_api = {
 	.target_register = ifx_cat1_i2c_target_register,
 	.target_unregister = ifx_cat1_i2c_target_unregister};
 
-#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(COMPONENT_CAT1D)
-#define PERI_INFO(n) .clock_peri_group = DT_PROP_BY_IDX(DT_INST_PHANDLE(n, clocks), peri_group, 1),
-#else
-#define PERI_INFO(n)
-#endif
+#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#define I2C_CAT1_INIT_FUNC(n)                                                                      \
+	static void ifx_cat1_i2c_irq_config_func_##n(const struct device *dev)                     \
+	{                                                                                          \
+		enable_sys_int(DT_INST_PROP_BY_IDX(n, system_interrupts, 0),                       \
+			       DT_INST_PROP_BY_IDX(n, system_interrupts, 1),                       \
+			       (void (*)(const void *))(void *)i2c_isr_handler, dev);              \
+	}
 
-#if defined(COMPONENT_CAT1D)
-#define I2C_PERI_CLOCK_INIT(n)                                                                     \
-	.clock = {                                                                                 \
-		.block = IFX_CAT1_PERIPHERAL_GROUP_ADJUST(                                         \
-			DT_PROP_BY_IDX(DT_INST_PHANDLE(n, clocks), peri_group, 0),                 \
-			DT_PROP_BY_IDX(DT_INST_PHANDLE(n, clocks), peri_group, 1),                 \
-			DT_INST_PROP_BY_PHANDLE(n, clocks, div_type)),                             \
-		.channel = DT_INST_PROP_BY_PHANDLE(n, clocks, channel),                            \
-	},                                                                                         \
-	PERI_INFO(n)
-#else
-#define I2C_PERI_CLOCK_INIT(n)                                                                     \
-	.clock = {                                                                                 \
-		.block = IFX_CAT1_PERIPHERAL_GROUP_ADJUST(                                         \
-			DT_PROP_BY_IDX(DT_INST_PHANDLE(n, clocks), peri_group, 1),                 \
-			DT_INST_PROP_BY_PHANDLE(n, clocks, div_type)),                             \
-		.channel = DT_INST_PROP_BY_PHANDLE(n, clocks, channel),                            \
-	},                                                                                         \
-	PERI_INFO(n)
-#endif
+#define IRQ_INFO(n)                                                                                \
+	.irq_num = DT_INST_PROP_BY_IDX(n, system_interrupts, 0),                                   \
+	.irq_priority = DT_INST_PROP_BY_IDX(n, system_interrupts, 1)
 
+#else
 #define I2C_CAT1_INIT_FUNC(n)                                                                      \
 	static void ifx_cat1_i2c_irq_config_func_##n(const struct device *dev)                     \
 	{                                                                                          \
 		IRQ_CONNECT(DT_INST_IRQN(n), DT_INST_IRQ(n, priority), i2c_isr_handler,            \
 			    DEVICE_DT_INST_GET(n), 0);                                             \
+		irq_enable(DT_INST_IRQN(n));                                                       \
 	}
 
-/* Macros for I2C instance declaration */
+#define IRQ_INFO(n)                                                                                \
+	.irq_priority = DT_INST_IRQ(n, priority),                                                  \
+	.irq_num = DT_INST_IRQN(n)
+#endif
+
 #define INFINEON_CAT1_I2C_INIT(n)                                                                  \
 	PINCTRL_DT_INST_DEFINE(n);                                                                 \
                                                                                                    \
@@ -723,25 +736,30 @@ static const struct i2c_driver_api i2c_cat1_driver_api = {
                                                                                                    \
 	I2C_CAT1_INIT_FUNC(n)                                                                      \
                                                                                                    \
-	static const struct ifx_cat1_i2c_config i2c_cat1_cfg_##n = {                               \
+	static const struct ifx_cat1_i2c_config i2c_cat1_cfg##n = {                                \
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),                                         \
 		.master_frequency = DT_INST_PROP_OR(n, clock_frequency, 100000),                   \
 		.base = (CySCB_Type *)DT_INST_REG_ADDR(n),                                         \
-		.irq_priority = DT_INST_IRQ(n, priority),                                          \
-		.irq_num = DT_INST_IRQN(n),                                                        \
+		IRQ_INFO(n),                                                                       \
 		.irq_config_func = ifx_cat1_i2c_irq_config_func_##n,                               \
 		.i2c_handle_events_func = i2c_handle_events_func_##n,                              \
 	};                                                                                         \
                                                                                                    \
 	static struct ifx_cat1_i2c_data ifx_cat1_i2c_data##n = {                                   \
+		.clock_peri_group = DT_INST_PROP(n, ifx_peri_group),                               \
+		.clock_id = DT_INST_PROP(n, ifx_peri_clk),                                         \
+		.peri_div_type = DT_INST_PROP(n, ifx_peri_div),					   \
+		.peri_div_type_inst = DT_INST_PROP(n, ifx_peri_div_inst),			   \
 		.i2c_deep_sleep_param = {(CySCB_Type *)DT_INST_REG_ADDR(n), NULL},                 \
 		.i2c_deep_sleep = {&Cy_SCB_I2C_DeepSleepCallback, CY_SYSPM_DEEPSLEEP,              \
 				   CY_SYSPM_SKIP_BEFORE_TRANSITION,                                \
 				   &ifx_cat1_i2c_data##n.i2c_deep_sleep_param, NULL, NULL, 1},     \
-		I2C_PERI_CLOCK_INIT(n)};                                                           \
+	};                                                                                         \
                                                                                                    \
-	I2C_DEVICE_DT_INST_DEFINE(n, ifx_cat1_i2c_init, NULL, &ifx_cat1_i2c_data##n,               \
-				  &i2c_cat1_cfg_##n, POST_KERNEL, CONFIG_I2C_INIT_PRIORITY,        \
+	I2C_DEVICE_DT_INST_DEFINE(n, ifx_cat1_i2c_init, NULL,                                      \
+				  &ifx_cat1_i2c_data##n,                                           \
+				  &i2c_cat1_cfg##n,                                                \
+				  POST_KERNEL,                                                     \
+				  CONFIG_I2C_INIT_PRIORITY,                                        \
 				  &i2c_cat1_driver_api);
-
 DT_INST_FOREACH_STATUS_OKAY(INFINEON_CAT1_I2C_INIT)
