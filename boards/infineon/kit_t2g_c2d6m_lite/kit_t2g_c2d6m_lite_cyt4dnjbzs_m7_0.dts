@@ -71,3 +71,25 @@ uart7: &scb7 {
 	pinctrl-0 = <&p9_0_scb7_uart_rx &p9_1_scb7_uart_tx>;
 	pinctrl-names = "default";
 };
+
+i2c11: &scb11 {
+       compatible = "infineon,cat1-i2c-pdl";
+       status = "okay";
+
+       #address-cells = <1>;
+       #size-cells = <0>;
+
+       pinctrl-0 = <&p0_4_scb11_i2c_scl &p0_5_scb11_i2c_sda>;
+       pinctrl-names = "default";
+
+       clocks = <&clk_hf2>;
+       ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+       ifx,peri-clk = <0x0113>;
+       ifx,peri-div = <0>; /* 8-bit divider */
+       ifx,peri-div-inst = <1>;
+
+       accel@53 {
+               compatible = "adi,adxl345";
+               reg = <0x53>;
+       };
+};
