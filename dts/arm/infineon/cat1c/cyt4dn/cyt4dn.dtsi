@@ -459,7 +459,7 @@
 			divider-val = <79>;
 			ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
 			#pwm-cells = <3>;
-			status = "okay";
+			status = "disabled";
 		};
 
 		tcpwm0_grp1: tcpwm@40388000 {
@@ -474,7 +474,7 @@
 			divider-val = <79>;
 			ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
 			#pwm-cells = <3>;
-			status = "okay";
+			status = "disabled";
 		};
 
 		tcpwm0_grp2: tcpwm@40390000 {
@@ -489,7 +489,13 @@
 			divider-val = <79>;
 			ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
 			#pwm-cells = <3>;
-			status = "okay";
+			status = "disabled";
+
+		wdt0: watchdog@4026c000 {
+			compatible = "infineon,cat1-watchdog";
+			reg = <0x4026C000 0x80>;
+			system-interrupts = <17 3>;
+			status = "disabled";
 		};
 	};
 };
