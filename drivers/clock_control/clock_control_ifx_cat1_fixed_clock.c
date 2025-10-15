@@ -39,6 +39,9 @@ static int fixed_rate_clk_init(const struct device *dev)
 	case IFX_CAT1_CLOCK_BLOCK_FLL:
 		break;
 
+	case 7:
+		Cy_SysClk_IloSrcEnable(0);
+
 	case 2: /* ECO */
 		int ret = Cy_SysClk_EcoConfigure(config->rate, IFX_ECO_CSUM, IFX_ECO_ISR,
 						 IFX_ECO_DRIVERLEVEL);

@@ -14,6 +14,15 @@
 
 / {
 	clocks {
+		/* ilo */
+		clk_ilo: clk_ilo {
+			#clock-cells = <0>;
+			compatible = "infineon,fixed-clock";
+			clock-frequency = <32768>;
+			clock-block = <7>; /* ILO */
+			status = "okay";
+		};
+
 		/* eco */
 		clk_eco: clk_eco {
 			#clock-cells = <0>;
