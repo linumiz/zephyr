@@ -76,6 +76,8 @@ struct wdt_window {
 	uint32_t min;
 	/** Upper limit of watchdog feed timeout in milliseconds. */
 	uint32_t max;
+	/** Warning or Alarm limit of watchdog feed timeout in milliseconds. */
+	uint32_t warn_limit;
 };
 
 /**
