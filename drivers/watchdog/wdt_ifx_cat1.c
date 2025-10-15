@@ -9,6 +9,7 @@
 
 #include "cy_wdt.h"
 #include "cy_sysclk.h"
+#include "cy_sysint.h"
 
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/watchdog.h>
@@ -16,7 +17,13 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(wdt_infineon_cat1, CONFIG_WDT_LOG_LEVEL);
 
+#if !defined(CY_IP_MXS40SRSS) && !(CY_IP_MXS40SRSS_VERSION >= 2)
 #define IFX_CAT1_WDT_IS_IRQ_EN DT_NODE_HAS_PROP(DT_DRV_INST(0), interrupts)
+#endif
+
+#if defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION >= 2)
+#define IFX_CAT1_WDT_IS_IRQ_EN DT_NODE_HAS_PROP(DT_DRV_INST(0), system_interrupts)
+#endif
 
 typedef struct {
 	/* Minimum period in milliseconds that can be represented with this
@@ -36,7 +43,6 @@ typedef struct {
 #define ifx_wdt_lock()
 #define ifx_wdt_unlock()
 #endif
-
 #if defined(SRSS_NUM_WDT_A_BITS)
 #define IFX_WDT_MATCH_BITS (SRSS_NUM_WDT_A_BITS)
 #elif defined(COMPONENT_CAT1A)
@@ -45,6 +51,10 @@ typedef struct {
 #endif
 #elif defined(COMPONENT_CAT1B)
 #define IFX_WDT_MATCH_BITS (16)
+#elif defined(COMPONENT_CAT1C)
+#if defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION >= 2)
+#define IFX_WDT_MATCH_BITS (0)
+#endif
 #else
 #error Unhandled device type
 #endif
@@ -54,7 +64,7 @@ typedef struct {
  * WDT Reset Period (timeout_ms) = CLK_DURATION * (2 * 2^(IFX_WDT_MATCH_BITS - ignore_bits) + match)
  * Max WDT Reset Period = 3 * (2^IFX_WDT_MATCH_BITS) * CLK_DURATION
  */
-#if defined(CY_IP_MXS40SRSS)
+#if defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION < 2)
 /* ILO, PILO, BAK all run at 32768 Hz - Period is ~0.030518 ms */
 #define IFX_WDT_MAX_TIMEOUT_MS  6000
 #define IFX_WDT_MAX_IGNORE_BITS 12
@@ -184,6 +194,10 @@ static const wdt_ignore_bits_data_t ifx_wdt_ignore_data[] = {
 };
 #endif
 
+#if defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION >= 2)
+#define IFX_WDT_MAX_TIMEOUT_MS  131072000
+#endif
+
 struct ifx_cat1_wdt_data {
 	bool wdt_initialized;
 	uint32_t wdt_initial_timeout_ms;
@@ -192,12 +206,15 @@ struct ifx_cat1_wdt_data {
 #ifdef IFX_CAT1_WDT_IS_IRQ_EN
 	wdt_callback_t callback;
 #endif /* IFX_CAT1_WDT_IS_IRQ_EN */
-	uint32_t timeout;
+	uint32_t max_timeout;
+	uint32_t min_timeout;
+	uint32_t warn_timeout;
 	bool timeout_installed;
 };
 
 static struct ifx_cat1_wdt_data wdt_data;
 
+#if defined(CY_IP_MXS40SSRSS) || (defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION < 2))
 #define IFX_DETERMINE_MATCH_BITS(bits)      ((IFX_WDT_MAX_IGNORE_BITS) - (bits))
 #define IFX_GET_COUNT_FROM_MATCH_BITS(bits) (2UL << IFX_DETERMINE_MATCH_BITS(bits))
 
@@ -214,15 +231,24 @@ __STATIC_INLINE uint32_t ifx_wdt_timeout_to_match(uint32_t timeout_ms, uint32_t 
 __STATIC_INLINE uint32_t ifx_wdt_timeout_to_ignore_bits(uint32_t *timeout_ms)
 {
 	for (uint32_t i = 0; i <= IFX_WDT_MAX_IGNORE_BITS; i++) {
-		if (*timeout_ms >= ifx_wdt_ignore_data[i].round_threshold_ms) {
-			if (*timeout_ms < ifx_wdt_ignore_data[i].min_period_ms) {
-				*timeout_ms = ifx_wdt_ignore_data[i].min_period_ms;
+		if (*max_timeout_ms >= ifx_wdt_ignore_data[i].round_threshold_ms) {
+			if (*max_timeout_ms < ifx_wdt_ignore_data[i].min_period_ms) {
+				*max_timeout_ms = ifx_wdt_ignore_data[i].min_period_ms;
 			}
 			return i;
 		}
 	}
 	return IFX_WDT_MAX_IGNORE_BITS; /* Ideally should never reach this */
 }
+#endif
+
+#if defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION >= 2)
+__STATIC_INLINE uint32_t ifx_wdt_timeout_to_match(uint32_t timeout_ms)
+{
+	uint32_t timeout_count = ((timeout_ms * CY_SYSCLK_ILO_FREQ) / 1000UL);
+	return timeout_count;
+}
+#endif
 
 #ifdef IFX_CAT1_WDT_IS_IRQ_EN
 static void ifx_cat1_wdt_isr_handler(const struct device *dev)
@@ -241,7 +267,7 @@ static int ifx_cat1_wdt_setup(const struct device *dev, uint8_t options)
 	struct ifx_cat1_wdt_data *dev_data = dev->data;
 
 	/* Initialize the WDT */
-	if ((dev_data->timeout == 0) || (dev_data->timeout > IFX_WDT_MAX_TIMEOUT_MS)) {
+	if ((dev_data->max_timeout == 0) || (dev_data->max_timeout > IFX_WDT_MAX_TIMEOUT_MS)) {
 		return -ENOTSUP;
 	}
 
@@ -256,13 +282,21 @@ static int ifx_cat1_wdt_setup(const struct device *dev, uint8_t options)
 	Cy_WDT_ClearInterrupt();
 	Cy_WDT_MaskInterrupt();
 
-	dev_data->wdt_initial_timeout_ms = dev_data->timeout;
+	dev_data->wdt_initial_timeout_ms = dev_data->max_timeout;
 #if defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION >= 2)
-	Cy_WDT_SetUpperLimit(ifx_wdt_timeout_to_match(dev_data->wdt_initial_timeout_ms));
+	Cy_WDT_SetLowerLimit(ifx_wdt_timeout_to_match(dev_data->min_timeout));
+	Cy_WDT_SetLowerAction(CY_WDT_LOW_UPPER_LIMIT_ACTION_RESET);
+
+	if ((dev_data->warn_timeout > 0) && (dev_data->callback != NULL)) {
+		Cy_WDT_SetWarnLimit(ifx_wdt_timeout_to_match(dev_data->warn_timeout));
+		Cy_WDT_SetWarnAction(CY_WDT_WARN_ACTION_INT);
+	}
+
+	Cy_WDT_SetUpperLimit(ifx_wdt_timeout_to_match(dev_data->max_timeout));
 	Cy_WDT_SetUpperAction(CY_WDT_LOW_UPPER_LIMIT_ACTION_RESET);
 #else
-	dev_data->wdt_ignore_bits = ifx_wdt_timeout_to_ignore_bits(&dev_data->timeout);
-	dev_data->wdt_rounded_timeout_ms = dev_data->timeout;
+	dev_data->wdt_ignore_bits = ifx_wdt_timeout_to_ignore_bits(&dev_data->max_timeout);
+	dev_data->wdt_rounded_timeout_ms = dev_data->max_timeout;
 #if defined(SRSS_NUM_WDT_A_BITS) && (SRSS_NUM_WDT_A_BITS == 22)
 	/* Cy_WDT_SetMatchBits configures the bit position above which the bits will be ignored for
 	 * match, while ifx_wdt_timeout_to_ignore_bits returns number of timer MSB to ignore, so
@@ -297,7 +331,9 @@ static int ifx_cat1_wdt_setup(const struct device *dev, uint8_t options)
 #ifdef IFX_CAT1_WDT_IS_IRQ_EN
 	if (dev_data->callback) {
 		Cy_WDT_UnmaskInterrupt();
+#if !defined(CY_IP_MXS40SRSS) && !(CY_IP_MXS40SRSS_VERSION >= 2)
 		irq_enable(DT_INST_IRQN(0));
+#endif
 	}
 #endif /* IFX_CAT1_WDT_IS_IRQ_EN */
 
@@ -310,7 +346,11 @@ static int ifx_cat1_wdt_disable(const struct device *dev)
 
 #ifdef IFX_CAT1_WDT_IS_IRQ_EN
 	Cy_WDT_MaskInterrupt();
+#if defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION >= 2)
+	Cy_SysInt_DisableSystemInt(17);
+#else
 	irq_disable(DT_INST_IRQN(0));
+#endif
 #endif /* IFX_CAT1_WDT_IS_IRQ_EN */
 
 	ifx_wdt_unlock();
@@ -338,35 +378,52 @@ static int ifx_cat1_wdt_install_timeout(const struct device *dev, const struct w
 	if (cfg->callback) {
 #ifndef IFX_CAT1_WDT_IS_IRQ_EN
 		LOG_WRN("Interrupt is not configured, can't set a callback.");
+		return -ENOTSUP;
 #else
 		dev_data->callback = cfg->callback;
 #endif /* IFX_CAT1_WDT_IS_IRQ_EN */
 	}
 
+#if defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION >= 2)
+	/* window watchdog supported */
+	if (cfg->window.max == 0U) {
+		return -EINVAL;
+	}
+
+	dev_data->min_timeout = cfg->window.min;
+#else
 	/* window watchdog not supported */
 	if (cfg->window.min != 0U || cfg->window.max == 0U) {
 		return -EINVAL;
 	}
+#endif
 
-	dev_data->timeout = cfg->window.max;
+	dev_data->max_timeout = cfg->window.max;
+	dev_data->warn_timeout = cfg->window.warn_limit;
 
 	return 0;
 }
 
 static int ifx_cat1_wdt_feed(const struct device *dev, int channel_id)
 {
+#if !defined(CY_IP_MXS40SRSS) && !(CY_IP_MXS40SRSS_VERSION >= 2)
 	struct ifx_cat1_wdt_data *data = dev->data;
+#endif
 
 	/* Only channel 0 is supported */
 	if (channel_id) {
 		return -EINVAL;
 	}
 
+#if !defined(CY_IP_MXS40SRSS) && !(CY_IP_MXS40SRSS_VERSION >= 2)
 	ifx_wdt_unlock();
 	Cy_WDT_ClearWatchdog(); /* Clear to prevent reset from WDT */
 	Cy_WDT_SetMatch(
 		ifx_wdt_timeout_to_match(data->wdt_rounded_timeout_ms, data->wdt_ignore_bits));
 	ifx_wdt_lock();
+#elif defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION >= 2)
+	Cy_WDT_ClearWatchdog();
+#endif
 
 	return 0;
 }
@@ -374,9 +431,16 @@ static int ifx_cat1_wdt_feed(const struct device *dev, int channel_id)
 static int ifx_cat1_wdt_init(const struct device *dev)
 {
 #ifdef IFX_CAT1_WDT_IS_IRQ_EN
+#if defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION >= 2)
+	enable_sys_int(DT_INST_PROP_BY_IDX(0, system_interrupts, 0),
+		       DT_INST_PROP_BY_IDX(0, system_interrupts, 1),
+		       (void (*)(const void *))(void *)ifx_cat1_wdt_isr_handler,
+		       dev);
+#else
 	/* Connect WDT interrupt to ISR */
 	IRQ_CONNECT(DT_INST_IRQN(0), DT_INST_IRQ(0, priority), ifx_cat1_wdt_isr_handler,
 		    DEVICE_DT_INST_GET(0), 0);
+#endif
 #endif /* IFX_CAT1_WDT_IS_IRQ_EN */
 
 	return 0;
