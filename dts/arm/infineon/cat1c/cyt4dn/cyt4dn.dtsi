@@ -5,6 +5,7 @@
  */
 
 #include <mem.h>
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
 
 / {
 	flash-controller@40240000 {
@@ -444,6 +445,51 @@
 			reg = <0x406B0000 0x10000>;
 			system-interrupts = <145 6>;
 			status = "disabled";
+		};
+
+		tcpwm0_grp0: tcpwm@40380000 {
+			compatible = "infineon,cat1-pwm";
+			reg = <0x40380b00 0x80>;  /* Counter grp0 - counter 22 */
+			pinctrl-0 = <&p0_5_pwm0_22_line_out>;
+
+			pinctrl-names = "default";
+			resolution = <16>;
+			divider-type = <1>;
+			divider-sel = <0>;
+			divider-val = <79>;
+			ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+			#pwm-cells = <3>;
+			status = "okay";
+		};
+
+		tcpwm0_grp1: tcpwm@40388000 {
+			compatible = "infineon,cat1-pwm";
+			reg = <0x40388180 0x80>; /* Counter grp1 - counter 03 */
+			pinctrl-0 = <&p9_6_pwm0_03_line_out>;
+
+			pinctrl-names = "default";
+			resolution = <16>;
+			divider-type = <1>;
+			divider-sel = <1>;
+			divider-val = <79>;
+			ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+			#pwm-cells = <3>;
+			status = "okay";
+		};
+
+		tcpwm0_grp2: tcpwm@40390000 {
+			compatible = "infineon,cat1-pwm";
+			reg = <0x40390580 0x80>;
+			pinctrl-0 = <&p15_5_pwm0_11_line_out>; /* Counter grp2 - counter 11 */
+
+			pinctrl-names = "default";
+			resolution = <32>;
+			divider-type = <1>;
+			divider-sel = <2>;
+			divider-val = <79>;
+			ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+			#pwm-cells = <3>;
+			status = "okay";
 		};
 	};
 };
