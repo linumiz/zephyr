@@ -59,6 +59,13 @@ properties:
       (8-bit divider) or 1 to 65536 (16-bit divider).
     required: true
 
+  ifx,peri-group:
+    type: int
+    required: true
+    description: |
+      Peripheral clock divider group. Use IFX_PERI_GRP_INST_SEL(grp, inst) macro.
+      Required for cat1c devices
+
   "#pwm-cells":
     const: 3
     description: |
