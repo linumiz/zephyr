@@ -17,8 +17,8 @@
 #include <cy_tcpwm_pwm.h>
 #include <cy_gpio.h>
 #include <cy_sysclk.h>
-#include <cyhal_hw_resources.h>
-#include <cyhal_hw_types.h>
+//#include <cyhal_hw_resources.h>
+//#include <cyhal_hw_types.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(pwm_ifx_cat1, CONFIG_PWM_LOG_LEVEL);
@@ -36,6 +36,9 @@ struct ifx_cat1_pwm_config {
 	cy_en_divider_types_t divider_type;
 	uint32_t divider_sel;
 	uint32_t divider_val;
+#if (CY_IP_MXTCPWM_VERSION >= 2u)
+	uint32_t clock_peri_group;
+#endif
 };
 
 static int ifx_cat1_pwm_init(const struct device *dev)
@@ -44,7 +47,9 @@ static int ifx_cat1_pwm_init(const struct device *dev)
 	const struct ifx_cat1_pwm_config *config = dev->config;
 	cy_en_tcpwm_status_t status;
 	int ret;
+#if !(CY_IP_MXTCPWM_VERSION >= 2u)
 	uint32_t addr_offset = (uint32_t)config->reg_addr - TCPWM0_BASE;
+#endif
 	uint32_t clk_connection;
 
 	const cy_stc_tcpwm_pwm_config_t pwm_config = {
@@ -58,11 +63,47 @@ static int ifx_cat1_pwm_init(const struct device *dev)
 		.enablePeriodSwap = true,
 	};
 
+#if (CY_IP_MXTCPWM_VERSION >= 2u)
+	/* Configure PWM clock */
+	Cy_SysClk_PeriPclkDisableDivider(config->clock_peri_group,
+	                                 config->divider_type, config->divider_sel);
+
+	Cy_SysClk_PeriPclkSetDivider(config->clock_peri_group,
+	                             config->divider_type, config->divider_sel,
+				     config->divider_val);
+
+	Cy_SysClk_PeriPclkEnableDivider(config->clock_peri_group,
+	                                config->divider_type, config->divider_sel);
+#else
 	/* Configure PWM clock */
 	Cy_SysClk_PeriphDisableDivider(config->divider_type, config->divider_sel);
 	Cy_SysClk_PeriphSetDivider(config->divider_type, config->divider_sel, config->divider_val);
 	Cy_SysClk_PeriphEnableDivider(config->divider_type, config->divider_sel);
+#endif
 
+#if (CY_IP_MXTCPWM_VERSION >= 2u)
+	if ((uint32_t)config->reg_addr >= (uint32_t)TCPWM0_GRP2) {
+		clk_connection = (PCLK_TCPWM0_CLOCKS512 +
+				 (((uint32_t)config->reg_addr - (uint32_t)TCPWM0_GRP2) /
+				  sizeof(TCPWM_GRP_CNT_Type)));
+		data->pwm_num = 512 + (((uint32_t)config->reg_addr - (uint32_t)TCPWM0_GRP2) /
+				       sizeof(TCPWM_GRP_CNT_Type));
+	} else if ((uint32_t)config->reg_addr >= (uint32_t)TCPWM0_GRP1) {
+		clk_connection = (PCLK_TCPWM0_CLOCKS256 +
+				 (((uint32_t)config->reg_addr - (uint32_t)TCPWM0_GRP1) /
+				  sizeof(TCPWM_GRP_CNT_Type)));
+		data->pwm_num = 256 + (((uint32_t)config->reg_addr - (uint32_t)TCPWM0_GRP1) /
+				       sizeof(TCPWM_GRP_CNT_Type));
+	} else {
+		clk_connection = (PCLK_TCPWM0_CLOCKS0 +
+				 (((uint32_t)config->reg_addr - (uint32_t)TCPWM0_GRP0) /
+				  sizeof(TCPWM_GRP_CNT_Type)));
+		data->pwm_num = (((uint32_t)config->reg_addr - (uint32_t)TCPWM0_GRP0) /
+				 sizeof(TCPWM_GRP_CNT_Type));
+	}
+
+	Cy_SysClk_PeriPclkAssignDivider(clk_connection, config->divider_type, config->divider_sel);
+#else
 	/* This is very specific to the cyw920829m2evk_02 and may need to be modified
 	 * for other boards.
 	 */
@@ -75,14 +116,17 @@ static int ifx_cat1_pwm_init(const struct device *dev)
 				 (addr_offset / sizeof(TCPWM_GRP_CNT_Type));
 	}
 	Cy_SysClk_PeriphAssignDivider(clk_connection, config->divider_type, config->divider_sel);
+#endif
 
 	ret = pinctrl_apply_state(config->pcfg, PINCTRL_STATE_DEFAULT);
 	if (ret < 0) {
 		return ret;
 	}
 
+#if !(CY_IP_MXTCPWM_VERSION >= 2u)
 	/* Configure the TCPWM to be a PWM */
 	data->pwm_num += addr_offset / sizeof(TCPWM_GRP_CNT_Type);
+#endif
 	status = Cy_TCPWM_PWM_Init(PWM_REG_BASE, data->pwm_num, &pwm_config);
 	if (status != CY_TCPWM_SUCCESS) {
 		return -ENOTSUP;
@@ -153,9 +197,12 @@ static int ifx_cat1_pwm_get_cycles_per_sec(const struct device *dev, uint32_t ch
 					   uint64_t *cycles)
 {
 	const struct ifx_cat1_pwm_config *config = dev->config;
-
+#if (CY_IP_MXTCPWM_VERSION >= 2u)
+	*cycles = Cy_SysClk_PeriPclkGetFrequency(config->clock_peri_group,
+						 config->divider_type, config->divider_sel);
+#else
 	*cycles = Cy_SysClk_PeriphGetFrequency(config->divider_type, config->divider_sel);
-
+#endif
 	return 0;
 }
 
@@ -164,6 +211,26 @@ static DEVICE_API(pwm, ifx_cat1_pwm_api) = {
 	.get_cycles_per_sec = ifx_cat1_pwm_get_cycles_per_sec,
 };
 
+#if (CY_IP_MXTCPWM_VERSION >= 2u)
+#define INFINEON_CAT1_PWM_INIT(n)                                                                  \
+	PINCTRL_DT_INST_DEFINE(n);                                                                 \
+                                                                                                   \
+	static struct ifx_cat1_pwm_data pwm_cat1_data_##n;                                         \
+                                                                                                   \
+	static struct ifx_cat1_pwm_config pwm_cat1_config_##n = {                                  \
+		.reg_addr = (TCPWM_GRP_CNT_Type *)DT_INST_REG_ADDR(n),                             \
+		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),                                         \
+		.resolution_32_bits = (DT_INST_PROP(n, resolution) == 32) ? true : false,          \
+		.divider_type = DT_INST_PROP(n, divider_type),                                     \
+		.divider_sel = DT_INST_PROP(n, divider_sel),                                       \
+		.divider_val = DT_INST_PROP(n, divider_val),                                       \
+		.clock_peri_group = DT_INST_PROP(n, ifx_peri_group),                               \
+	};                                                                                         \
+												   \
+	DEVICE_DT_INST_DEFINE(n, ifx_cat1_pwm_init, NULL, &pwm_cat1_data_##n,                      \
+			      &pwm_cat1_config_##n, POST_KERNEL, CONFIG_PWM_INIT_PRIORITY,         \
+			      &ifx_cat1_pwm_api);
+#else
 #define INFINEON_CAT1_PWM_INIT(n)                                                                  \
 	PINCTRL_DT_INST_DEFINE(n);                                                                 \
                                                                                                    \
@@ -181,5 +248,5 @@ static DEVICE_API(pwm, ifx_cat1_pwm_api) = {
 	DEVICE_DT_INST_DEFINE(n, ifx_cat1_pwm_init, NULL, &pwm_cat1_data_##n,                      \
 			      &pwm_cat1_config_##n, POST_KERNEL, CONFIG_PWM_INIT_PRIORITY,         \
 			      &ifx_cat1_pwm_api);
-
+#endif
 DT_INST_FOREACH_STATUS_OKAY(INFINEON_CAT1_PWM_INIT)

@@ -9,7 +9,7 @@ config PWM_INFINEON_CAT1
 	bool "Infineon CAT1 PWM driver"
 	default y
 	depends on DT_HAS_INFINEON_CAT1_PWM_ENABLED
-	depends on SOC_FAMILY_INFINEON_CAT1B
+	depends on SOC_FAMILY_INFINEON_CAT1B || SOC_FAMILY_INFINEON_CAT1C
 	select USE_INFINEON_PWM
 	select PINCTRL
 	help
