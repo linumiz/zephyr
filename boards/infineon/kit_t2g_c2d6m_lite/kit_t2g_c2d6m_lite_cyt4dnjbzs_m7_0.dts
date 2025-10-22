@@ -30,6 +30,7 @@
 		zephyr,itcm = &itcm;
 		zephyr,console = &uart7;
 		zephyr,shell-uart = &uart7;
+		zephyr,canbus = &can0;
 	};
 
 	leds {
@@ -92,4 +93,31 @@ i2c11: &scb11 {
                compatible = "adi,adxl345";
                reg = <0x53>;
        };
+};
+
+&can0_1 {
+	compatible = "infineon,cat1-can";
+	clocks = <&clk_hf2>;
+	clock-frequency = <40000000>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0101>;
+	ifx,peri-div = <3>; /* 24-bit divider */
+	ifx,peri-div-inst = <0>;
+
+	pinctrl-0 = <&p5_2_can0_1_tx &p5_3_can0_1_rx>;
+	pinctrl-names = "default";
+};
+
+can0: &can0_0 {
+	compatible = "infineon,cat1-can";
+	status = "okay";
+	clocks = <&clk_hf2>;
+	clock-frequency = <40000000>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0100>;
+	ifx,peri-div = <3>; /* 24-bit divider */
+	ifx,peri-div-inst = <0>;
+
+	pinctrl-0 = <&p5_1_can0_0_rx &p5_0_can0_0_tx>;
+	pinctrl-names = "default";
 };
