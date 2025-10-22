@@ -490,6 +490,7 @@
 			ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
 			#pwm-cells = <3>;
 			status = "disabled";
+		};
 
 		wdt0: watchdog@4026c000 {
 			compatible = "infineon,cat1-watchdog";
@@ -497,6 +498,45 @@
 			system-interrupts = <17 3>;
 			status = "disabled";
 		};
+
+		can0_0: can@40520000 {
+			compatible = "infineon,cat1-can";
+			reg = <0x40520000 0x200>, <0x40530000 0x4000>;
+			reg-names = "m_can", "message_ram";
+			system-interrupts = <90 2>, <96 2>;
+			clocks = <&clk_hf2>;
+			bosch,mram-cfg = <0x0 28 8 3 3 1 3 3>;
+			status = "disabled";
+		};
+
+		can0_1: can@40520200 {
+			compatible = "infineon,cat1-can";
+			reg = <0x40520200 0x200>, <0x40530000 0x4000>;
+			reg-names = "m_can", "message_ram";
+			system-interrupts = <91 3>, <97 3>;
+			clocks = <&clk_hf2>;
+			bosch,mram-cfg = <0x2000 28 8 3 3 1 3 3>;
+			status = "disabled";
+		};
+
+		can1_0: can@40540000 {
+			compatible = "infineon,cat1-can";
+			reg = <0x40540000 0x200>, <0x40550000 0x4000>;
+			reg-names = "m_can", "message_ram";
+			system-interrupts = <102 3>, <108 3>;
+			clocks = <&clk_hf2>;
+			bosch,mram-cfg = <0x0 28 8 3 3 1 3 3>;
+			status = "disabled";
+		};
+
+		can1_1: can@40540200 {
+			compatible = "infineon,cat1-can";
+			reg = <0x40540200 0x200>, <0x40550000 0x4000>;
+			reg-names = "m_can", "message_ram";
+			system-interrupts = <103 3>, <109 3>;
+			clocks = <&clk_hf2>;
+			bosch,mram-cfg = <0x2000 28 8 3 3 1 3 3>;
+			status = "disabled";
+		};
 	};
 };
-
