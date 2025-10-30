@@ -1389,6 +1389,15 @@ static inline int can_mcan_sys_read_mram(mem_addr_t base, uint16_t offset, void 
 	__ASSERT(POINTER_TO_UINT(dst) % 4U == 0U, "dst must be 32-bit aligned");
 	__ASSERT(len % 4U == 0U, "len must be a multiple of 4");
 
+#if defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE)
+	int err;
+
+	err = sys_cache_data_invd_range((void *)(base + offset), len);
+	if (err != 0) {
+		return err;
+	}
+#endif /* !defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE) */
+
 	while (len32-- > 0) {
 		*dst32++ = *src32++;
 	}
@@ -1425,7 +1434,11 @@ static inline int can_mcan_sys_write_mram(mem_addr_t base, uint16_t offset, cons
 		*dst32++ = *src32++;
 	}
 
+#if defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE)
+	return sys_cache_data_flush_range((void *)(base + offset), len);
+#else /* defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE) */
 	return 0;
+#endif /* !defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE) */
 }
 
 /**
@@ -1455,7 +1468,11 @@ static inline int can_mcan_sys_clear_mram(mem_addr_t base, uint16_t offset, size
 		*dst32++ = 0U;
 	}
 
+#if defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE)
+	return sys_cache_data_flush_range((void *)(base + offset), len);
+#else /* defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE) */
 	return 0;
+#endif /* !defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE) */
 }
 
 /**
