@@ -121,3 +121,31 @@ can0: &can0_0 {
 	pinctrl-0 = <&p5_1_can0_0_rx &p5_0_can0_0_tx>;
 	pinctrl-names = "default";
 };
+
+spi0: &scb0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "infineon,cat1-spi-pdl";
+	status = "okay";
+
+	pinctrl-0 = <&p11_3_scb0_spi_mosi &p11_0_scb0_spi_miso &p11_2_scb0_spi_clk>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpio_prt11 1 GPIO_ACTIVE_LOW>;
+
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0108>;
+	ifx,peri-div = <1>; /* 16-bit divider */
+	ifx,peri-div-inst = <3>;
+
+	slow@0 {
+		compatible = "test-spi-loopback-slow";
+		reg = <0>;
+		spi-max-frequency = <3000000>;
+	};
+
+	fast@0 {
+		compatible = "test-spi-loopback-fast";
+		reg = <0>;
+		spi-max-frequency = <3000000>;
+	};
+};

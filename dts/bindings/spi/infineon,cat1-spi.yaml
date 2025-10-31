@@ -7,14 +7,47 @@ description: Infineon CAT1 SPI
 
 compatible: "infineon,cat1-spi"
 
-include: [spi-controller.yaml, pinctrl-device.yaml]
+include: [spi-controller.yaml, pinctrl-device.yaml, "infineon,cat1-scb.yaml", "infineon,system-interrupts.yaml"]
 
 properties:
   reg:
     required: true
 
   interrupts:
-    required: true
+    description: Required for non-cat1c devices
+
+  system-interrupts:
+    description: Required for cat1c devices
 
   pinctrl-0:
     required: true
+
+  ifx,peri-clk:
+    type: int
+    description:
+      Clock selection for peripheral
+
+  ifx,peri-group:
+    type: int
+    description:
+      Peripheral clock divider group and inst for scb i2c
+
+  ifx,peri-div:
+    type: int
+    required: true
+    enum:
+      - 0 # 8-bit divider
+      - 1 # 16-bit divider
+      - 2 # 16_5-bit divider
+      - 3 # 24_5-bit divider
+    description:
+      Peripheral clock divider type.
+
+  ifx,peri-div-inst:
+    type: int
+    required: true
+    description:
+      Peripheral clock divider type instance. peripheral clock divider has
+      multiple instnace of same type divider, so this property is used to specifi
+      which instance to be used. please refer device specific datasheet for
+      number of instance present for every divider type.
