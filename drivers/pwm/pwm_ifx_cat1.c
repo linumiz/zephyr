@@ -218,13 +218,13 @@ static DEVICE_API(pwm, ifx_cat1_pwm_api) = {
 	static struct ifx_cat1_pwm_data pwm_cat1_data_##n;                                         \
                                                                                                    \
 	static struct ifx_cat1_pwm_config pwm_cat1_config_##n = {                                  \
-		.reg_addr = (TCPWM_GRP_CNT_Type *)DT_INST_REG_ADDR(n),                             \
+		.reg_addr = (TCPWM_GRP_CNT_Type *)DT_REG_ADDR(DT_INST_PARENT(n)),                  \
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),                                         \
-		.resolution_32_bits = (DT_INST_PROP(n, resolution) == 32) ? true : false,          \
-		.divider_type = DT_INST_PROP(n, divider_type),                                     \
-		.divider_sel = DT_INST_PROP(n, divider_sel),                                       \
-		.divider_val = DT_INST_PROP(n, divider_val),                                       \
-		.clock_peri_group = DT_INST_PROP(n, ifx_peri_group),                               \
+		.resolution_32_bits = (DT_PROP(DT_INST_PARENT(n), resolution) == 32) ? true : false,          \
+		.divider_type = DT_PROP(DT_INST_PARENT(n), divider_type),                                     \
+		.divider_sel = DT_PROP(DT_INST_PARENT(n), divider_sel),                                       \
+		.divider_val = DT_PROP(DT_INST_PARENT(n), divider_val),                                       \
+		.clock_peri_group = DT_PROP(DT_INST_PARENT(n), ifx_peri_group),                               \
 	};                                                                                         \
 												   \
 	DEVICE_DT_INST_DEFINE(n, ifx_cat1_pwm_init, NULL, &pwm_cat1_data_##n,                      \
@@ -237,12 +237,12 @@ static DEVICE_API(pwm, ifx_cat1_pwm_api) = {
 	static struct ifx_cat1_pwm_data pwm_cat1_data_##n;                                         \
                                                                                                    \
 	static struct ifx_cat1_pwm_config pwm_cat1_config_##n = {                                  \
-		.reg_addr = (TCPWM_GRP_CNT_Type *)DT_INST_REG_ADDR(n),                             \
+		.reg_addr = (TCPWM_GRP_CNT_Type *)DT_REG_ADDR(DT_INST_PARENT(n)),                             \
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),                                         \
-		.resolution_32_bits = (DT_INST_PROP(n, resolution) == 32) ? true : false,          \
-		.divider_type = DT_INST_PROP(n, divider_type),                                     \
-		.divider_sel = DT_INST_PROP(n, divider_sel),                                       \
-		.divider_val = DT_INST_PROP(n, divider_val),                                       \
+		.resolution_32_bits = (DT_PROP(DT_INST_PARENT(n), resolution) == 32) ? true : false,          \
+		.divider_type = DT_PROP(DT_INST_PARENT(n), divider_type),                              \
+		.divider_sel = DT_PROP(DT_INST_PARENT(n), divider_sel),                                       \
+		.divider_val = DT_PROP(DT_INST_PARENT(n), divider_val),                                       \
 	};                                                                                         \
                                                                                                    \
 	DEVICE_DT_INST_DEFINE(n, ifx_cat1_pwm_init, NULL, &pwm_cat1_data_##n,                      \

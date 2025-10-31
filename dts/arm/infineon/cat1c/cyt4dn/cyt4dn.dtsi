@@ -464,6 +464,16 @@
 					status = "disabled";
 				};
 
+				pwm0_0: pwm0_0 {
+					compatible = "infineon,cat1-pwm";
+
+					#pwm-cells = <3>;
+					pinctrl-names = "default";
+					pinctrl-0 = <&p9_6_pwm0_03_line_out>;
+					system-interrupts = <552 4>;
+					status = "disabled";
+				};
+
 			};
 
 			tcpwm0_1: tcpwm0_0@40380080 {
