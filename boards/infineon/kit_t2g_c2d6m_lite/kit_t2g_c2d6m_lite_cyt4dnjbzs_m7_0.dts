@@ -10,6 +10,7 @@
 #include <arm/infineon/cat1c/cyt4dn/memory_partition.dtsi>
 #include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
 #include "kit_t2g_c2d6m_lite_common.dtsi"
+#include <zephyr/dt-bindings/pwm/pwm.h>
 
 / {
 
@@ -18,8 +19,8 @@
 
 	aliases {
 		uart-7 = &uart7;
-		led0 = &user_led1;
-		led1 = &user_led1;
+		led0 = &user_led0;
+		pwm-led0 = &pwm_led0;
 		sw0 = &user_bt0;
 	};
 
@@ -40,10 +41,13 @@
 			label = "LED_0";
 			gpios = <&gpio_prt7 5 GPIO_ACTIVE_HIGH>;
 		};
+	};
 
-		user_led1: led_1 {
-			label = "LED_1";
-			gpios = <&gpio_prt7 6 GPIO_ACTIVE_HIGH>;
+	pwmleds {
+		compatible = "pwm-leds";
+
+		pwm_led0: pwm_led_0 {
+			pwms = <&pwm0_26 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
 		};
 	};
 

@@ -1,0 +1,13 @@
+&tcpwm0_26 {
+	status = "okay";
+	divider-type = <1>;
+	divider-sel = <2>;
+	divider-val = <79>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+};
+
+&pwm0_26 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&p7_6_pwm0_26_line_out>;
+	status = "okay";
+};
