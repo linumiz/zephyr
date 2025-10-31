@@ -1,0 +1,26 @@
+//#include <zephyr/dt-bindings/pwm/pwm_ifx_tcpwm.h>
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
+
+&tcpwm0_grp0 {
+		reg = <0x40380000 0x80>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		tcpwm0_0: tcpwm0_0@40380000 {
+			compatible = "infineon,tcpwm";
+			reg = <0x40380000 0x80>;
+			resolution = <16>;
+			status = "okay";
+
+			divider-type = <1>;
+			divider-sel = <0>;
+			divider-val = <20000>;
+			ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+
+			counter0_0: counter0_0 {
+				compatible = "infineon,tcpwm-counter";
+				system-interrupts = <552 4>;
+				status = "okay";
+		};
+	};
+};
