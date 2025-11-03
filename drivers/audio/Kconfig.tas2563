@@ -1,0 +1,17 @@
+# Copyright (c) 2025 Linumiz GmbH
+# SPDX-License-Identifier: Apache-2.0
+
+config AUDIO_TAS2563
+        bool "TAS6422 audio amplifier support"
+        default y
+        depends on DT_HAS_TI_TAS2563_ENABLED
+        select I2C
+        depends on GPIO
+        help
+          Enable TAS2563 support on the selected board
+config TAS2563_IRQ_GPIO_SUPPORT
+	bool "interrupt support"
+	default n
+	depends on AUDIO_TAS2563
+	help
+	  Enable the irq support
