@@ -8,27 +8,44 @@
 #include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
 
 / {
-	flash-controller@40240000 {
-		compatible = "infineon,cat1-flash-controller";
+	flash_controller: flash_controller@40240000 {
+		compatible = "infineon,cat1-flash-controller-pdl";
 		reg = < 0x40240000 0x10000 >;
 		#address-cells = <1>;
 		#size-cells = <1>;
-		status = "disabled";
+		status = "okay";
 
+		/* Code flash - Large sector (32KB Sectors) */
 		flash0: flash@10000000 {
 			compatible = "soc-nv-flash";
-			reg = <0x10000000 0x80000>;
+			reg = <0x10000000 0x5F0000>;
 			write-block-size = <512>;
-			erase-block-size = <512>;
+			erase-block-size = <32768>;
 		};
 
-		flash1: flash@10080000 {
+		/* Code flash - Small sector (8KB Sectors) */
+		flash1: flash@105F0000 {
 			compatible = "soc-nv-flash";
-			reg = <0x10080000 0x200000>;
+			reg = <0x105F0000 0x40000>;
 			write-block-size = <512>;
-			erase-block-size = <512>;
+			erase-block-size = <8192>;
 		};
 
+		/* Work flash - Large sector (2KB Sectors) */
+		flash2: flash@14000000 {
+			compatible = "soc-nv-flash";
+			reg = <0x14000000 0x18000>;
+			write-block-size = <64>;
+			erase-block-size = <2048>;
+		};
+
+		/* Work flash - Small sector (128B Sectors) */
+		flash3: flash@14018000 {
+			compatible = "soc-nv-flash";
+			reg = <0x14018000 0x8000>;
+			write-block-size = <64>;
+			erase-block-size = <128>;
+		};
 	};
 
 	/* 0x0000000028000800  _base_SRAM_CM0P =

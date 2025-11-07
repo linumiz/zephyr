@@ -32,6 +32,7 @@
 		zephyr,console = &uart7;
 		zephyr,shell-uart = &uart7;
 		zephyr,canbus = &can0;
+		zephyr,flash-controller = &flash_controller;
 	};
 
 	leds {
