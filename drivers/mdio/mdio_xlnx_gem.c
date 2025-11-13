@@ -8,6 +8,7 @@
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/mdio.h>
+#include <zephyr/drivers/pinctrl.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(xlnx_gem_mdio, CONFIG_MDIO_LOG_LEVEL);
@@ -86,6 +87,7 @@ enum eth_xlnx_mdc_clock_divider {
  */
 struct xlnx_gem_mdio_config {
 	uint32_t gem_base_addr;
+	const struct pinctrl_dev_config *pcfg;
 };
 
 /**
@@ -261,9 +263,18 @@ static int xlnx_gem_mdio_write(const struct device *dev, uint8_t prtad, uint8_t 
 static int xlnx_gem_mdio_initialize(const struct device *dev)
 {
 	const struct xlnx_gem_mdio_config *const dev_conf = dev->config;
-
 	uint32_t reg_val;
-	uint32_t mdc_divider = (uint32_t)MDC_DIVIDER_224;
+	uint32_t mdc_divider = (uint32_t)MDC_DIVIDER_48;
+
+	/* Configure dt provided device signals when available */
+	int ret = pinctrl_apply_state(dev_conf->pcfg, PINCTRL_STATE_DEFAULT);
+	if (ret < 0) {
+		return ret;
+	}
+	uint32_t reg_addr = 0x40480000;
+	reg_val = 0x80000002;  /* enable rgmii mode and enable eth ip block */
+
+	sys_write32(reg_val, reg_addr);
 
 	/* Set the MDC divider in gem.net_config */
 	reg_val = sys_read32(dev_conf->gem_base_addr + ETH_XLNX_GEM_NWCFG_OFFSET);
@@ -286,8 +297,10 @@ static DEVICE_API(mdio, xlnx_gem_mdio_api) = {
 };
 
 #define XLNX_GEM_MDIO_DEV_CONFIG(port)\
+	PINCTRL_DT_INST_DEFINE(port); \
 	static const struct xlnx_gem_mdio_config xlnx_gem##port##_mdio_cfg = {\
 		.gem_base_addr = DT_REG_ADDR_BY_IDX(DT_PARENT(DT_INST(port, xlnx_gem)), 0),\
+	.pcfg				= PINCTRL_DT_INST_DEV_CONFIG_GET(port), \
 	};
 
 #define XLNX_GEM_MDIO_DEV_INIT(port)\

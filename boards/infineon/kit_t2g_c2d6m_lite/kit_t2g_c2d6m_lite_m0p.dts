@@ -24,6 +24,10 @@
 		zephyr,console = &uart9;
 		zephyr,shell-uart = &uart9;
 	};
+
+	aliases {
+		uart-9 = &uart9;
+	};
 };
 
 uart9: &scb9 {

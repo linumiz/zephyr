@@ -44,12 +44,24 @@
 	status = "okay";
 };
 
+&pll1 {
+	status = "okay";
+};
+
+&pll5 {
+	status = "okay";
+};
+
 &pll6 {
 	status = "okay";
 };
 
+&pll7 {
+	status = "okay";
+};
+
 &clk_hf0 {
-	status = "disabled";
+	status = "okay";
 };
 
 &clk_hf1 {
@@ -64,10 +76,10 @@
 	status = "disabled";
 };
 &clk_hf4 {
-	status = "disabled";
+	status = "okay";
 };
 &clk_hf5 {
-	status = "disabled";
+	status = "okay";
 };
 &clk_hf6 {
 	status = "disabled";
