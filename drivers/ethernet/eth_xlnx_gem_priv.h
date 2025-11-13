@@ -16,6 +16,7 @@
 #include <zephyr/types.h>
 #include <zephyr/net/net_pkt.h>
 #include <zephyr/irq.h>
+#include <zephyr/drivers/pinctrl.h>
 
 #define ETH_XLNX_BUFFER_ALIGNMENT			4 /* RX/TX buffer alignment (in bytes) */
 
@@ -396,10 +397,12 @@ ETH_NET_DEVICE_DT_INST_DEFINE(port,\
 
 /* Device configuration data declaration macro */
 #define ETH_XLNX_GEM_DEV_CONFIG(port) \
+	PINCTRL_DT_INST_DEFINE(port);                                                                 \
 static const struct eth_xlnx_gem_dev_cfg eth_xlnx_gem##port##_dev_cfg = {\
 	.phy_dev			= ETH_XLNX_GEM_PHY_DEV(port),\
 	.base_addr			= DT_REG_ADDR_BY_IDX(\
 		DT_PARENT(DT_INST(port, xlnx_gem)), 0),\
+	.pcfg				= PINCTRL_DT_INST_DEV_CONFIG_GET(port),  \
 	.config_func			= eth_xlnx_gem##port##_irq_config,\
 	.pll_clock_frequency		= DT_INST_PROP(port, clock_frequency),\
 	.clk_ctrl_reg_address		= DT_REG_ADDR_BY_IDX(\
@@ -476,16 +479,15 @@ struct eth_xlnx_dma_area_gem##port {\
 /* DMA memory area instantiation macro */
 #define ETH_XLNX_GEM_DMA_AREA_INST(port) \
 static struct eth_xlnx_dma_area_gem##port eth_xlnx_gem##port##_dma_area\
-	__ocm_bss_section __aligned(4096);
+	__aligned(4096);
 
 /* Interrupt configuration function macro */
 #define ETH_XLNX_GEM_CONFIG_IRQ_FUNC(port) \
 static void eth_xlnx_gem##port##_irq_config(const struct device *dev)\
 {\
-	ARG_UNUSED(dev);\
-	IRQ_CONNECT(DT_INST_IRQN(port), DT_INST_IRQ(port, priority),\
-	eth_xlnx_gem_isr, DEVICE_DT_INST_GET(port), 0);\
-	irq_enable(DT_INST_IRQN(port));\
+	enable_sys_int(DT_INST_PROP_BY_IDX(port, system_interrupts, SYS_INT_NUM), \
+	DT_INST_PROP_BY_IDX(port, system_interrupts, SYS_INT_PRI), \
+		       (void (*)(const void *))(void *)eth_xlnx_gem_isr, dev); \
 }
 
 /* RX/TX BD Ring initialization macro */
@@ -600,6 +602,7 @@ struct eth_xlnx_gem_bdring {
 struct eth_xlnx_gem_dev_cfg {
 	const struct device		*phy_dev;
 	uint32_t			base_addr;
+	const struct pinctrl_dev_config *pcfg;
 	eth_xlnx_gem_config_irq_t	config_func;
 
 	uint32_t			pll_clock_frequency;

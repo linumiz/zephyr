@@ -155,6 +155,13 @@ static int eth_xlnx_gem_dev_init(const struct device *dev)
 		 "must be 16380 bytes maximum.", dev->name,
 		 dev_conf->tx_buffer_size);
 
+
+	/* Configure dt provided device signals when available */
+	int ret = pinctrl_apply_state(dev_conf->pcfg, PINCTRL_STATE_DEFAULT);
+	if (ret < 0) {
+		return ret;
+	}
+
 	/*
 	 * Initialization procedure as described in the Zynq-7000 TRM,
 	 * chapter 16.3.x. MDIO initialization (16.3.4) is handled prior
@@ -751,6 +758,7 @@ static void eth_xlnx_gem_reset_hw(const struct device *dev)
 	 * chapter 16.3.1.
 	 */
 
+#if 0
 	/*
 	 * Prepare the NWCTRL register, preserve the MDEN bit
 	 * If MDIO is active, the separate MDIO driver will have already set this.
@@ -759,6 +767,7 @@ static void eth_xlnx_gem_reset_hw(const struct device *dev)
 	nwctrl &= ETH_XLNX_GEM_NWCTRL_MDEN_BIT;
 	nwctrl |= ETH_XLNX_GEM_NWCTRL_STATCLR_BIT; /* clear statistics counters */
 	sys_write32(nwctrl, dev_conf->base_addr + ETH_XLNX_GEM_NWCTRL_OFFSET);
+#endif
 
 	/* Clear the RX/TX status registers */
 	sys_write32(ETH_XLNX_GEM_TXSRCLR_MASK,
@@ -804,6 +813,10 @@ static void eth_xlnx_gem_configure_clocks(const struct device *dev,
 	uint32_t tmp;
 	uint32_t clk_ctrl_reg;
 
+	uint32_t reg_val = sys_read32(0x40480000);
+//	reg_val = ~(1 << 31);
+//	sys_write32(reg_val, 0x40480000);
+	
 	if (PHY_LINK_IS_SPEED_1000M(state->speed)) {
 		target = 125000000; /* Target frequency: 125 MHz */
 	} else if (PHY_LINK_IS_SPEED_100M(state->speed)) {
@@ -812,6 +825,12 @@ static void eth_xlnx_gem_configure_clocks(const struct device *dev,
 		target = 2500000;   /* Target frequency: 2.5 MHz */
 	}
 
+	reg_val |= BIT(1);
+	reg_val |= BIT(31);
+
+	sys_write32(reg_val, 0x40480000);
+
+	return 0;
 	/*
 	 * Calculate the divisors for the target frequency.
 	 * The frequency of the PLL to which the divisors shall be applied are
