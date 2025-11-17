@@ -2416,5 +2416,13 @@
 					    <507 5>; /* CH83 */
 			status = "okay";
 		};
+
+		adc0: adc@40900000 {
+			compatible = "infineon,ifx-sar";
+			reg = <0x40900000 0x100000>;
+			#io-channel-cells = <1>;
+			system-interrupts = <160 3>;
+			status = "okay";
+		};
 	};
 };
