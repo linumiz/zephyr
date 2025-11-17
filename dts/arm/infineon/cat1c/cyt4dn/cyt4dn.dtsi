@@ -2152,5 +2152,13 @@
 			bosch,mram-cfg = <0x2000 28 8 3 3 1 3 3>;
 			status = "disabled";
 		};
+
+		adc0: adc@40900000 {
+			compatible = "infineon,ifx-sar";
+			reg = <0x40900000 0x100000>;
+			#io-channel-cells = <1>;
+			system-interrupts = <160 3>;
+			status = "okay";
+		};
 	};
 };
