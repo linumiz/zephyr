@@ -260,21 +260,23 @@ int nxp_wifi_wlan_event_callback(enum wlan_event_reason reason, void *data)
 
 		LOG_DBG("Soft AP \"%s\" started successfully", uap_ssid);
 #endif
-		if (net_addr_pton(AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_ADDRESS, &dhcps_addr4) < 0) {
+		if (net_addr_pton(NET_AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_ADDRESS,
+				  &dhcps_addr4) < 0) {
 			LOG_ERR("Invalid CONFIG_NXP_WIFI_SOFTAP_IP_ADDRESS");
 			return 0;
 		}
 		net_if_ipv4_addr_add(g_uap.netif, &dhcps_addr4, NET_ADDR_MANUAL, 0);
 		net_if_ipv4_set_gw(g_uap.netif, &dhcps_addr4);
 
-		if (net_addr_pton(AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_MASK, &netmask_addr) < 0) {
+		if (net_addr_pton(NET_AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_MASK,
+				  &netmask_addr) < 0) {
 			LOG_ERR("Invalid CONFIG_NXP_WIFI_SOFTAP_IP_MASK");
 			return 0;
 		}
 		net_if_ipv4_set_netmask_by_addr(g_uap.netif, &dhcps_addr4, &netmask_addr);
 		net_if_dormant_off(g_uap.netif);
 
-		if (net_addr_pton(AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_BASE, &base_addr) < 0) {
+		if (net_addr_pton(NET_AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_BASE, &base_addr) < 0) {
 			LOG_ERR("Invalid CONFIG_NXP_WIFI_SOFTAP_IP_BASE");
 			return 0;
 		}
@@ -286,6 +288,9 @@ int nxp_wifi_wlan_event_callback(enum wlan_event_reason reason, void *data)
 
 		LOG_DBG("DHCP Server started successfully");
 		s_nxp_wifi_UapActivated = true;
+#ifndef CONFIG_WIFI_NM_HOSTAPD_AP
+		wifi_mgmt_raise_ap_enable_result_event(g_uap.netif, WIFI_STATUS_AP_SUCCESS);
+#endif
 		break;
 	case WLAN_REASON_UAP_CLIENT_ASSOC:
 		sta_node *con_sta_info = (sta_node *)data;
@@ -353,7 +358,8 @@ int nxp_wifi_wlan_event_callback(enum wlan_event_reason reason, void *data)
 		net_if_dormant_on(g_uap.netif);
 		LOG_DBG("WLAN: UAP Stopped");
 
-		if (net_addr_pton(AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_ADDRESS, &dhcps_addr4) < 0) {
+		if (net_addr_pton(NET_AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_ADDRESS,
+				  &dhcps_addr4) < 0) {
 			LOG_ERR("Invalid CONFIG_NXP_WIFI_SOFTAP_IP_ADDRESS");
 		} else {
 			net_if_ipv4_addr_rm(g_uap.netif, &dhcps_addr4);
@@ -362,6 +368,9 @@ int nxp_wifi_wlan_event_callback(enum wlan_event_reason reason, void *data)
 		net_dhcpv4_server_stop(g_uap.netif);
 		LOG_DBG("DHCP Server stopped successfully");
 		s_nxp_wifi_UapActivated = false;
+#ifndef CONFIG_WIFI_NM_HOSTAPD_AP
+		wifi_mgmt_raise_ap_disable_result_event(g_uap.netif, WIFI_STATUS_AP_SUCCESS);
+#endif
 		break;
 #endif
 	case WLAN_REASON_PS_ENTER:
@@ -674,13 +683,13 @@ static int nxp_wifi_start_ap(const struct device *dev, struct wifi_connect_req_p
 		return -EAGAIN;
 	}
 
-	if (net_addr_pton(AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_ADDRESS, &ap_addr4->address) < 0) {
+	if (net_addr_pton(NET_AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_ADDRESS, &ap_addr4->address) < 0) {
 		LOG_ERR("Invalid CONFIG_NXP_WIFI_SOFTAP_IP_ADDRESS");
 		return -ENOENT;
 	}
 	ap_addr4->gw = ap_addr4->address;
 
-	if (net_addr_pton(AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_MASK, &ap_addr4->netmask) < 0) {
+	if (net_addr_pton(NET_AF_INET, CONFIG_NXP_WIFI_SOFTAP_IP_MASK, &ap_addr4->netmask) < 0) {
 		LOG_ERR("Invalid CONFIG_NXP_WIFI_SOFTAP_IP_MASK");
 		return -ENOENT;
 	}

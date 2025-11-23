@@ -95,12 +95,6 @@
 			clocks = <&lfosc>;
 		};
 
-		hsclk: hsclk {
-			#clock-cells = <1>;
-			compatible = "ti,mspm0-clk";
-			clocks = <&sysosc>;
-		};
-
 		ulpclk: ulpclk {
 			#clock-cells = <1>;
 			compatible = "ti,mspm0-clk";
@@ -166,6 +160,20 @@
 			interrupts = <30 0>;
 			alarms-count = <2>;
 			status = "disabled";
+		};
+
+		vref0: vref@40030000 {
+			compatible = "ti,mspm0-vref";
+			reg = <0x40030000 0x2000>;
+			clocks = <&ckm MSPM0_CLOCK_BUSCLK>;
+			ti,clk-div = < 0x1 >;
+			off-on-delay-us = <200>;
+			regulator-uv = <1400000>;
+			ti,sample-cycles = <10>;
+			ti,hold-cycles = <40>;
+			pinctrl-0 = <&analog_pa23>;
+			pinctrl-names = "default";
+			status="disabled";
 		};
 
 		pinctrl: pin-controller@400a0000 {

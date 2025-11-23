@@ -150,6 +150,10 @@
 	d3ppre = <2>;
 };
 
+&pwr {
+	power-supply = "ldo";
+};
+
 &usart3 {
 	pinctrl-0 = <&usart3_tx_pb10 &usart3_rx_pb11>;
 	pinctrl-names = "default";
@@ -169,6 +173,7 @@
 	 * and accessed simultaneously, 4bits sent to/received from each.
 	 */
 	dual-flash;
+	ssht-enable;
 	status = "okay";
 
 	ext_flash_ctrl: qspi-flash-controller@0 {

@@ -410,8 +410,6 @@ static bool is_valid_gatt_packet_len(const struct btp_hdr *hdr, struct net_buf_s
 		}
 	case BTP_GATT_WRITE_WITHOUT_RSP:
 		return buf_simple->len == 0U;
-	case BTP_GATT_SIGNED_WRITE_WITHOUT_RSP:
-		return buf_simple->len == 0U;
 	case BTP_GATT_WRITE:
 		return buf_simple->len == sizeof(struct btp_gatt_write_rp);
 	case BTP_GATT_WRITE_LONG:
@@ -873,6 +871,8 @@ static bool is_valid_vcs_packet_len(const struct btp_hdr *hdr, struct net_buf_si
 		return buf_simple->len == 0U;
 	case BTP_VCS_UNMUTE:
 		return buf_simple->len == 0U;
+	case BTP_VCS_REGISTER:
+		return buf_simple->len == 0U;
 
 	/* no events */
 	default:
@@ -1236,7 +1236,7 @@ static bool is_valid_csis_packet_len(const struct btp_hdr *hdr, struct net_buf_s
 		return buf_simple->len == 0U;
 	case BTP_CSIS_GET_MEMBER_RSI:
 		return buf_simple->len == sizeof(struct btp_csis_get_member_rsi_rp);
-	case BTP_CSIS_ENC_SIRK_TYPE:
+	case BTP_CSIS_SET_SIRK_TYPE:
 		return buf_simple->len == 0U;
 
 	/* No events */
@@ -1928,7 +1928,7 @@ void bsim_btp_uart_init(void)
 {
 	TEST_ASSERT(device_is_ready(dev));
 
-	k_timer_start(&timer, K_MSEC(10), K_MSEC(10));
+	k_timer_start(&timer, K_USEC(100), K_USEC(100));
 }
 
 static void wait_for_response(const struct btp_hdr *cmd_hdr)

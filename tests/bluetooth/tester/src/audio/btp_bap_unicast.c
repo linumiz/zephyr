@@ -2,6 +2,7 @@
 
 /*
  * Copyright (c) 2023 Codecoup
+ * Copyright (c) 2025 Nordic Semiconductor ASA
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -511,7 +512,6 @@ static void stream_configured_cb(struct bt_bap_stream *stream,
 
 	u_stream->conn_id = bt_conn_index(stream->conn);
 	u_conn = &connections[u_stream->conn_id];
-	u_stream->ase_id = info.id;
 
 	stream_state_changed(stream);
 }
@@ -1272,6 +1272,12 @@ static int client_configure_codec(struct btp_bap_unicast_connection *u_conn, str
 		memcpy(&stream->codec_cfg, codec_cfg, sizeof(*codec_cfg));
 		err = bt_bap_stream_config(conn, stream_unicast_to_bap(stream), ep,
 					   &stream->codec_cfg);
+
+		if (err == 0) {
+			stream->ase_id = ase_id;
+		} else {
+			stream->in_use = false;
+		}
 	} else {
 		/* Reconfigure a stream */
 		memcpy(&stream->codec_cfg, codec_cfg, sizeof(*codec_cfg));
@@ -1381,9 +1387,38 @@ uint8_t btp_ascs_preconfigure_qos(const void *cmd, uint16_t cmd_len,
 				  void *rsp, uint16_t *rsp_len)
 {
 	const struct btp_ascs_preconfigure_qos_cmd *cp = cmd;
+	const uint16_t latency = sys_le16_to_cpu(cp->max_transport_latency);
+	const uint32_t sdu_interval = sys_get_le24(cp->sdu_interval);
+	const uint32_t pd = sys_get_le24(cp->presentation_delay);
+	const uint16_t max_sdu = sys_le16_to_cpu(cp->max_sdu);
 	struct bt_bap_qos_cfg *qos;
 
 	LOG_DBG("");
+
+	if (cp->framing != BT_ISO_FRAMING_UNFRAMED && cp->framing != BT_ISO_FRAMING_FRAMED) {
+		LOG_DBG("Invalid framing %u", cp->framing);
+		return BTP_STATUS_FAILED;
+	}
+
+	if (!IN_RANGE(max_sdu, BT_ISO_MIN_SDU, BT_ISO_MAX_SDU)) {
+		LOG_DBG("Invalid SDU %u", max_sdu);
+		return BTP_STATUS_FAILED;
+	}
+
+	if (!IN_RANGE(latency, BT_ISO_LATENCY_MIN, BT_ISO_LATENCY_MAX)) {
+		LOG_DBG("Invalid latency %u", latency);
+		return BTP_STATUS_FAILED;
+	}
+
+	if (!IN_RANGE(sdu_interval, BT_ISO_SDU_INTERVAL_MIN, BT_ISO_SDU_INTERVAL_MAX)) {
+		LOG_DBG("Invalid SDU interval %u", sdu_interval);
+		return BTP_STATUS_FAILED;
+	}
+
+	if (pd > BT_AUDIO_PD_MAX) {
+		LOG_DBG("Invalid presentation delay %u", pd);
+		return BTP_STATUS_FAILED;
+	}
 
 	qos = &cigs[cp->cig_id].qos[cp->cis_id];
 	memset(qos, 0, sizeof(*qos));
@@ -1391,10 +1426,10 @@ uint8_t btp_ascs_preconfigure_qos(const void *cmd, uint16_t cmd_len,
 	qos->phy = BT_BAP_QOS_CFG_2M;
 	qos->framing = cp->framing;
 	qos->rtn = cp->retransmission_num;
-	qos->sdu = sys_le16_to_cpu(cp->max_sdu);
-	qos->latency = sys_le16_to_cpu(cp->max_transport_latency);
-	qos->interval = sys_get_le24(cp->sdu_interval);
-	qos->pd = sys_get_le24(cp->presentation_delay);
+	qos->sdu = max_sdu;
+	qos->latency = latency;
+	qos->interval = sdu_interval;
+	qos->pd = pd;
 
 	return BTP_STATUS_SUCCESS;
 }
