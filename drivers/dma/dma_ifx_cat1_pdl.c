@@ -621,12 +621,12 @@ static const struct dma_driver_api ifx_cat1_dma_api = {
 		.channel = n,                                                                      \
 	};                                                                                         \
                                                                                                    \
-	enable_sys_int(DT_INST_PROP_BY_IDX(inst, system_interrupts, 0 + (n*2)),                    \
-		       DT_INST_PROP_BY_IDX(inst, system_interrupts, 1 + (n*2)),                    \
+	enable_sys_int(DT_INST_IRQ_BY_IDX(inst, n, irq),	                    		   \
+		       DT_INST_IRQ_BY_IDX(inst, n, priority),                    		   \
 	               (void (*)(const void *))(void *)ifx_cat1_dma_isr,                           \
 	               &irq_context##inst##n);                                                     \
                                                                                                    \
-	ifx_cat1_dma_channels##inst[n].irq = DT_INST_PROP_BY_IDX(inst, system_interrupts, 0 + (n*2));
+	ifx_cat1_dma_channels##inst[n].irq = DT_INST_IRQ_BY_IDX(inst, n, irq);
 
 #else
 #define IRQ_CONFIGURE(n, inst)                                                                     \

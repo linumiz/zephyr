@@ -2175,7 +2175,7 @@
 			compatible = "infineon,cat1-dma-pdl";
 			reg = <0x40280000 0x10000>;
 			dma-channels = <76>;
-			system-interrupts = <296 5>, /* CH0 */
+			interrupts = <296 5>, /* CH0 */
 					    <297 5>, /* CH1 */
 				            <298 5>, /* CH2 */
 					    <299 5>, /* CH3 */
@@ -2259,7 +2259,7 @@
 			compatible = "infineon,cat1-dma-pdl";
 			reg = <0x40290000 0x10000>;
 			dma-channels = <84>;
-			system-interrupts = <424 5>, /* CH0 */
+			interrupts = <424 5>, /* CH0 */
 					    <425 5>, /* CH1 */
 					    <426 5>, /* CH2 */
 					    <427 5>, /* CH3 */
