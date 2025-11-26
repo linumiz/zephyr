@@ -156,14 +156,14 @@ void soc_prep_hook(void)
 	Cy_WDT_Unlock();
 	Cy_WDT_Disable();
 	Cy_SystemInit();
-	SystemCoreClockUpdate();
+//	SystemCoreClockUpdate();
 	SystemIrqInit();
 }
 
 void soc_early_init_hook(void)
 {
-	sys_cache_instr_enable();
-	sys_cache_data_enable();
+//	sys_cache_instr_enable();
+//	sys_cache_data_enable();
 
 	system_irq_init();
 }

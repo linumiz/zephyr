@@ -17,6 +17,7 @@
 #include <zephyr/net/net_pkt.h>
 #include <zephyr/irq.h>
 #include <zephyr/drivers/pinctrl.h>
+#include <zephyr/linker/section_tags.h>
 
 #define ETH_XLNX_BUFFER_ALIGNMENT			4 /* RX/TX buffer alignment (in bytes) */
 
@@ -193,6 +194,10 @@
 #define ETH_XLNX_GEM_LADDR4L_OFFSET			0x000000A0
 #define ETH_XLNX_GEM_LADDR4H_OFFSET			0x000000A4
 #define ETH_XLNX_GEM_DESIGN_CFG5_OFFSET			0x00000290
+#define ETH_XLNX_GEM_TX1QBASEL_OFFSET			0x00000440
+#define ETH_XLNX_GEM_TX1QBASEH_OFFSET			0x000004C8
+#define ETH_XLNX_GEM_RX1QBASEL_OFFSET			0x00000480
+#define ETH_XLNX_GEM_RX1QBASEH_OFFSET			0x000004D4
 
 /*
  * Masks for clearing registers during initialization:
@@ -459,11 +464,22 @@ static struct eth_xlnx_gem_dev_data eth_xlnx_gem##port##_dev_data = {\
 	.first_tx_buffer = NULL\
 };
 
+#define ETH_XLNX_GEM_BD_RINGS_DECL(port) \
+struct eth_xlnx_gem##port##_bd_rings_layout {\
+	struct eth_xlnx_gem_bd rxbd_ring[DT_INST_PROP(port, rx_buffer_descriptors)];\
+	struct eth_xlnx_gem_bd txbd_ring[DT_INST_PROP(port, tx_buffer_descriptors)];\
+	struct eth_xlnx_gem_bd tie_off_rx_bd;\
+	struct eth_xlnx_gem_bd tie_off_tx_bd;\
+}
+
+/* Buffer descriptor rings instantiation macro */
+#define ETH_XLNX_GEM_BD_RINGS_INST(port) \
+__nocache static struct eth_xlnx_gem##port##_bd_rings_layout eth_xlnx_gem##port##_bd_rings;
+
+
 /* DMA memory area declaration macro */
 #define ETH_XLNX_GEM_DMA_AREA_DECL(port) \
-struct eth_xlnx_dma_area_gem##port {\
-	struct eth_xlnx_gem_bd rx_bd[DT_INST_PROP(port, rx_buffer_descriptors)];\
-	struct eth_xlnx_gem_bd tx_bd[DT_INST_PROP(port, tx_buffer_descriptors)];\
+struct eth_xlnx_gem##port##_dma_area_layout {\
 	uint8_t rx_buffer\
 		[DT_INST_PROP(port, rx_buffer_descriptors)]\
 		[((DT_INST_PROP(port, rx_buffer_size)\
@@ -474,12 +490,17 @@ struct eth_xlnx_dma_area_gem##port {\
 		[((DT_INST_PROP(port, tx_buffer_size)\
 		+ (ETH_XLNX_BUFFER_ALIGNMENT - 1))\
 		& ~(ETH_XLNX_BUFFER_ALIGNMENT - 1))];\
+	uint8_t rx_tie_off_buffer[((DT_INST_PROP(port, rx_buffer_size)\
+		+ (ETH_XLNX_BUFFER_ALIGNMENT - 1))\
+		& ~(ETH_XLNX_BUFFER_ALIGNMENT - 1))];\
+	uint8_t tx_tie_off_buffer[((DT_INST_PROP(port, tx_buffer_size)\
+		+ (ETH_XLNX_BUFFER_ALIGNMENT - 1))\
+		& ~(ETH_XLNX_BUFFER_ALIGNMENT - 1))];\
 };
 
 /* DMA memory area instantiation macro */
 #define ETH_XLNX_GEM_DMA_AREA_INST(port) \
-static struct eth_xlnx_dma_area_gem##port eth_xlnx_gem##port##_dma_area\
-	__aligned(4096);
+static struct eth_xlnx_gem##port##_dma_area_layout eth_xlnx_gem##port##_dma_area;
 
 /* Interrupt configuration function macro */
 #define ETH_XLNX_GEM_CONFIG_IRQ_FUNC(port) \
@@ -488,15 +509,23 @@ static void eth_xlnx_gem##port##_irq_config(const struct device *dev)\
 	enable_sys_int(DT_INST_PROP_BY_IDX(port, system_interrupts, SYS_INT_NUM), \
 	DT_INST_PROP_BY_IDX(port, system_interrupts, SYS_INT_PRI), \
 		       (void (*)(const void *))(void *)eth_xlnx_gem_isr, dev); \
+										\
+	enable_sys_int(DT_INST_PROP_BY_IDX(port, system_interrupts, 2), \
+	DT_INST_PROP_BY_IDX(port, system_interrupts, 3), \
+		       (void (*)(const void *))(void *)eth_xlnx_gem_isr, dev); \
 }
 
 /* RX/TX BD Ring initialization macro */
 #define ETH_XLNX_GEM_INIT_BD_RING(port) \
 if (dev_conf->base_addr == DT_REG_ADDR_BY_IDX(DT_PARENT(DT_INST(port, xlnx_gem)), 0)) {\
-	dev_data->rxbd_ring.first_bd = &(eth_xlnx_gem##port##_dma_area.rx_bd[0]);\
-	dev_data->txbd_ring.first_bd = &(eth_xlnx_gem##port##_dma_area.tx_bd[0]);\
+	dev_data->rxbd_ring.first_bd = &(eth_xlnx_gem##port##_bd_rings.rxbd_ring[0]);\
+	dev_data->rxbd_ring.tie_off_bd = &eth_xlnx_gem##port##_bd_rings.tie_off_rx_bd;\
+	dev_data->txbd_ring.first_bd = &(eth_xlnx_gem##port##_bd_rings.txbd_ring[0]);\
+	dev_data->txbd_ring.tie_off_bd = &eth_xlnx_gem##port##_bd_rings.tie_off_tx_bd;\
 	dev_data->first_rx_buffer = (uint8_t *)eth_xlnx_gem##port##_dma_area.rx_buffer;\
 	dev_data->first_tx_buffer = (uint8_t *)eth_xlnx_gem##port##_dma_area.tx_buffer;\
+	dev_data->rx_tie_off_buffer = eth_xlnx_gem##port##_dma_area.rx_tie_off_buffer;\
+	dev_data->tx_tie_off_buffer = eth_xlnx_gem##port##_dma_area.tx_tie_off_buffer;\
 }
 
 /* Top-level device initialization macro - bundles all of the above */
@@ -504,6 +533,8 @@ if (dev_conf->base_addr == DT_REG_ADDR_BY_IDX(DT_PARENT(DT_INST(port, xlnx_gem))
 ETH_XLNX_GEM_CONFIG_IRQ_FUNC(port);\
 ETH_XLNX_GEM_DEV_CONFIG(port);\
 ETH_XLNX_GEM_DEV_DATA(port);\
+ETH_XLNX_GEM_BD_RINGS_DECL(port);\
+ETH_XLNX_GEM_BD_RINGS_INST(port);\
 ETH_XLNX_GEM_DMA_AREA_DECL(port);\
 ETH_XLNX_GEM_DMA_AREA_INST(port);\
 ETH_XLNX_GEM_NET_DEV_INIT(port);
@@ -557,9 +588,9 @@ struct eth_xlnx_gem_bd {
 	/* TODO for Cortex-A53: 64-bit addressing */
 	/* TODO: timestamping support */
 	/* Buffer physical address (absolute address) */
-	uint32_t		addr;
+	volatile uint32_t		addr;
 	/* Buffer control word (different contents for RX and TX) */
-	uint32_t		ctrl;
+	volatile uint32_t		ctrl;
 };
 
 /**
@@ -580,6 +611,8 @@ struct eth_xlnx_gem_bdring {
 	struct k_sem		ring_sem;
 	/* Pointer to the first BD in the list */
 	struct eth_xlnx_gem_bd	*first_bd;
+	/* Pointer to the tie-off BD for the respective direction */
+	struct eth_xlnx_gem_bd	*tie_off_bd;
 	/* Index of the next BD to be used for TX */
 	uint8_t			next_to_use;
 	/* Index of the next BD to be processed (both RX/TX) */
@@ -601,7 +634,7 @@ struct eth_xlnx_gem_bdring {
  */
 struct eth_xlnx_gem_dev_cfg {
 	const struct device		*phy_dev;
-	uint32_t			base_addr;
+	volatile uint32_t			base_addr;
 	const struct pinctrl_dev_config *pcfg;
 	eth_xlnx_gem_config_irq_t	config_func;
 
@@ -663,6 +696,8 @@ struct eth_xlnx_gem_dev_data {
 
 	uint8_t				*first_rx_buffer;
 	uint8_t				*first_tx_buffer;
+	uint8_t				*rx_tie_off_buffer;
+	uint8_t				*tx_tie_off_buffer;
 
 	struct eth_xlnx_gem_bdring	rxbd_ring;
 	struct eth_xlnx_gem_bdring	txbd_ring;
