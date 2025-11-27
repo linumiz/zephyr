@@ -7,12 +7,9 @@ description: Xilinx GEM Ethernet controller
 
 compatible: "xlnx,gem"
 
-include: ethernet-controller.yaml
+include: [ethernet-controller.yaml, "infineon,system-interrupts.yaml", "pinctrl-device.yaml"]
 
 properties:
-  interrupts:
-    required: true
-
   clock-frequency:
     type: int
     required: true
