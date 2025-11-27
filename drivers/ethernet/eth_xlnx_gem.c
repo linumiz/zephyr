@@ -475,7 +475,6 @@ static int eth_xlnx_gem_send(const struct device *dev, struct net_pkt *pkt)
 	 */
 	reg_val &= ~ETH_XLNX_GEM_TXBD_USED_BIT;
 	sys_write32(reg_val, reg_ctrl);
-	printk("Reg ctrl = 0x%x 0x%x\n", reg_ctrl, *(int *)reg_ctrl); 
 #ifdef CONFIG_DCACHE
 	sys_cache_data_flush_range((void *)(dev_data->first_tx_buffer +
 				   (dev_conf->tx_buffer_size * curr_bd_idx)),
@@ -514,7 +513,6 @@ static int eth_xlnx_gem_send(const struct device *dev, struct net_pkt *pkt)
 		dev_data->stats.tx_timeout_count++;
 #endif
 
-		printk("Reg ctrl = 0x%x 0x%x\n", reg_ctrl, *(int *)reg_ctrl); 
 		return -EIO;
 	}
 
@@ -1188,10 +1186,11 @@ static void eth_xlnx_gem_set_initial_dmacr(const struct device *dev)
 	 *          01xxx = attempt to use INCR8  bursts,
 	 *          1xxxx = attempt to use INCR16 bursts
 	 */
-//	dev_conf->ahb_burst_length = AHB_BURST_INCR16;
 	reg_val |= ((uint32_t)dev_conf->ahb_burst_length &
 		   ETH_XLNX_GEM_DMACR_AHB_BURST_LENGTH_MASK);
 
+//	reg_val |= BIT(28); /* enable rx extended mode */
+//	reg_val |= BIT(29); /* enable tx extended mode */
 	reg_val &= ~BIT(30);
 
 	/* Write the assembled register contents */
