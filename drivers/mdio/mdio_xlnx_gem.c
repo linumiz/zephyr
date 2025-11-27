@@ -265,12 +265,17 @@ static int xlnx_gem_mdio_initialize(const struct device *dev)
 	const struct xlnx_gem_mdio_config *const dev_conf = dev->config;
 
 	uint32_t reg_val;
-	uint32_t mdc_divider = (uint32_t)MDC_DIVIDER_224;
+	uint32_t mdc_divider = (uint32_t)MDC_DIVIDER_48;
 
 	int ret = pinctrl_apply_state(dev_conf->pcfg, PINCTRL_STATE_DEFAULT);
 	if (ret < 0) {
 		return ret;
 	}
+
+	reg_val = sys_read32(0x40480000);
+	reg_val |= BIT(31); /* Enable Eth IP block */
+
+	sys_write32(reg_val, 0x40480000);
 
 	/* Set the MDC divider in gem.net_config */
 	reg_val = sys_read32(dev_conf->gem_base_addr + ETH_XLNX_GEM_NWCFG_OFFSET);
