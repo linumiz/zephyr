@@ -6,3 +6,4 @@ description: Xilinx GEM MDIO node
 compatible: "xlnx,gem-mdio"
 
 include: mdio-controller.yaml
+include: pinctrl-device.yaml
