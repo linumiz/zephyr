@@ -121,6 +121,12 @@ static int eth_xlnx_gem_dev_init(const struct device *dev)
 {
 	const struct eth_xlnx_gem_dev_cfg *dev_conf __attribute__((unused)) = dev->config;
 
+	/* Configure dt provided device signals when available */
+	int ret = pinctrl_apply_state(dev_conf->pcfg, PINCTRL_STATE_DEFAULT);
+	if (ret < 0) {
+		return ret;
+	}
+
 	/* Precondition checks using assertions */
 
 	/* AMBA AHB configuration options */
