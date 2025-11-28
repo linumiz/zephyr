@@ -1,0 +1,13 @@
+/*
+ * Copyright (c) 2025 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/* Cortex-M0+ application flash image area */
+
+. = ALIGN(4);
+__cy_m0p_code_start = . ;
+KEEP(*(.cy_m0p_image))
+. = CONFIG_SOC_FAMILY_INFINEON_CAT1C_CM0P_IMAGE_ROM_SIZE;
+__cy_m0p_code_end = . ;
