@@ -21,6 +21,10 @@ if (CONFIG_SOC_FAMILY_INFINEON_CAT1 OR CONFIG_SOC_FAMILY_PSOC6_LEGACY)
 
   ## Add mtb-templates-cat1 sources for CAT1 devices
   add_subdirectory(mtb-template-cat1)
+
+  add_subdirectory(serial-memory-ms)
+  add_subdirectory(zephyr-ifx-cycfg)
+  add_subdirectory(mtb-hal-t2gc2d6m)
 endif()
 
 if (CONFIG_SOC_FAMILY_INFINEON_CAT1 AND NOT CONFIG_SOC_FAMILY_PSOC6_LEGACY)
