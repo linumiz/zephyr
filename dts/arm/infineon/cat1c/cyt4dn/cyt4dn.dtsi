@@ -16,24 +16,15 @@
 		#size-cells = <1>;
 		status = "okay";
 
-		/* Code flash - Large sector (32KB Sectors) */
-		flash0: flash@10000000 {
+		code_flash: flash@10000000 {
 			compatible = "soc-nv-flash";
-			reg = <0x10000000 0x5F0000>;
+			reg = <0x10000000 DT_SIZE_K(6336)>;
 			write-block-size = <512>;
 			erase-block-size = <32768>;
 		};
 
-		/* Code flash - Small sector (8KB Sectors) */
-		flash1: flash@105F0000 {
-			compatible = "soc-nv-flash";
-			reg = <0x105F0000 0x40000>;
-			write-block-size = <512>;
-			erase-block-size = <8192>;
-		};
-
 		/* Work flash - Large sector (2KB Sectors) */
-		flash2: flash@14000000 {
+		work_flash0: flash@14000000 {
 			compatible = "soc-nv-flash";
 			reg = <0x14000000 0x18000>;
 			write-block-size = <64>;
@@ -41,7 +32,7 @@
 		};
 
 		/* Work flash - Small sector (128B Sectors) */
-		flash3: flash@14018000 {
+		work_flash1: flash@14018000 {
 			compatible = "soc-nv-flash";
 			reg = <0x14018000 0x8000>;
 			write-block-size = <64>;
@@ -49,13 +40,17 @@
 		};
 	};
 
-	/* 0x0000000028000800  _base_SRAM_CM0P =
-	 * ((sram_base_address + sram_start_reserve) + sram_private_for_srom)
-	 * TODO: Where better to keep srom private
-	 */
 	sram0: memory@28000000 {
 		compatible = "mmio-sram";
-		reg = <0x28000000 0x3800>;
+		reg = <0x28000000 DT_SIZE_K(256)>;
+	};
+	sram1: memory@28040000 {
+		compatible = "mmio-sram";
+		reg = <0x28040000 DT_SIZE_K(256)>;
+	};
+	sram2: memory@28080000 {
+		compatible = "mmio-sram";
+		reg = <0x28080000 DT_SIZE_K(128)>;
 	};
 
 	smif_0: smif0@40420000 {
