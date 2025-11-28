@@ -21,3 +21,19 @@ config SOC_CYT4DNJBZS_M7_0
 config SOC_CYT4DNJBZS_M7_1 
 	select CPU_CORTEX_M7 
 	select SOC_EARLY_INIT_HOOK
+
+# TRAVEO T2G CYT4DN Cortex M0+ prebuilt images
+choice
+	prompt "TRAVEO T2G CYT4DN Cortex M0+ prebuilt images"
+	help
+	  Choose the prebuilt application image to be executed on the Cortex-M0+ core of the TRAVEO T2G CYT4DN
+	  dual-core MCU. The image is responsible for booting the Cortex-M4 on the device.
+
+config SOC_CYT4DN_CM0P_IMAGE_SLEEP
+	bool "DeepSleep"
+	help
+	  DeepSleep prebuilt application image is executed on the Cortex-M0+ core of the 
+	  TRAVEO T2G CYT4DN M0+ and M7 dual-core MCU. The image is provided as C array ready
+	  to be compiled as part of the Cortex-M7 application. The Cortex-M0+ application code
+	  is placed to internal flash by the Cortex-M7 linker script.
+endchoice
