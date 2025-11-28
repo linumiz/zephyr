@@ -15,29 +15,33 @@
 		#size-cells = <1>;
 		status = "disabled";
 
-		flash0: flash@10000000 {
+		code_flash: flash@10000000 {
 			compatible = "soc-nv-flash";
-			reg = <0x10000000 0x80000>;
+			reg = <0x10000000 DT_SIZE_K(6336)>;
 			write-block-size = <512>;
 			erase-block-size = <512>;
 		};
 
-		flash1: flash@10080000 {
+		work_flash: flash@14000000 {
 			compatible = "soc-nv-flash";
-			reg = <0x10080000 0x200000>;
+			reg = <0x14000000 DT_SIZE_K(128)>;
 			write-block-size = <512>;
 			erase-block-size = <512>;
 		};
 
 	};
 
-	/* 0x0000000028000800  _base_SRAM_CM0P =
-	 * ((sram_base_address + sram_start_reserve) + sram_private_for_srom)
-	 * TODO: Where better to keep srom private
-	 */
 	sram0: memory@28000000 {
 		compatible = "mmio-sram";
-		reg = <0x28000000 0x3800>;
+		reg = <0x28000000 DT_SIZE_K(256)>;
+	};
+	sram1: memory@28040000 {
+		compatible = "mmio-sram";
+		reg = <0x28040000 DT_SIZE_K(256)>;
+	};
+	sram2: memory@28080000 {
+		compatible = "mmio-sram";
+		reg = <0x28080000 DT_SIZE_K(128)>;
 	};
 
 	soc {

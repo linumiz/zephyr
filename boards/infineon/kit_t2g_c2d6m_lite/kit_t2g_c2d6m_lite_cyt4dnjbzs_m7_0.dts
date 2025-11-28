@@ -7,149 +7,27 @@
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn.dtsi>
 #include <arm/infineon/cat1c/cyt4dn/system_clocks.dtsi>
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn_m7.dtsi>
-#include <arm/infineon/cat1c/cyt4dn/memory_partition.dtsi>
 #include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
 #include "kit_t2g_c2d6m_lite_common.dtsi"
-#include <zephyr/dt-bindings/pwm/pwm.h>
 
 / {
 
 	model = "Infineon Evaluation board for CYT4DNJBZS M7";
 	compatible = "infineon,kit_t2g_c2d6m_lite", "infineon,cyt4dn";
 
-	aliases {
-		uart-7 = &uart7;
-		led0 = &user_led0;
-		pwm-led0 = &pwm_led0;
-		sw0 = &user_bt0;
-	};
-
 	chosen {
-		zephyr,sram = &cm7_0_code;
-		zephyr,flash = &cm7_0_data;
+		zephyr,sram = &sram0;
+		zephyr,flash = &code_flash;
 		zephyr,dtcm = &dtcm;
 		zephyr,itcm = &itcm;
+		zephyr,code-partition = &m7_0_partition;
 		zephyr,console = &uart7;
 		zephyr,shell-uart = &uart7;
 		zephyr,canbus = &can0;
 	};
-
-	leds {
-		compatible = "gpio-leds";
-
-		user_led0: led_0 {
-			label = "LED_0";
-			gpios = <&gpio_prt7 5 GPIO_ACTIVE_HIGH>;
-		};
-	};
-
-	pwmleds {
-		compatible = "pwm-leds";
-
-		pwm_led0: pwm_led_0 {
-			pwms = <&pwm0_26 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
-		};
-	};
-
-	gpio_keys {
-		compatible = "gpio-keys";
-
-		user_bt0: user_btn0 {
-			label = "SW_1";
-			gpios = <&gpio_prt0 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-			zephyr,code = <INPUT_KEY_0>;
-		};
-	};
 };
 
-uart7: &scb7 {
-	compatible = "infineon,cat1-uart-pdl";
+&uart7 {
 	status = "okay";
-	current-speed = <115200>;
-	clocks = <&clk_hf2>;
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x010F>;
-	ifx,peri-div = <0>; /* 8-bit divider */
-	ifx,peri-div-inst = <0>;
-
-	/* UART pins */
-	pinctrl-0 = <&p9_0_scb7_uart_rx &p9_1_scb7_uart_tx>;
-	pinctrl-names = "default";
 };
 
-i2c11: &scb11 {
-       compatible = "infineon,cat1-i2c-pdl";
-       status = "okay";
-
-       #address-cells = <1>;
-       #size-cells = <0>;
-
-       pinctrl-0 = <&p0_4_scb11_i2c_scl &p0_5_scb11_i2c_sda>;
-       pinctrl-names = "default";
-
-       clocks = <&clk_hf2>;
-       ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-       ifx,peri-clk = <0x0113>;
-       ifx,peri-div = <0>; /* 8-bit divider */
-       ifx,peri-div-inst = <1>;
-
-       accel@53 {
-               compatible = "adi,adxl345";
-               reg = <0x53>;
-       };
-};
-
-&can0_1 {
-	compatible = "infineon,cat1-can";
-	clocks = <&clk_hf2>;
-	clock-frequency = <40000000>;
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x0101>;
-	ifx,peri-div = <3>; /* 24-bit divider */
-	ifx,peri-div-inst = <0>;
-
-	pinctrl-0 = <&p5_2_can0_1_tx &p5_3_can0_1_rx>;
-	pinctrl-names = "default";
-};
-
-can0: &can0_0 {
-	compatible = "infineon,cat1-can";
-	status = "okay";
-	clocks = <&clk_hf2>;
-	clock-frequency = <40000000>;
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x0100>;
-	ifx,peri-div = <3>; /* 24-bit divider */
-	ifx,peri-div-inst = <0>;
-
-	pinctrl-0 = <&p5_1_can0_0_rx &p5_0_can0_0_tx>;
-	pinctrl-names = "default";
-};
-
-spi0: &scb0 {
-	#address-cells = <1>;
-	#size-cells = <0>;
-	compatible = "infineon,cat1-spi-pdl";
-	status = "okay";
-
-	pinctrl-0 = <&p11_3_scb0_spi_mosi &p11_0_scb0_spi_miso &p11_2_scb0_spi_clk>;
-	pinctrl-names = "default";
-	cs-gpios = <&gpio_prt11 1 GPIO_ACTIVE_LOW>;
-
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x0108>;
-	ifx,peri-div = <1>; /* 16-bit divider */
-	ifx,peri-div-inst = <3>;
-
-	slow@0 {
-		compatible = "test-spi-loopback-slow";
-		reg = <0>;
-		spi-max-frequency = <3000000>;
-	};
-
-	fast@0 {
-		compatible = "test-spi-loopback-fast";
-		reg = <0>;
-		spi-max-frequency = <3000000>;
-	};
-};

@@ -7,15 +7,20 @@
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn.dtsi>
 #include <arm/infineon/cat1c/cyt4dn/system_clocks.dtsi>
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn_m0p.dtsi>
-#include <arm/infineon/cat1c/cyt4dn/memory_partition.dtsi>
 #include "kit_t2g_c2d6m_lite_common.dtsi"
 
 / {
-	model = "Infineon Evaluation board for CYT4DNJBZS M0";
+	model = "Infineon Evaluation board for CYT4DNJBZS M0+";
 	compatible = "infineon,kit_t2g_c2d6m_lite", "infineon,T2G_C2D";
 
 	chosen {
-		zephyr,sram = &m0p_code;
-		zephyr,flash = &m0p_data;
+		zephyr,sram = &sram0;
+		zephyr,flash = &code_flash;
+		zephyr,code-partition = &m0p_partition;
 	};
+};
+
+/* Modify SRAM start adress to exclude reserved area */
+&sram0 {
+	reg = <0x28000800 0x3800>;
 };
