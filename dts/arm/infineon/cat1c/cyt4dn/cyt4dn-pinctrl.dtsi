@@ -107,6 +107,146 @@
 				pinmux = <DT_CAT1_PINMUX(12, 0, HSIOM_SEL_DS_6)>;
 				drive-push-pull;
 			};
+
+			/* SMIF0 pins */
+			/omit-if-no-ref/ p23_0_smif0_data4: p23_0_smif0_data4 {
+				pinmux = <DT_CAT1_PINMUX(23, 0, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p23_1_smif0_data2: p23_1_smif0_data2 {
+				pinmux = <DT_CAT1_PINMUX(23, 1, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p23_2_smif0_data3: p23_2_smif0_data3 {
+				pinmux = <DT_CAT1_PINMUX(23, 2, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p23_3_smif0_data5: p23_3_smif0_data5 {
+				pinmux = <DT_CAT1_PINMUX(23, 3, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p23_4_smif0_rwds: p23_4_smif0_rwds {
+				pinmux = <DT_CAT1_PINMUX(23, 4, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p24_1_smif0_clk: p24_1_smif0_clk {
+				pinmux = <DT_CAT1_PINMUX(24, 1, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p25_0_smif0_data0: p25_0_smif0_data0 {
+				pinmux = <DT_CAT1_PINMUX(25, 0, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p25_1_smif0_data6: p25_1_smif0_data6 {
+				pinmux = <DT_CAT1_PINMUX(25, 1, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p25_2_smif0_sel0: p25_2_smif0_sel0 {
+				pinmux = <DT_CAT1_PINMUX(25, 2, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p25_3_smif0_data1: p25_3_smif0_data1 {
+				pinmux = <DT_CAT1_PINMUX(25, 3, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p25_4_smif0_data7: p25_4_smif0_data7 {
+				pinmux = <DT_CAT1_PINMUX(25, 4, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p25_5_smif0_sel1: p25_5_smif0_sel1 {
+				pinmux = <DT_CAT1_PINMUX(25, 5, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/* SMIF1 pins */
+			/omit-if-no-ref/ p26_0_smif1_data4: p26_0_smif1_data4 {
+				pinmux = <DT_CAT1_PINMUX(26, 0, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p26_1_smif1_data2: p26_1_smif1_data2 {
+				pinmux = <DT_CAT1_PINMUX(26, 1, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p26_2_smif1_data3: p26_2_smif1_data3 {
+				pinmux = <DT_CAT1_PINMUX(26, 2, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p26_3_smif1_data5: p26_3_smif1_data5 {
+				pinmux = <DT_CAT1_PINMUX(26, 3, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p26_4_smif1_rwds: p26_4_smif1_rwds {
+				pinmux = <DT_CAT1_PINMUX(26, 4, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p27_1_smif1_clk: p27_1_smif1_clk {
+				pinmux = <DT_CAT1_PINMUX(27, 1, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p28_0_smif1_data0: p28_0_smif1_data0 {
+				pinmux = <DT_CAT1_PINMUX(28, 0, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p28_1_smif1_data6: p28_1_smif1_data6 {
+				pinmux = <DT_CAT1_PINMUX(28, 1, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p28_3_smif1_data1: p28_3_smif1_data1 {
+				pinmux = <DT_CAT1_PINMUX(28, 3, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p28_4_smif1_data7: p28_4_smif1_data7 {
+				pinmux = <DT_CAT1_PINMUX(28, 4, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
+
+			/omit-if-no-ref/ p28_5_smif1_sel1: p28_5_smif1_sel1 {
+				pinmux = <DT_CAT1_PINMUX(28, 5, HSIOM_SEL_ACT_15)>;
+				drive-push-pull;
+				input-enable;
+			};
 		};
 	};
 };

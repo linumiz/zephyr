@@ -57,6 +57,77 @@
 		reg = <0x28000000 0x3800>;
 	};
 
+	smif_0: smif0@40420000 {
+		compatible = "infineon,serial-memory-qspi";
+		reg = <0x40420000 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		pinctrl-0 = <
+			&p23_0_smif0_data4
+			&p23_1_smif0_data2
+			&p23_2_smif0_data3
+			&p23_3_smif0_data5
+			&p23_4_smif0_rwds
+			&p24_1_smif0_clk
+			&p25_0_smif0_data0
+			&p25_1_smif0_data6
+			&p25_2_smif0_sel0
+			&p25_3_smif0_data1
+			&p25_4_smif0_data7
+			&p25_5_smif0_sel1
+		>;
+		pinctrl-names = "default";
+		status = "okay";
+
+		hyperflash0: hyperflash0@00000000 {
+			compatible = "soc-nv-flash";
+			reg = <0x00000000 DT_SIZE_M(512)>;
+			write-block-size = <256>;
+			erase-block-size = <4096>;
+
+			partitions {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				compatible = "fixed-partitions";
+			};
+		};
+	};
+
+	smif_1: smif1@40430000 {
+		compatible = "infineon,serial-memory-qspi";
+		reg = <0x40430000 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		pinctrl-0 = <
+			&p26_0_smif1_data4
+			&p26_1_smif1_data2
+			&p26_2_smif1_data3
+			&p26_3_smif1_data5
+			&p26_4_smif1_rwds
+			&p27_1_smif1_clk
+			&p28_0_smif1_data0
+			&p28_1_smif1_data6
+			&p28_3_smif1_data1
+			&p28_4_smif1_data7
+			&p28_5_smif1_sel1
+		>;
+		pinctrl-names = "default";
+		status = "okay";
+
+		hyperram0: hyperram0@00000000 {
+			compatible = "soc-nv-flash";
+			reg = <0x00000000 DT_SIZE_M(64)>;
+			write-block-size = <256>;
+			erase-block-size = <0>; /* RAM cannot be erased */
+
+			partitions {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				compatible = "fixed-partitions";
+			};
+		};
+	};
+
 	soc {
 		pinctrl: pinctrl@40300000 {
 			compatible = "infineon,cat1-pinctrl";
