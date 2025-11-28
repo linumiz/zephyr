@@ -1,0 +1,5 @@
+description: Infineon CAT1 flash controller PDL driver
+
+compatible: "infineon,cat1-flash-controller-pdl"
+
+include: flash-controller.yaml

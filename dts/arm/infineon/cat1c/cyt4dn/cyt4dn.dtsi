@@ -8,27 +8,44 @@
 #include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
 
 / {
-	flash-controller@40240000 {
-		compatible = "infineon,cat1-flash-controller";
+	flash_controller: flash_controller@40240000 {
+		compatible = "infineon,cat1-flash-controller-pdl";
 		reg = < 0x40240000 0x10000 >;
 		#address-cells = <1>;
 		#size-cells = <1>;
-		status = "disabled";
+		status = "okay";
 
+		/* Code flash - Large sector (32KB Sectors) */
 		flash0: flash@10000000 {
 			compatible = "soc-nv-flash";
-			reg = <0x10000000 0x80000>;
+			reg = <0x10000000 0x5F0000>;
 			write-block-size = <512>;
-			erase-block-size = <512>;
+			erase-block-size = <32768>;
 		};
 
-		flash1: flash@10080000 {
+		/* Code flash - Small sector (8KB Sectors) */
+		flash1: flash@105F0000 {
 			compatible = "soc-nv-flash";
-			reg = <0x10080000 0x200000>;
+			reg = <0x105F0000 0x40000>;
 			write-block-size = <512>;
-			erase-block-size = <512>;
+			erase-block-size = <8192>;
 		};
 
+		/* Work flash - Large sector (2KB Sectors) */
+		flash2: flash@14000000 {
+			compatible = "soc-nv-flash";
+			reg = <0x14000000 0x18000>;
+			write-block-size = <64>;
+			erase-block-size = <2048>;
+		};
+
+		/* Work flash - Small sector (128B Sectors) */
+		flash3: flash@14018000 {
+			compatible = "soc-nv-flash";
+			reg = <0x14018000 0x8000>;
+			write-block-size = <64>;
+			erase-block-size = <128>;
+		};
 	};
 
 	/* 0x0000000028000800  _base_SRAM_CM0P =
@@ -38,6 +55,77 @@
 	sram0: memory@28000000 {
 		compatible = "mmio-sram";
 		reg = <0x28000000 0x3800>;
+	};
+
+	smif_0: smif0@40420000 {
+		compatible = "infineon,serial-memory-qspi";
+		reg = <0x40420000 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		pinctrl-0 = <
+			&p23_0_smif0_data4
+			&p23_1_smif0_data2
+			&p23_2_smif0_data3
+			&p23_3_smif0_data5
+			&p23_4_smif0_rwds
+			&p24_1_smif0_clk
+			&p25_0_smif0_data0
+			&p25_1_smif0_data6
+			&p25_2_smif0_sel0
+			&p25_3_smif0_data1
+			&p25_4_smif0_data7
+			&p25_5_smif0_sel1
+		>;
+		pinctrl-names = "default";
+		status = "okay";
+
+		hyperflash0: hyperflash0@00000000 {
+			compatible = "soc-nv-flash";
+			reg = <0x00000000 DT_SIZE_M(512)>;
+			write-block-size = <256>;
+			erase-block-size = <4096>;
+
+			partitions {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				compatible = "fixed-partitions";
+			};
+		};
+	};
+
+	smif_1: smif1@40430000 {
+		compatible = "infineon,serial-memory-qspi";
+		reg = <0x40430000 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		pinctrl-0 = <
+			&p26_0_smif1_data4
+			&p26_1_smif1_data2
+			&p26_2_smif1_data3
+			&p26_3_smif1_data5
+			&p26_4_smif1_rwds
+			&p27_1_smif1_clk
+			&p28_0_smif1_data0
+			&p28_1_smif1_data6
+			&p28_3_smif1_data1
+			&p28_4_smif1_data7
+			&p28_5_smif1_sel1
+		>;
+		pinctrl-names = "default";
+		status = "okay";
+
+		hyperram0: hyperram0@00000000 {
+			compatible = "soc-nv-flash";
+			reg = <0x00000000 DT_SIZE_M(64)>;
+			write-block-size = <256>;
+			erase-block-size = <0>; /* RAM cannot be erased */
+
+			partitions {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				compatible = "fixed-partitions";
+			};
+		};
 	};
 
 	soc {
@@ -2151,6 +2239,190 @@
 			clocks = <&clk_hf2>;
 			bosch,mram-cfg = <0x2000 28 8 3 3 1 3 3>;
 			status = "disabled";
+		};
+
+		dma0: dw@40280000 {
+			#dma-cells = <1>;
+			compatible = "infineon,cat1-dma-pdl";
+			reg = <0x40280000 0x10000>;
+			dma-channels = <76>;
+			interrupts = <296 5>, /* CH0 */
+					    <297 5>, /* CH1 */
+				            <298 5>, /* CH2 */
+					    <299 5>, /* CH3 */
+					    <300 5>, /* CH4 */
+					    <301 5>, /* CH5 */
+					    <302 5>, /* CH6 */
+					    <303 5>, /* CH7 */
+					    <304 5>, /* CH8 */
+					    <305 5>, /* CH9 */
+					    <306 5>, /* CH10 */
+					    <307 5>, /* CH11 */
+					    <308 5>, /* CH12 */
+					    <309 5>, /* CH13 */
+					    <310 5>, /* CH14 */
+					    <311 5>, /* CH15 */
+					    <312 5>, /* CH16 */
+					    <313 5>, /* CH17 */
+					    <314 5>, /* CH18 */
+					    <315 5>, /* CH19 */
+					    <316 5>, /* CH20 */
+					    <317 5>, /* CH21 */
+					    <318 5>, /* CH22 */
+					    <319 5>, /* CH23 */
+					    <320 5>, /* CH24 */
+					    <321 5>, /* CH25 */
+					    <322 5>, /* CH26 */
+					    <323 5>, /* CH27 */
+					    <324 5>, /* CH28 */
+					    <325 5>, /* CH29 */
+					    <326 5>, /* CH30 */
+					    <327 5>, /* CH31 */
+					    <328 5>, /* CH32 */
+					    <329 5>, /* CH33 */
+					    <330 5>, /* CH34 */
+					    <331 5>, /* CH35 */
+					    <332 5>, /* CH36 */
+					    <333 5>, /* CH37 */
+					    <334 5>, /* CH38 */
+					    <335 5>, /* CH39 */
+					    <336 5>, /* CH40 */
+					    <337 5>, /* CH41 */
+					    <338 5>, /* CH42 */
+					    <339 5>, /* CH43 */
+					    <340 5>, /* CH44 */
+					    <341 5>, /* CH45 */
+					    <342 5>, /* CH46 */
+					    <343 5>, /* CH47 */
+					    <344 5>, /* CH48 */
+					    <345 5>, /* CH49 */
+					    <346 5>, /* CH50 */
+					    <347 5>, /* CH51 */
+					    <348 5>, /* CH52 */
+					    <349 5>, /* CH53 */
+					    <350 5>, /* CH54 */
+					    <351 5>, /* CH55 */
+					    <352 5>, /* CH56 */
+					    <353 5>, /* CH57 */
+					    <354 5>, /* CH58 */
+					    <355 5>, /* CH59 */
+					    <356 5>, /* CH60 */
+					    <357 5>, /* CH61 */
+					    <358 5>, /* CH62 */
+					    <359 5>, /* CH63 */
+					    <360 5>, /* CH64 */
+					    <361 5>, /* CH65 */
+					    <362 5>, /* CH66 */
+					    <363 5>, /* CH67 */
+					    <364 5>, /* CH68 */
+					    <365 5>, /* CH69 */
+					    <366 5>, /* CH70 */
+					    <367 5>, /* CH71 */
+					    <368 5>, /* CH72 */
+					    <369 5>, /* CH73 */
+					    <370 5>, /* CH74 */
+					    <371 5>; /* CH75 */
+			status = "okay";
+		};
+
+		dma1: dw@40290000 {
+			#dma-cells = <1>;
+			compatible = "infineon,cat1-dma-pdl";
+			reg = <0x40290000 0x10000>;
+			dma-channels = <84>;
+			interrupts = <424 5>, /* CH0 */
+					    <425 5>, /* CH1 */
+					    <426 5>, /* CH2 */
+					    <427 5>, /* CH3 */
+					    <428 5>, /* CH4 */
+					    <429 5>, /* CH5 */
+					    <430 5>, /* CH6 */
+					    <432 5>, /* CH7 */
+					    <432 5>, /* CH8 */
+					    <433 5>, /* CH9 */
+					    <434 5>, /* CH10 */
+					    <435 5>, /* CH11 */
+					    <436 5>, /* CH12 */
+					    <437 5>, /* CH13 */
+					    <438 5>, /* CH14 */
+					    <439 5>, /* CH15 */
+					    <440 5>, /* CH16 */
+					    <441 5>, /* CH17 */
+					    <442 5>, /* CH18 */
+					    <443 5>, /* CH19 */
+					    <444 5>, /* CH20 */
+					    <445 5>, /* CH21 */
+					    <446 5>, /* CH22 */
+					    <447 5>, /* CH23 */
+					    <448 5>, /* CH24 */
+					    <449 5>, /* CH25 */
+					    <450 5>, /* CH26 */
+					    <451 5>, /* CH27 */
+					    <452 5>, /* CH28 */
+					    <453 5>, /* CH29 */
+					    <454 5>, /* CH30 */
+					    <455 5>, /* CH31 */
+					    <456 5>, /* CH32 */
+					    <457 5>, /* CH33 */
+					    <458 5>, /* CH34 */
+					    <459 5>, /* CH35 */
+					    <460 5>, /* CH36 */
+					    <461 5>, /* CH37 */
+					    <462 5>, /* CH38 */
+					    <463 5>, /* CH39 */
+					    <464 5>, /* CH40 */
+					    <465 5>, /* CH41 */
+					    <466 5>, /* CH42 */
+					    <467 5>, /* CH43 */
+					    <468 5>, /* CH44 */
+					    <469 5>, /* CH45 */
+					    <470 5>, /* CH46 */
+					    <471 5>, /* CH47 */
+					    <472 5>, /* CH48 */
+					    <473 5>, /* CH49 */
+					    <474 5>, /* CH50 */
+					    <475 5>, /* CH51 */
+					    <476 5>, /* CH52 */
+					    <477 5>, /* CH53 */
+					    <478 5>, /* CH54 */
+					    <479 5>, /* CH55 */
+					    <480 5>, /* CH56 */
+					    <481 5>, /* CH57 */
+					    <482 5>, /* CH58 */
+					    <483 5>, /* CH59 */
+					    <484 5>, /* CH60 */
+					    <485 5>, /* CH61 */
+					    <486 5>, /* CH62 */
+					    <487 5>, /* CH63 */
+					    <488 5>, /* CH64 */
+					    <489 5>, /* CH65 */
+					    <490 5>, /* CH66 */
+					    <491 5>, /* CH67 */
+					    <492 5>, /* CH68 */
+					    <493 5>, /* CH69 */
+					    <494 5>, /* CH70 */
+					    <495 5>, /* CH71 */
+					    <496 5>, /* CH72 */
+					    <497 5>, /* CH73 */
+					    <498 5>, /* CH74 */
+					    <499 5>, /* CH75 */
+					    <500 5>, /* CH76 */
+					    <501 5>, /* CH77 */
+					    <502 5>, /* CH78 */
+					    <503 5>, /* CH79 */
+					    <504 5>, /* CH80 */
+					    <505 5>, /* CH81 */
+					    <506 5>, /* CH82 */
+					    <507 5>; /* CH83 */
+			status = "okay";
+		};
+
+		adc0: adc@40900000 {
+			compatible = "infineon,ifx-sar";
+			reg = <0x40900000 0x100000>;
+			#io-channel-cells = <1>;
+			system-interrupts = <160 3>;
+			status = "okay";
 		};
 	};
 };

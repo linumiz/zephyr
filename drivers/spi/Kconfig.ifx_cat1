@@ -23,7 +23,7 @@ config SPI_PDL_INFINEON_CAT1
 	help
 	  This option enables the SPI driver for Infineon CAT1 family.
 
-if SPI_INFINEON_CAT1
+if SPI_PDL_INFINEON_CAT1
 
 config IFX_CAT1_SPI_DMA
 	bool "Infineon CAT1 SPI DMA Support"
