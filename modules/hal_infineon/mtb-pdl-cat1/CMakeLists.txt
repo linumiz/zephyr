@@ -39,6 +39,7 @@ zephyr_library_sources_ifdef(CONFIG_SOC_FAMILY_PSOC6_LEGACY      ${pdl_drv_dir}/
 if(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_syslib.c)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_sysint.c)
+  zephyr_library_sources_ifdef(CONFIG_USE_INFINEON_HWINFO   ${pdl_drv_dir}/source/cy_flash_srom.c)
   zephyr_library_sources_ifdef(CONFIG_USE_INFINEON_ADC      ${pdl_drv_dir}/source/cy_sar2.c)
 endif()
 zephyr_library_sources_ifdef(CONFIG_USE_INFINEON_I2C      ${pdl_drv_dir}/source/cy_scb_i2c.c)

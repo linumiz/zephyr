@@ -1,0 +1,11 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config HWINFO_IFX_CAT1
+	bool "IFX CAT1 hwinfo"
+	default y
+	depends on SOC_FAMILY_INFINEON_CAT1C
+	select USE_INFINEON_HWINFO
+	select HWINFO_HAS_DRIVER
+	help
+	  Enable IFX CAT1 hwinfo driver
