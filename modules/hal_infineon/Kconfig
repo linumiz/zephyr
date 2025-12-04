@@ -89,6 +89,11 @@ config USE_INFINEON_SMIF
 	help
 	  Enable SMIF HAL driver for Infineon devices
 
+config USE_INFINEON_HWINFO
+	bool
+	help
+	 Enable the hwinfo driver for infineon device
+
 endif # SOC_FAMILY_INFINEON_CAT1 || SOC_FAMILY_PSOC6_LEGACY
 
 config USE_INFINEON_ABSTRACTION_RTOS
