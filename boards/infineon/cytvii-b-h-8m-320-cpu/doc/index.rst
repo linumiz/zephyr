@@ -6,7 +6,7 @@ Overview
 The cytvii-b-h-8m-320-cpu kit enables you to evaluate and develop applications using the TRAVEO™ T2G Body
 High family CYT4BF device. The TRAVEO™ T2G B-H MCU is specifically designed for automotive
 applications and it is a true programmable embedded system-on-chip, integrating two 350-MHz Arm®
-Cortex®-M7 as the primary application processor, a 100-MHz Arm® Cortex®-M0+ that supports the
+Cortex®-M7 as the primary application processor,a 100-MHz Arm® Cortex®-M0+ that supports the
 following:
 
 - Audio Interface
@@ -20,10 +20,10 @@ following:
 - Additional features are accessible via the SAMTEC connector
 
 The CPU board can be used as standalone board for basic validation or in combination with the
-Traveo II base board (CYTVII-B-E-BB). The base board brings out all important interface 
+Traveo II base board (CYTVII-B-E-BB). The base board brings out all important interface
 connections such as CAN, LIN, SPI EEPROM, CXPI, and FlexRay, and can be used in conjunction
-with several CPU boards of the Traveo II family.Two Samtec connectors on the CPU board and 
-corresponding mating connectors on the base board are used to connect signals across the two boards. 
+with several CPU boards of the Traveo II family.Two Samtec connectors on the CPU board and
+corresponding mating connectors on the base board are used to connect signals across the two boards.
 
 
 
@@ -100,7 +100,7 @@ And the second Cortex®-M7 core:
 Flashing
 ========
 
-The cytvii-b-h-8m-320-cpu does not include an onboard programmer/debugger to flash/debug use the Cypress MiniProg4 , Arm Standard JTAG (20 pin connector) or any compatible programming tool. 
+The cytvii-b-h-8m-320-cpu does not include an onboard programmer/debugger to flash/debug use the Cypress MiniProg4 , Arm Standard JTAG (20 pin connector) or any compatible programming tool.
 
 Infineon OpenOCD Installation
 =============================
@@ -128,7 +128,7 @@ The path to the installed Infineon OpenOCD executable must be available to the `
             # Do a pristine build once after setting CMake argument
             west build -b cytvii-b-h-8m-320-cpu/cyt4bfcche/m0p -p always samples/basic/blinky
 
-            west flash 
+            west flash
             west debug
 
       .. group-tab:: Linux

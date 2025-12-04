@@ -28,12 +28,12 @@
                sw3 = &bb_user_bt3;
                sw4 = &bb_user_bt4;
                sw5 = &bb_user_bt5;
-               
+
         };
 
         leds {
                 compatible = "gpio-leds";
-                
+
 
                 cpu_user_led0: led0 {
                         label = "LED_0";
@@ -54,33 +54,33 @@
                         label = "LED_3";
                         gpios = <&gpio_prt32 2 GPIO_ACTIVE_HIGH>;
                 };
-                
+
                 bb_user_led4: led4 {
                         label = "LED_4";
                         gpios = <&gpio_prt31 2 GPIO_ACTIVE_HIGH>;
-                }; 
+                };
 
                 bb_user_led5: led5 {
                         label = "LED_5";
                         gpios = <&gpio_prt31 0 GPIO_ACTIVE_HIGH>;
-                };  
+                };
 
                 bb_user_led6: led6 {
                         label = "LED_6";
                         gpios = <&gpio_prt29 7 GPIO_ACTIVE_HIGH>;
-                }; 
+                };
 
 
                 bb_user_led7: led7 {
                         label = "LED_7";
                         gpios = <&gpio_prt29 4 GPIO_ACTIVE_HIGH>;
-                }; 
+                };
 
 
                 bb_user_led8: led8 {
                         label = "LED_8";
                         gpios = <&gpio_prt3 7 GPIO_ACTIVE_HIGH>;
-                }; 
+                };
 
                 bb_user_led9: led9 {
                         label = "LED_9";
@@ -90,8 +90,8 @@
                 bb_user_led10: led10 {
                         label = "LED_10";
                         gpios = <&gpio_prt2 7 GPIO_ACTIVE_HIGH>;
-                };             
-            
+                };
+
         };
 
         gpio_keys {
