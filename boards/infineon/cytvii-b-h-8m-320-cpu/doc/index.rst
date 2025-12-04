@@ -6,7 +6,7 @@ Overview
 The cytvii-b-h-8m-320-cpu kit enables you to evaluate and develop applications using the TRAVEO™ T2G Body
 High family CYT4BF device. The TRAVEO™ T2G B-H MCU is specifically designed for automotive
 applications and it is a true programmable embedded system-on-chip, integrating two 350-MHz Arm®
-Cortex®-M7 as the primary application processor, a 100-MHz Arm® Cortex®-M0+ that supports the
+Cortex®-M7 as the primary application processor,a 100-MHz Arm® Cortex®-M0+ that supports the
 following:
 
 - Audio Interface
