@@ -1,0 +1,28 @@
+/*
+ * Copyright (c) 2025 Infineon Technologies AG,
+ * or an affiliate of Infineon Technologies AG.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <arm/infineon/cat1c/mpns/cyt4bfccjs.dtsi>
+#include <arm/infineon/cat1c/xmc7200/system_clocks.dtsi>
+#include <arm/infineon/cat1c/xmc7200/xmc7200_m7.dtsi>
+#include <arm/infineon/cat1c/xmc7200/memory_partition.dtsi>
+
+#include "cytvii-b-h-8m-320-cpu_common.dtsi"
+
+/ {
+	model = "Infineon Evaluation Evk board for CYT4BFCCHE M7_1";
+	compatible = "infineon,cytvii-b-h-8m-320-cpu", "infineon,CYTVIIBH8M";
+
+	chosen {
+		zephyr,sram = &sram_m7_1;
+		zephyr,flash = &flash_m7_1;
+		zephyr,dtcm = &dtcm;
+		zephyr,itcm = &itcm;
+		zephyr,console = &uart3;
+		zephyr,shell-uart = &uart3;
+	};
+};
