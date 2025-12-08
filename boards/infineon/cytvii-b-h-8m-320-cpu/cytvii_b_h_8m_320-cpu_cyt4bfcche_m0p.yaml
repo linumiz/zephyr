@@ -1,0 +1,15 @@
+# Copyright (c) 2025 Infineon Technologies AG,
+# or an affiliate of Infineon Technologies AG.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+identifier: cytvii_b_h_8m_320_cpu/cyt4bfcche/m0p
+name: T2G CYTVII-B-H-8M-320-CPU Evaluation Board (M0P)
+type: mcu
+arch: arm
+ram: 1024
+flash: 8192
+toolchain:
+  - zephyr
+  - gnuarmemb
+vendor: infineon
