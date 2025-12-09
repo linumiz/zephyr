@@ -129,6 +129,14 @@
 	};
 
 	soc {
+		mbox:mbox@40220000 {
+			compatible = "infineon,cat1-mbox-pdl";
+			reg = <0x40220000 0x10000>;
+			system-interrupts = <0 3>;
+			#mbox-cells = <1>;
+			status = "disabled";
+		};
+
 		pinctrl: pinctrl@40300000 {
 			compatible = "infineon,cat1-pinctrl";
 			reg = <0x40300000 0x20000>;
