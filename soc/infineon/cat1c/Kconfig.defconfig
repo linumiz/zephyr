@@ -5,6 +5,15 @@
 
 if SOC_FAMILY_INFINEON_CAT1C
 
+config GEN_IRQ_VECTOR_TABLE
+	default n
+
+config DYNAMIC_INTERRUPTS
+    default y
+
+config BUILD_OUTPUT_HEX
+	default y
+
 rsource "*/Kconfig.defconfig"
 
 endif # SOC_FAMILY_INFINEON_CAT1C

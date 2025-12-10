@@ -18,6 +18,17 @@ if (CONFIG_SOC_FAMILY_INFINEON_CAT1 OR CONFIG_SOC_FAMILY_PSOC6_LEGACY)
 
   ## Add mtb-pdl-cat1 sources for CAT1 devices
   add_subdirectory(mtb-pdl-cat1)
+  if(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+    add_custom_command(TARGET modules_hal_infineon POST_BUILD
+        COMMAND ${CMAKE_OBJCOPY} 
+          -W Cy_Srom_SetResponseHandler 
+          -W Cy_SysInt_Init
+          -W Cy_SysInt_SetSystemIrqVector
+          -W Cy_SysInt_GetSystemIrqVector
+          $<TARGET_FILE:modules_hal_infineon>
+        COMMENT "Set weak for PDL symbols to hook into Zephyr APIs"
+    )
+  endif()
 
   ## Add mtb-templates-cat1 sources for CAT1 devices
   add_subdirectory(mtb-template-cat1)
