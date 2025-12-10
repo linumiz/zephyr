@@ -9,17 +9,21 @@ config SOC_SERIES_CYT4DN
 config SOC_SERIES
 	default "cyt4dn" if SOC_SERIES_CYT4DN
 
-config SOC_CYT4DNJBZS_M0PLUS 
+config SOC_DIE_CYT4DN
 	bool
 	select SOC_SERIES_CYT4DN
+
+config SOC_CYT4DNJBZS_M0PLUS 
+	bool
+	select SOC_DIE_CYT4DN
 
 config SOC_CYT4DNJBZS_M7_0 
 	bool
-	select SOC_SERIES_CYT4DN
+	select SOC_DIE_CYT4DN
 
 config SOC_CYT4DNJBZS_M7_1 
 	bool
-	select SOC_SERIES_CYT4DN
+	select SOC_DIE_CYT4DN
 
 config SOC
-	default "cyt4dnjbzs" if SOC_CYT4DNJBZS_M0PLUS || SOC_CYT4DNJBZS_M7_0 || SOC_CYT4DNJBZS_M7_1 
+	default "cyt4dnjbzs" if SOC_CYT4DNJBZS_M0PLUS || SOC_CYT4DNJBZS_M7_0 || SOC_CYT4DNJBZS_M7_1

@@ -1,0 +1,12 @@
+# Copyright (c) 2025 Infineon Technolgies AG
+# SPDX-License-Identifier: Apache-2.0
+
+config INFINEON_CAT1C_M0PLUS
+	bool
+	select ARM
+	select CPU_CORTEX_M0PLUS 
+	select CPU_CORTEX_M_HAS_SYSTICK
+	select CPU_HAS_ARM_MPU
+	select CPU_CORTEX_M_HAS_VTOR
+	select ARM_CUSTOM_INTERRUPT_CONTROLLER
+	select SOC_PREP_HOOK
