@@ -91,6 +91,10 @@ zephyr_library_sources(${pdl_drv_dir}/source/cy_ipc_sema.c)
 zephyr_library_sources(${pdl_drv_dir}/source/cy_prot.c)
 zephyr_library_sources(${pdl_drv_dir}/source/cy_sysclk.c)
 
+if(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+  zephyr_library_sources(${pdl_drv_dir}/source/cy_flash_srom.c)
+endif()
+
 if(CONFIG_SOC_FAMILY_INFINEON_CAT1B OR CONFIG_SOC_FAMILY_INFINEON_CAT1C)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_sysclk_v2.c)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_wdt_b.c)
