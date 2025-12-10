@@ -4,21 +4,18 @@
  */
 
 /dts-v1/;
-#include <arm/infineon/cat1c/cyt4dn/cyt4dn.dtsi>
-#include <arm/infineon/cat1c/cyt4dn/system_clocks.dtsi>
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn_m7.dtsi>
-#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
 #include "kit_t2g_c2d6m_lite_common.dtsi"
 #include <zephyr/dt-bindings/pwm/pwm.h>
 #include <dt-bindings/adc/adc.h>
 
 / {
 
-	model = "Infineon Evaluation board for CYT4DNJBZS M7";
+	model = "Infineon Evaluation board for CYT4DNJBZS M7 Core 0";
 	compatible = "infineon,kit_t2g_c2d6m_lite", "infineon,cyt4dn";
 
 	chosen {
-		zephyr,sram = &sram0;
+		zephyr,sram = &sram_m7_0;
 		zephyr,flash = &code_flash;
 		zephyr,dtcm = &dtcm;
 		zephyr,itcm = &itcm;
@@ -28,6 +25,10 @@
 		zephyr,canbus = &can0;
 		zephyr,flash-controller = &flash_controller;
 	};
+};
+
+&m7_0 {
+	status = "okay";
 };
 
 &uart7 {

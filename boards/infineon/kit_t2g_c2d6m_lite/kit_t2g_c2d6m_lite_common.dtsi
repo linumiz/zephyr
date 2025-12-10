@@ -55,10 +55,26 @@
 
 	pwmleds {
 		compatible = "pwm-leds";
-		status = "disabled";
 
 		pwm_led0: pwm_led_0 {
 			pwms = <&pwm0_26 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+		};
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		sram_srom: memory@28000000 {
+			reg = <0x28000000 DT_SIZE_K(2)>;
+		};
+		sram_m0plus: memory@28000800 {
+			reg = <0x28000800 DT_SIZE_K(30)>;
+		};
+		sram_m7_0: memory@28008000 {
+			reg = <0x28008000 DT_SIZE_K(224)>;
+		};
+		sram_m7_1: memory@28040000 {
+			reg = <0x28040000 DT_SIZE_K(256)>;
 		};
 	};
 };
@@ -74,9 +90,9 @@
 			reg = <0x0 DT_SIZE_K(512)>;
 			status = "disabled";
 		};
-		m7_0_partition: partition@0 {
+		m7_0_partition: partition@80000 {
 			label = "m7_0_partition";
-			reg = <0x0 DT_SIZE_K(3168)>;
+			reg = <0x80000 DT_SIZE_K(2656)>;
 		};
 		m7_1_partition: partition@318000 {
 			label = "m7_1_partition";
