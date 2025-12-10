@@ -7,3 +7,13 @@ config CAN_MCAN
 	bool
 	help
 	  Enable the Bosch M_CAN CAN IP module driver backend.
+
+if CAN_MCAN
+
+config CAN_MCAN_MRAM_NON_CACHABLE
+	bool "MCAN MRAM non-cachable"
+	default n
+	help
+		Select if MCAN Message-RAM is in a non-cachable memory region.
+
+endif
