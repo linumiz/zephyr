@@ -7,6 +7,7 @@
 /*
  * Copyright (c) 2018 Bosch Sensortec GmbH
  * Copyright (c) 2022, Leonard Pollak
+ * Copyright (c) 2025 Linumiz GmbH
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -29,7 +30,8 @@ struct bme_data_regs {
 	uint8_t temperature[3];
 	uint8_t humidity[2];
 	uint8_t padding[3];
-	uint8_t gas[2];
+	uint8_t gas_l[2];
+	uint8_t gas_h[2];
 } __packed;
 
 #if BME680_BUS_SPI
@@ -64,7 +66,7 @@ static inline int bme680_reg_write(const struct device *dev, uint8_t reg,
 	return config->bus_io->write(dev, reg, val);
 }
 
-static void bme680_calc_temp(struct bme680_data *data, uint32_t adc_temp)
+static void bme680_calc_temp(struct bme680_data *data, uint32_t adc_temp, uint8_t index)
 {
 	int64_t var1, var2, var3;
 
@@ -73,10 +75,15 @@ static void bme680_calc_temp(struct bme680_data *data, uint32_t adc_temp)
 	var3 = ((var1 >> 1) * (var1 >> 1)) >> 12;
 	var3 = ((var3) * ((int32_t)data->par_t3 << 4)) >> 14;
 	data->t_fine = var2 + var3;
+#ifdef CONFIG_MODE_PARALLEL
+	data->calc_temp[index] = ((data->t_fine * 5) + 128) >> 8;
+#else
+	ARG_UNUSED(index);
 	data->calc_temp = ((data->t_fine * 5) + 128) >> 8;
+#endif
 }
 
-static void bme680_calc_press(struct bme680_data *data, uint32_t adc_press)
+static void bme680_calc_press(struct bme680_data *data, uint32_t adc_press, uint8_t index)
 {
 	int32_t var1, var2, var3, calc_press;
 
@@ -109,13 +116,19 @@ static void bme680_calc_press(struct bme680_data *data, uint32_t adc_press)
 	var3 = ((int32_t)(calc_press >> 8) * (int32_t)(calc_press >> 8)
 		* (int32_t)(calc_press >> 8)
 		* (int32_t)data->par_p10) >> 17;
-
+#ifdef CONFIG_MODE_PARALLEL
+	data->calc_press[index] = calc_press
+			   + ((var1 + var2 + var3
+			       + ((int32_t)data->par_p7 << 7)) >> 4);
+#else
+	ARG_UNUSED(index);
 	data->calc_press = calc_press
 			   + ((var1 + var2 + var3
 			       + ((int32_t)data->par_p7 << 7)) >> 4);
+#endif
 }
 
-static void bme680_calc_humidity(struct bme680_data *data, uint16_t adc_humidity)
+static void bme680_calc_humidity(struct bme680_data *data, uint16_t adc_humidity, uint8_t index)
 {
 	int32_t var1, var2_1, var2_2, var2, var3, var4, var5, var6;
 	int32_t temp_scaled, calc_hum;
@@ -143,11 +156,16 @@ static void bme680_calc_humidity(struct bme680_data *data, uint16_t adc_humidity
 	} else if (calc_hum < 0) {
 		calc_hum = 0;
 	}
-
+#ifdef CONFIG_MODE_PARALLEL
+	data->calc_humidity[index] = calc_hum;
+#else
+	ARG_UNUSED(index);
 	data->calc_humidity = calc_hum;
+#endif
 }
 
-static void bme680_calc_gas_resistance(struct bme680_data *data, uint8_t gas_range,
+#ifdef CONFIG_MODE_FORCED
+static void bme680_calc_gas_resistance_l(struct bme680_data *data, uint8_t gas_range,
 				       uint16_t adc_gas_res)
 {
 	int64_t var1, var3;
@@ -170,6 +188,23 @@ static void bme680_calc_gas_resistance(struct bme680_data *data, uint8_t gas_ran
 	var3 = (((int64_t)look_up2[gas_range] * (int64_t)var1) >> 9);
 	data->calc_gas_resistance = (uint32_t)((var3 + ((int64_t)var2 >> 1))
 					    / (int64_t)var2);
+}
+#endif
+
+static void bme680_calc_gas_resistance_h(struct bme680_data *data, uint8_t gas_range, uint16_t adc_gas_res, uint8_t index)
+{
+	uint32_t calc_gas_res;
+	uint32_t var1 = ((uint32_t)262144) >> gas_range;
+	int32_t var2 = (int32_t) adc_gas_res - (int32_t)512;
+	var2 *= (int32_t)3;
+	var2 = ((int32_t)4096) + var2;
+	calc_gas_res = ((uint32_t)10000 * var1) / (uint32_t)var2;
+#ifdef CONFIG_MODE_PARALLEL
+	data->calc_gas_resistance[index] = calc_gas_res * 100;
+#else
+	ARG_UNUSED(index);
+	data->calc_gas_resistance = calc_gas_res * 100;
+#endif
 }
 
 static uint8_t bme680_calc_res_heat(struct bme680_data *data, uint16_t heatr_temp)
@@ -196,6 +231,7 @@ static uint8_t bme680_calc_res_heat(struct bme680_data *data, uint16_t heatr_tem
 	return heatr_res;
 }
 
+#ifdef CONFIG_MODE_FORCED
 static uint8_t bme680_calc_gas_wait(uint16_t dur)
 {
 	uint8_t factor = 0, durval;
@@ -214,21 +250,51 @@ static uint8_t bme680_calc_gas_wait(uint16_t dur)
 
 	return durval;
 }
+#endif
+
+#ifdef CONFIG_MODE_PARALLEL
+static uint8_t bme688_calc_gas_shared_wait(uint16_t dur)
+{
+    uint8_t factor = 0;
+    uint8_t heatdurval;
+
+    if (dur >= 0x783)
+    {
+        heatdurval = 0xff;
+    }
+    else
+    {
+        dur = (uint16_t)(((uint32_t)dur * 1000) / 477);
+        while (dur > 0x3F)
+        {
+            dur = dur >> 2;
+            factor += 1;
+        }
+
+        heatdurval = (uint8_t)(dur | (factor * 64));
+	heatdurval = CLAMP(heatdurval, 0x01, 0xff);
+    }
+
+    return heatdurval;
+
+}	
+#endif
 
 static int bme680_sample_fetch(const struct device *dev,
 			       enum sensor_channel chan)
 {
 	struct bme680_data *data = dev->data;
 	struct bme_data_regs data_regs;
-	uint8_t gas_range;
 	uint32_t adc_temp, adc_press;
-	uint16_t adc_hum, adc_gas_res;
+	uint16_t adc_hum;
+	uint16_t adc_gas_res;
+	uint8_t gas_range;
 	uint8_t status;
 	int cnt = 0;
 	int ret;
+	__ASSERT_NO_MSG(chan == SENSOR_CHAN_ALL); 
 
-	__ASSERT_NO_MSG(chan == SENSOR_CHAN_ALL);
-
+#ifdef CONFIG_MODE_FORCED
 	/* Trigger the measurement */
 	ret = bme680_reg_write(dev, BME680_REG_CTRL_MEAS, BME680_CTRL_MEAS_VAL);
 	if (ret < 0) {
@@ -250,7 +316,6 @@ static int bme680_sample_fetch(const struct device *dev,
 		}
 	} while (!(status & BME680_MSK_NEW_DATA));
 	LOG_DBG("New data after %d ms", cnt);
-
 	ret = bme680_reg_read(dev, BME680_REG_FIELD0, &data_regs, sizeof(data_regs));
 	if (ret < 0) {
 		return ret;
@@ -259,14 +324,62 @@ static int bme680_sample_fetch(const struct device *dev,
 	adc_press = sys_get_be24(data_regs.pressure) >> 4;
 	adc_temp = sys_get_be24(data_regs.temperature) >> 4;
 	adc_hum = sys_get_be16(data_regs.humidity);
-	adc_gas_res = sys_get_be16(data_regs.gas) >> 6;
-	data->heatr_stab = data_regs.gas[1] & BME680_MSK_HEATR_STAB;
-	gas_range = data_regs.gas[1] & BME680_MSK_GAS_RANGE;
+	bme680_calc_temp(data, adc_temp, 0);
+	bme680_calc_press(data, adc_press, 0);
+	bme680_calc_humidity(data, adc_hum, 0);
 
-	bme680_calc_temp(data, adc_temp);
-	bme680_calc_press(data, adc_press);
-	bme680_calc_humidity(data, adc_hum);
-	bme680_calc_gas_resistance(data, gas_range, adc_gas_res);
+	if (data->variant_id == 1) {
+		adc_gas_res = sys_get_be16(data_regs.gas_h) >> 6;
+		gas_range = data_regs.gas_h[1] & BME680_MSK_GAS_RANGE;
+		data->heatr_stab = data_regs.gas_h[1] & BME680_MSK_HEATR_STAB;
+		bme680_calc_gas_resistance_h(data, gas_range, adc_gas_res, 0);
+	}
+	else {
+		adc_gas_res= sys_get_be16(data_regs.gas_l) >> 6;
+        	gas_range= data_regs.gas_l[1] & BME680_MSK_GAS_RANGE;
+		data->heatr_stab = data_regs.gas_l[1] & BME680_MSK_HEATR_STAB;
+		bme680_calc_gas_resistance_l(data, gas_range, adc_gas_res);
+	}
+#endif
+#ifdef CONFIG_MODE_PARALLEL
+	  uint8_t off;
+	  uint8_t index;
+	  for (index= 0; index < 3; index++)
+	  {
+		off = index * BME688_REG_OFFSET;
+
+		do {
+			if (cnt++ > 250) {
+				return -EAGAIN;
+			}
+			k_sleep(K_MSEC(1));
+			ret = bme680_reg_read(dev, BME680_REG_MEAS_STATUS + off, &status, 1);
+			if (ret < 0) {
+				return ret;
+			}
+		} while (!(status & BME680_MSK_NEW_DATA));
+		LOG_DBG("New data after %d ms", cnt);
+
+		ret = bme680_reg_read(dev, BME680_REG_FIELD0 + off, &data_regs, sizeof(data_regs));
+		if (ret < 0) {
+			return ret;
+		 }
+
+		adc_press = sys_get_be24(data_regs.pressure) >> 4;
+		adc_temp = sys_get_be24(data_regs.temperature) >> 4;
+		adc_hum = sys_get_be16(data_regs.humidity);
+		bme680_calc_temp(data, adc_temp, index);
+		bme680_calc_press(data, adc_press, index);
+		bme680_calc_humidity(data, adc_hum, index);
+		
+		if (data->variant_id == 1) {
+			adc_gas_res = sys_get_be16(data_regs.gas_h) >> 6;
+			gas_range = data_regs.gas_h[1] & BME680_MSK_GAS_RANGE;
+			data->heatr_stab = data_regs.gas_h[1] & BME680_MSK_HEATR_STAB;
+			bme680_calc_gas_resistance_h(data, gas_range, adc_gas_res, index);
+		}
+	  }
+#endif 
 	return 0;
 }
 
@@ -277,6 +390,7 @@ static int bme680_channel_get(const struct device *dev,
 	struct bme680_data *data = dev->data;
 
 	switch (chan) {
+#ifdef CONFIG_MODE_FORCED
 	case SENSOR_CHAN_AMBIENT_TEMP:
 		/*
 		 * data->calc_temp has a resolution of 0.01 degC.
@@ -309,6 +423,56 @@ static int bme680_channel_get(const struct device *dev,
 		val->val1 = data->calc_gas_resistance;
 		val->val2 = 0;
 		break;
+#else
+	case SENSOR_CHAN_AMBIENT_TEMP:
+		/*
+		 * data->calc_temp has a resolution of 0.01 degC.
+		 * So 5123 equals 51.23 degC.
+		 */
+		val[0].val1 = data->calc_temp[0] / 100;
+		val[0].val2 = data->calc_temp[0] % 100 * 10000;
+		val[1].val1 = data->calc_temp[1] / 100;
+		val[1].val2 = data->calc_temp[1] % 100 * 10000;
+		val[2].val1 = data->calc_temp[2] / 100;
+		val[2].val2 = data->calc_temp[2] % 100 * 10000;
+		break;
+	case SENSOR_CHAN_PRESS:
+		/*
+		 * data->calc_press has a resolution of 1 Pa.
+		 * So 96321 equals 96.321 kPa.
+		 */
+		val[0].val1 = data->calc_press[0] / 1000;
+		val[0].val2 = (data->calc_press[0] % 1000) * 1000;
+		val[1].val1 = data->calc_press[1] / 1000;
+		val[1].val2 = (data->calc_press[1] % 1000) * 1000;
+		val[2].val1 = data->calc_press[2] / 1000;
+		val[2].val2 = (data->calc_press[2] % 1000) * 1000;
+		break;
+	case SENSOR_CHAN_HUMIDITY:
+		/*
+		 * data->calc_humidity has a resolution of 0.001 %RH.
+		 * So 46333 equals 46.333 %RH.
+		 */
+		val[0].val1 = data->calc_humidity[0] / 1000;
+		val[0].val2 = (data->calc_humidity[0] % 1000) * 1000;
+		val[1].val1 = data->calc_humidity[1] / 1000;
+		val[1].val2 = (data->calc_humidity[1] % 1000) * 1000;
+		val[2].val1 = data->calc_humidity[2] / 1000;
+		val[2].val2 = (data->calc_humidity[2] % 1000) * 1000;
+		break;
+	case SENSOR_CHAN_GAS_RES:
+		/*
+		 * data->calc_gas_resistance has a resolution of 1 ohm.
+		 * So 100000 equals 100000 ohms.
+		 */
+		val[0].val1= data->calc_gas_resistance[0];
+		val[0].val2 = 0;
+		val[1].val1= data->calc_gas_resistance[1];
+		val[1].val2 = 0;
+		val[2].val1= data->calc_gas_resistance[2];
+		val[2].val2 = 0;
+		break;
+#endif
 	default:
 		return -ENOTSUP;
 	}
@@ -400,17 +564,14 @@ static int bme680_power_up(const struct device *dev)
 		data->mem_page = (mem_page & BME680_SPI_MEM_PAGE_MSK) >> BME680_SPI_MEM_PAGE_POS;
 	}
 #endif
-
 	err = bme680_reg_read(dev, BME680_REG_CHIP_ID, &data->chip_id, 1);
 	if (err < 0) {
 		return err;
 	}
 
-	if (data->chip_id == BME680_CHIP_ID) {
-		LOG_DBG("BME680 chip detected");
-	} else {
-		LOG_ERR("Bad BME680 chip id: 0x%x", data->chip_id);
-		return -ENOTSUP;
+	err = bme680_reg_read(dev, BME680_REG_VARIANT_ID, &data->variant_id, 1);
+	if(err < 0) {
+		return err;
 	}
 
 	err = bme680_read_compensation(dev);
@@ -428,11 +589,40 @@ static int bme680_power_up(const struct device *dev)
 		return err;
 	}
 
-	err = bme680_reg_write(dev, BME680_REG_CTRL_GAS_1, BME680_CTRL_GAS_1_VAL);
+	if (data->variant_id == 1) {
+		err = bme680_reg_write(dev, BME680_REG_CTRL_GAS_1, BME688_CTRL_GAS_1_VAL | CONFIG_NB_CONV_VALUE);
+		if (err < 0) {
+			return err;
+		}
+	} 
+	else {
+		err = bme680_reg_write(dev, BME680_REG_CTRL_GAS_1, BME680_CTRL_GAS_1_VAL | CONFIG_NB_CONV_VALUE);
+		if (err < 0) {
+			return err;
+		}	
+	}
+ 
+#ifdef CONFIG_MODE_PARALLEL
+	uint8_t off;
+	for( off = 0 ; off <= CONFIG_NB_CONV_VALUE ; off++)
+	{
+		err = bme680_reg_write(dev, BME680_REG_RES_HEAT0 + off,
+				bme680_calc_res_heat(data, BME680_HEATR_TEMP));
+		if (err < 0) {
+			return err;
+		}
+
+		err = bme680_reg_write(dev, BME680_REG_GAS_WAIT0 + off, CONFIG_CONV_TPHG_CYCLE);   
+		if (err < 0) {
+			return err;
+		}
+	}
+	
+	err = bme680_reg_write(dev, BME688_REG_GAS_SHARED, bme688_calc_gas_shared_wait(BME680_HEATR_TEMP));
 	if (err < 0) {
 		return err;
 	}
-
+#else
 	err = bme680_reg_write(dev, BME680_REG_RES_HEAT0,
 			       bme680_calc_res_heat(data, BME680_HEATR_TEMP));
 	if (err < 0) {
@@ -444,7 +634,7 @@ static int bme680_power_up(const struct device *dev)
 	if (err < 0) {
 		return err;
 	}
-
+#endif
 	return bme680_reg_write(dev, BME680_REG_CTRL_MEAS, BME680_CTRL_MEAS_VAL);
 }
 
@@ -476,7 +666,6 @@ static int bme680_init(const struct device *dev)
 		LOG_ERR("Bus not ready for '%s'", dev->name);
 		return err;
 	}
-
 	return pm_device_driver_init(dev, bme680_pm_control);
 }
 

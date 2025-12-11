@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018 Bosch Sensortec GmbH
  * Copyright (c) 2022, Leonard Pollak
- *
+ * Copyright (c) 2025, Linumiz GmbH
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -79,7 +79,9 @@ struct bme680_config {
 #define BME680_REG_COEFF1               0x8a
 #define BME680_REG_COEFF2               0xe1
 #define BME680_REG_CHIP_ID		0xd0
+#define BME680_REG_VARIANT_ID		0xf0
 #define BME680_REG_SOFT_RESET           0xe0
+#define BME688_REG_GAS_SHARED		0x6e
 
 #define BME680_MSK_NEW_DATA             0x80
 #define BME680_MSK_GAS_RANGE            0x0f
@@ -158,13 +160,24 @@ struct bme680_config {
 #define BME680_FILTER                   (7 << 2)
 #endif
 
-#define BME680_MODE_SLEEP               0
-#define BME680_MODE_FORCED              1
+#define BME680_MODE_SLEEP               0x00
+#define BME680_MODE_FORCED              0x01
+#define BME688_MODE_PARALLEL		0x02
 
+#ifdef CONFIG_MODE_PARALLEL
+#define BME680_CTRL_MEAS_VAL    (BME680_PRESS_OVER | BME680_TEMP_OVER \
+				 | BME688_MODE_PARALLEL)
+#else
 #define BME680_CTRL_MEAS_VAL    (BME680_PRESS_OVER | BME680_TEMP_OVER \
 				 | BME680_MODE_FORCED)
+#endif
+
 #define BME680_CONFIG_VAL               BME680_FILTER
-#define BME680_CTRL_GAS_1_VAL   0x10
+
+#define BME680_CTRL_GAS_1_VAL	0x10
+#define BME688_CTRL_GAS_1_VAL   0x20
+
+#define BME688_REG_OFFSET	0x11
 
 #define BME680_CONCAT_BYTES(msb, lsb) (((uint16_t)msb << 8) | (uint16_t)lsb)
 
@@ -197,12 +210,18 @@ struct bme680_data {
 	int8_t res_heat_val;
 	int8_t range_sw_err;
 	bool has_read_compensation;
-
+#ifndef CONFIG_MODE_PARALLEL
 	/* Calculated sensor values. */
 	int32_t calc_temp;
 	uint32_t calc_press;
 	uint32_t calc_humidity;
 	uint32_t calc_gas_resistance;
+#else
+	int32_t calc_temp[3];
+	uint32_t calc_press[3];
+	uint32_t calc_humidity[3];
+	uint32_t calc_gas_resistance[3];
+#endif
 
 	/* Additional information */
 	uint8_t heatr_stab;
@@ -211,6 +230,8 @@ struct bme680_data {
 	int32_t t_fine;
 
 	uint8_t chip_id;
+
+	uint8_t variant_id;
 
 #if BME680_BUS_SPI
 	uint8_t mem_page;
