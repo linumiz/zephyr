@@ -115,7 +115,7 @@
 			compatible = "infineon,cat1-pll";
 			clocks = <&clk_eco>;
 			ifx,pll-instance = <6>;
-			p-div = <50>;
+			p-div = <35>;
 			q-div = <2>;
 			output-div = <2>;
 			status = "disabled";
@@ -137,7 +137,7 @@
 			compatible = "infineon,cat1-pll";
 			clocks = <&clk_eco>;
 			ifx,pll-instance = <8>;
-			p-div = <50>;
+			p-div = <25>;
 			q-div = <2>;
 			output-div = <2>;
 			status = "disabled";
@@ -150,7 +150,7 @@
 			clock-frequency = <200000000>;
 			ifx,hf-predivider = <IFX_CAT1_CLKHF_NO_DIVIDE>;
 			ifx,hf-instance = <0>;
-			status = "disabled";
+			clocks = <&pll5>;
 		};
 
 		/* clk_hf1 */
@@ -187,7 +187,7 @@
 		clk_hf4: clk_hf4 {
 			#clock-cells = <0>;
 			compatible = "infineon,cat1-clock";
-			clock-frequency = <50000000>;
+			clock-frequency = <40000000>;
 			ifx,hf-predivider = <IFX_CAT1_CLKHF_DIVIDE_BY_4>;
 			clocks = <&pll5>;
 			ifx,hf-instance = <4>;
@@ -197,8 +197,8 @@
 		clk_hf5: clk_hf5 {
 			#clock-cells = <0>;
 			compatible = "infineon,cat1-clock";
-			clock-frequency = <196000000>;
-			ifx,hf-predivider = <IFX_CAT1_CLKHF_NO_DIVIDE>;
+			clock-frequency = <24000000>;
+			ifx,hf-predivider = <IFX_CAT1_CLKHF_DIVIDE_BY_8>;
 			clocks = <&pll1>;
 			ifx,hf-instance = <5>;
 		};
