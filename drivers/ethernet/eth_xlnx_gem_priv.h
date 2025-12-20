@@ -418,8 +418,6 @@ static const struct eth_xlnx_gem_dev_cfg eth_xlnx_gem##port##_dev_cfg = {\
 	.clk_ctrl_reg_address		= DT_REG_ADDR_BY_IDX(DT_INST_PARENT(port), 1),\
 	.defer_rxp_to_queue		= !DT_INST_PROP(port, handle_rx_in_isr),\
 	.defer_txd_to_queue		= DT_INST_PROP(port, handle_tx_in_workq),\
-	.amba_dbus_width		= (enum eth_xlnx_amba_dbus_width)\
-		(DT_INST_PROP(port, amba_ahb_dbus_width)),\
 	.ahb_burst_length		= (enum eth_xlnx_ahb_burst_length)\
 		(DT_INST_PROP(port, amba_ahb_burst_length)),\
 	.hw_rx_buffer_size		= (enum eth_xlnx_hwrx_buffer_size)\
@@ -518,7 +516,7 @@ static void eth_xlnx_gem##port##_irq_config(const struct device *dev)\
 
 /* RX/TX BD Ring initialization macro */
 #define ETH_XLNX_GEM_INIT_BD_RING(port) \
-if (dev_conf->base_addr == DT_REG_ADDR_BY_IDX(DT_INST(port, xlnx_gem), 0)) {\
+if (dev_conf->base_addr == DT_REG_ADDR_BY_IDX(DT_INST_PARENT(port), 0)) {\
 	dev_data->rx_bd_ring.first_bd = &(eth_xlnx_gem##port##_bd_rings.rx_bd_ring[0]);\
 	dev_data->rx_bd_ring.tie_off_bd = &eth_xlnx_gem##port##_bd_rings.tie_off_rx_bd;\
 	dev_data->tx_bd_ring.first_bd = &(eth_xlnx_gem##port##_bd_rings.tx_bd_ring[0]);\
@@ -645,7 +643,7 @@ struct eth_xlnx_gem_dev_cfg {
 	uint8_t				defer_rxp_to_queue;
 	uint8_t				defer_txd_to_queue;
 
-	enum eth_xlnx_amba_dbus_width	amba_dbus_width;
+//	enum eth_xlnx_amba_dbus_width	amba_dbus_width;
 	enum eth_xlnx_ahb_burst_length	ahb_burst_length;
 	enum eth_xlnx_hwrx_buffer_size	hw_rx_buffer_size;
 	uint8_t				hw_rx_buffer_offset;

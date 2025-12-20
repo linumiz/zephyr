@@ -2433,7 +2433,7 @@
 
 			eth0_mac: ethernet {
 				compatible = "xlnx,gem";
-				interrupts = <83 4>, <84 4>;
+				system-interrupts = <83 4>, <84 4>;
 				clock-frequency = <140000000>;
 				amba-ahb-dbus-width = <1>;
 				amba-ahb-burst-length = <XLNX_GEM_AMBA_AHB_BURST_INCR4>;

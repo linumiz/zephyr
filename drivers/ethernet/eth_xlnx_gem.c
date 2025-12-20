@@ -833,6 +833,25 @@ static void eth_xlnx_gem_configure_clocks(const struct device *dev,
 	 * values for the respective GEM's TX clock are calculated here.
 	 */
 
+	uint32_t reg_ctrl = 0x40480000; /* Register ETH_CTL */
+        uint32_t reg_val = sys_read32(reg_ctrl);
+        uint32_t clk_ctrl_reg;
+
+        if (PHY_LINK_IS_SPEED_1000M(state->speed)) {
+                reg_val |= BIT(1) | BIT(0);; /* set to RGMII mode 1G */
+        } else if (PHY_LINK_IS_SPEED_100M(state->speed)) {
+                reg_val |= BIT(1); /* set to RGMII mode 100M */
+                reg_val |= BIT(10); /* Divide REFCLK to obtain 25MHz. REFLCKDIV = 4*/
+        } else {
+                reg_val &= ~(BIT(1) | (BIT(2)));
+        }
+
+        sys_write32(reg_val, reg_ctrl);
+
+	return;
+
+#if 0
+
 	const struct eth_xlnx_gem_dev_cfg *dev_conf = dev->config;
 
 	uint32_t div0;
@@ -916,6 +935,7 @@ static void eth_xlnx_gem_configure_clocks(const struct device *dev,
 
 	LOG_DBG("%s set clock dividers div0/1 %u/%u for target "
 		"frequency %u Hz", dev->name, div0, div1, target);
+#endif
 }
 
 /**
