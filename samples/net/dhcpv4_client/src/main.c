@@ -85,7 +85,9 @@ static void option_handler(struct net_dhcpv4_option_callback *cb,
 
 int main(void)
 {
-	LOG_INF("Run dhcpv4 client");
+	LOG_INF("Run dhcpv4 client: %u", Cy_SysClk_ClkMemGetFrequency());
+	k_msleep(5000);
+
 
 	net_mgmt_init_event_callback(&mgmt_cb, handler,
 				     NET_EVENT_IPV4_ADDR_ADD);
@@ -98,5 +100,8 @@ int main(void)
 	net_dhcpv4_add_option_callback(&dhcp_cb);
 
 	net_if_foreach(start_dhcpv4_client, NULL);
+
+	k_msleep(15000);
+
 	return 0;
 }

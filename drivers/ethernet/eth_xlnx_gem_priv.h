@@ -18,6 +18,7 @@
 #include <zephyr/irq.h>
 #include <zephyr/drivers/pinctrl.h>
 
+//#define CONFIG_SOC_XILINX_ZYNQMP 1
 #define ETH_XLNX_BUFFER_ALIGNMENT			4 /* RX/TX buffer alignment (in bytes) */
 
 /* Buffer descriptor (BD) related defines */
@@ -189,6 +190,8 @@
 #define ETH_XLNX_GEM_IDR_OFFSET				0x0000002C
 #define ETH_XLNX_GEM_IMR_OFFSET				0x00000030
 #define ETH_XLNX_GEM_PHY_MAINTENANCE_OFFSET		0x00000034
+#define ETH_XLNX_GEM_JUMBO_MAX_LENGTH_OFFSET		0x00000048
+#define ETH_XLNX_GEM_AXI_MAX_PIPELINE_OFFSET		0x00000054
 #define ETH_XLNX_GEM_LADDR1L_OFFSET			0x00000088
 #define ETH_XLNX_GEM_LADDR1H_OFFSET			0x0000008C
 #define ETH_XLNX_GEM_LADDR2L_OFFSET			0x00000090
@@ -197,13 +200,26 @@
 #define ETH_XLNX_GEM_LADDR3H_OFFSET			0x0000009C
 #define ETH_XLNX_GEM_LADDR4L_OFFSET			0x000000A0
 #define ETH_XLNX_GEM_LADDR4H_OFFSET			0x000000A4
+#define ETH_XLNX_GEM_TSU_TIMER_INCR_SUB_NSEC_OFFSET	0x000001AC
+#define ETH_XLNX_GEM_TSU_TIMER_NSEC_OFFSET		0x000001D4
+#define ETH_XLNX_GEM_TSU_TIMER_INCR_OFFSET		0x000001DC
 #define ETH_XLNX_GEM_DESIGN_CFG5_OFFSET			0x00000290
+#define ETH_XLNX_GEM_TRANSMIT_Q1_PTR			0x00000440
+#define ETH_XLNX_GEM_TRANSMIT_Q2_PTR			0x00000444
+#define ETH_XLNX_GEM_RECEIVE_Q1_PTR			0x00000480
+#define ETH_XLNX_GEM_RECEIVE_Q2_PTR			0x00000484
 #ifdef CONFIG_SOC_XILINX_ZYNQMP
 #define ETH_XLNX_GEM_TX1QBASEL_OFFSET			0x00000440
 #define ETH_XLNX_GEM_TX1QBASEH_OFFSET			0x000004C8
 #define ETH_XLNX_GEM_RX1QBASEL_OFFSET			0x00000480
 #define ETH_XLNX_GEM_RX1QBASEH_OFFSET			0x000004D4
 #endif /* CONFIG_SOC_XILINX_ZYNQMP */
+
+#define ETH_XLNX_GEM_JUMBO_MAX_LENGTH_DEF		0x00002800
+#define ETH_XLNX_GEM_AXI_MAX_PIPELINE_DEF		0x00000202
+#define ETH_XLNX_GEM_TSU_TIMER_INCR_SUB_NSEC_DEF	0x55001615
+#define ETH_XLNX_GEM_TSU_TIMER_NSEC_DEF			0x10afe401
+#define ETH_XLNX_GEM_TSU_TIMER_INCR_DEF			0x00000005
 
 /*
  * Masks for clearing registers during initialization:
@@ -238,7 +254,7 @@
 #define ETH_XLNX_GEM_NWCTRL_ZEROPAUSETX_BIT		0x00001000
 #define ETH_XLNX_GEM_NWCTRL_PAUSETX_BIT			0x00000800
 #define ETH_XLNX_GEM_NWCTRL_HALTTX_BIT			0x00000400
-#define ETH_XLNX_GEM_NWCTRL_STARTTX_BIT			0x00000200
+#define ETH_XLNX_GEM_NWCTRL_STARTTX_BIT			BIT(9)
 #define ETH_XLNX_GEM_NWCTRL_STATWEN_BIT			0x00000080
 #define ETH_XLNX_GEM_NWCTRL_STATINC_BIT			0x00000040
 #define ETH_XLNX_GEM_NWCTRL_STATCLR_BIT			0x00000020
@@ -318,6 +334,10 @@
  * [06]       Descriptor access endianness configuration
  * [04 .. 00] AHB fixed burst length for DMA data operations
  */
+#define ETH_XLNX_GEM_DMACR_TX_BD_EXTENDED_MODE_EN	BIT(29)
+#define ETH_XLNX_GEM_DMACR_RX_BD_EXTENDED_MODE_EN	BIT(28)
+#define ETH_XLNX_GEM_DMACR_FORCE_MAX_AMBA_BURST_TX	BIT(26)
+#define ETH_XLNX_GEM_DMACR_FORCE_MAX_AMBA_BURST_RX	BIT(25)
 #define ETH_XLNX_GEM_DMACR_DISCNOAHB_BIT		0x01000000
 #define ETH_XLNX_GEM_DMACR_RX_BUF_MASK			0x000000FF
 #define ETH_XLNX_GEM_DMACR_RX_BUF_SHIFT			16
@@ -374,7 +394,7 @@
 #define ETH_XLNX_GEM_IXR_HRESP_NOT_OK_BIT		0x00000800
 #define ETH_XLNX_GEM_IXR_RX_OVERRUN_BIT			0x00000400
 #define ETH_XLNX_GEM_IXR_LINK_CHANGE                    0x00000200
-#define ETH_XLNX_GEM_IXR_TX_COMPLETE_BIT		0x00000080
+#define ETH_XLNX_GEM_IXR_TX_COMPLETE_BIT		BIT(7)
 #define ETH_XLNX_GEM_IXR_TX_CORRUPT_BIT			0x00000040
 #define ETH_XLNX_GEM_IXR_RETRY_LIMIT_OR_LATE_COLL_BIT	0x00000020
 #define ETH_XLNX_GEM_IXR_TX_UNDERRUN_BIT		0x00000010
@@ -382,7 +402,7 @@
 #define ETH_XLNX_GEM_IXR_RX_USED_BIT			0x00000004
 #define ETH_XLNX_GEM_IXR_FRAME_RX_BIT			0x00000002
 #define ETH_XLNX_GEM_IXR_PHY_MGMNT_BIT			0x00000001
-#define ETH_XLNX_GEM_IXR_ALL_MASK			0x03FC7FFE
+#define ETH_XLNX_GEM_IXR_ALL_MASK			0x2FFC7CFF
 #define ETH_XLNX_GEM_IXR_ERRORS_MASK			0x00000C60
 
 /*
@@ -469,10 +489,10 @@ static struct eth_xlnx_gem_dev_data eth_xlnx_gem##port##_dev_data = {\
 /* Buffer descriptor rings declaration macro */
 #define ETH_XLNX_GEM_BD_RINGS_DECL(port) \
 struct eth_xlnx_gem##port##_bd_rings_layout {\
-	struct eth_xlnx_gem_bd rx_bd_ring[DT_INST_PROP(port, rx_buffer_descriptors)];\
-	struct eth_xlnx_gem_bd tx_bd_ring[DT_INST_PROP(port, tx_buffer_descriptors)];\
-	struct eth_xlnx_gem_bd tie_off_rx_bd;\
-	struct eth_xlnx_gem_bd tie_off_tx_bd;\
+	struct eth_xlnx_gem_bd rx_bd_ring[DT_INST_PROP(port, rx_buffer_descriptors)] __aligned(8);\
+	struct eth_xlnx_gem_bd tx_bd_ring[DT_INST_PROP(port, tx_buffer_descriptors)] __aligned(8);\
+	struct eth_xlnx_gem_bd tie_off_rx_bd __aligned(8);\
+	struct eth_xlnx_gem_bd tie_off_tx_bd __aligned(8);\
 }
 
 /* Buffer descriptor rings instantiation macro */
@@ -502,7 +522,7 @@ struct eth_xlnx_gem##port##_dma_area_layout {\
 
 /* DMA memory area instantiation macro */
 #define ETH_XLNX_GEM_DMA_AREA_INST(port) \
-static struct eth_xlnx_gem##port##_dma_area_layout eth_xlnx_gem##port##_dma_area\
+__nocache static struct eth_xlnx_gem##port##_dma_area_layout eth_xlnx_gem##port##_dma_area\
 	__aligned(4096);
 
 /* Interrupt configuration function macro */

@@ -162,8 +162,8 @@ void soc_prep_hook(void)
 
 void soc_early_init_hook(void)
 {
-	sys_cache_instr_enable();
-	sys_cache_data_enable();
+	//sys_cache_instr_enable();
+	//sys_cache_data_enable();
 
 	system_irq_init();
 }

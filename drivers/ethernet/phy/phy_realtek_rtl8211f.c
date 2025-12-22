@@ -55,6 +55,8 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define PHY_RT_RTL8211F_INER_REG                    (0x12U)
 #define PHY_RT_RTL8211F_INER_LINKSTATUS_CHANGE_MASK BIT(4)
 #define PHY_RT_RTL8211F_INSR_REG                    (0x1DU)
+#define PHY_RT_RTL8211F_PHYCR2_REG                    (0x19)
+#define PHY_RT_RTL8211F_PAGE_CTRL              (0xa43)
 
 #define PHY_RT_RTL8211F_RESET_HOLD_TIME_MS 10
 
@@ -504,6 +506,40 @@ static int phy_rt_rtl8211f_init(const struct device *dev)
 		LOG_ERR("Error writing phy (%d) mii control register2", config->addr);
 		return ret;
 	}
+
+       ret = phy_rt_rtl8211f_write(dev, PHY_RT_RTL8211F_PAGSR_REG,
+                                       0xa43);
+       if (ret) {
+               LOG_ERR("Error writing phy (%d) page select register", config->addr);
+               return ret;
+       }
+
+       ret = phy_rt_rtl8211f_read(dev, 0x19, &reg_val);
+       if (ret) {
+               LOG_ERR("Error reading phy (%d) mii control register1", config->addr);
+               return ret;
+       }
+
+       printk("reg PHYCR2 0x%x\n", reg_val);
+
+#if 0
+       reg_val = 0x63;
+
+       ret = phy_rt_rtl8211f_write(dev, 0x19, reg_val);
+       if (ret) {
+               LOG_ERR("Error writing phy (%d) page select register", config->addr);
+               return ret;
+       }
+
+       ret = phy_rt_rtl8211f_read(dev, 0x19, &reg_val);
+       if (ret) {
+               LOG_ERR("Error reading phy (%d) mii control register1", config->addr);
+               return ret;
+       }
+
+       printk("reg PHYCR2 0x%x\n", reg_val);
+#endif
+
 
 	/* Restore to default page 0 */
 	ret = phy_rt_rtl8211f_write(dev, PHY_RT_RTL8211F_PAGSR_REG, 0);

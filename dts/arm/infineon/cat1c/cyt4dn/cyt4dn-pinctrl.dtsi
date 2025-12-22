@@ -294,10 +294,12 @@
 				drive-push-pull;
 			};
 
+#if 0
 			/omit-if-no-ref/ p14_1_eth_tx_er: p14_1_eth_tx_er {
 				pinmux = <DT_CAT1_PINMUX(14, 1, HSIOM_SEL_ACT_12)>;
 				drive-push-pull;
 			};
+#endif
 
 			/omit-if-no-ref/ p14_2_eth_rxd_clk: p14_2_eth_rxd_clk {
 				pinmux = <DT_CAT1_PINMUX(14, 2, HSIOM_SEL_ACT_12)>;
@@ -329,10 +331,12 @@
 				input-enable;
 			};
 
+#if 0
 			/omit-if-no-ref/ p30_0_eth_rx_er: p30_0_eth_rx_er {
 				pinmux = <DT_CAT1_PINMUX(30, 0, HSIOM_SEL_ACT_12)>;
 				input-enable;
 			};
+#endif
 		};
 	};
 };
