@@ -186,7 +186,7 @@ spi0: &scb0 {
 	eth0_phy: phy@1 {
 		compatible = "realtek,rtl8211f";
 		reg = <0x1>;
-		status = "disabled";
+		status = "okay";
 		int-gpios = <&gpio_prt14 1 (GPIO_ACTIVE_LOW)>;
 	};
 };

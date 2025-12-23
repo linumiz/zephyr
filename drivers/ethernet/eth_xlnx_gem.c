@@ -199,10 +199,12 @@ static int eth_xlnx_gem_dev_init(const struct device *dev)
 	eth_xlnx_gem_set_initial_dmacr(dev);	/* Chapter 16.3.2 */
 	eth_xlnx_gem_configure_buffers(dev);	/* Chapter 16.3.5 */
 
+#if 0
 	sys_write32(ETH_XLNX_GEM_JUMBO_MAX_LENGTH_DEF,
 		dev_conf->base_addr + ETH_XLNX_GEM_JUMBO_MAX_LENGTH_OFFSET);
 	sys_write32(ETH_XLNX_GEM_AXI_MAX_PIPELINE_DEF,
 		dev_conf->base_addr + ETH_XLNX_GEM_AXI_MAX_PIPELINE_OFFSET);
+#endif
 
 	sys_write32(BIT(0), dev_conf->base_addr + ETH_XLNX_GEM_TRANSMIT_Q1_PTR);
 	sys_write32(BIT(0), dev_conf->base_addr + ETH_XLNX_GEM_TRANSMIT_Q2_PTR);
@@ -271,7 +273,6 @@ static void eth_xlnx_gem_iface_init(struct net_if *iface)
 	} else {
 		eth_xlnx_gem_configure_clocks(dev, NULL);
 		eth_xlnx_gem_set_nwcfg_link_speed(dev, NULL);
-		net_eth_carrier_on(dev_data->iface);
 
 		net_eth_carrier_on(iface);
 	}
@@ -367,74 +368,10 @@ static void eth_xlnx_gem_isr(const struct device *dev)
  * @retval 0 if the packet was transmitted successfully
  */
 
-struct pn_bd {
-	uint32_t		addr;
-	uint32_t		ctrl;
-};
-
-static __nocache volatile struct pn_bd tx_bd_ring[3] __attribute__((aligned(8)));
-static __nocache volatile __attribute__((aligned(8))) uint8_t pn_buf[1536];
-
-static int __attribute__((optimize("O0"))) eth_xlnx_gem_send(const struct device *dev, struct net_pkt *pkt)
+static int eth_xlnx_gem_send(const struct device *dev, struct net_pkt *pkt)
 {
 	const struct eth_xlnx_gem_dev_cfg *dev_conf = dev->config;
 	struct eth_xlnx_gem_dev_data *dev_data = dev->data;
-
-#if 0
-	/* Load Destination MAC address */
-	pn_buf[0] =  0xff;
-	pn_buf[1] =  0xff;
-	pn_buf[2] =  0xff;
-	pn_buf[3] =  0xff;
-	pn_buf[4] =  0xff;
-	pn_buf[5] =  0xff;
-
-	/* Load source MAC address */
-	pn_buf[6] =  0xb2;
-	pn_buf[7] =  0xf0;
-	pn_buf[8] =  0x70;
-	pn_buf[9] =  0xe8;
-	pn_buf[10] = 0x56;
-	pn_buf[11] = 0x5a; 
-
-	/* Load Ethertype */
-	pn_buf[12] = 0x00;
-	pn_buf[13] = 0x00;
-
-	/* Load Dummy payload */
-	for (uint16_t i = 0; i < 1500; i++ )
-	{
-		pn_buf[i + 14] = (uint8_t)i;
-	}
-
-#if 1
-	tx_bd_ring[0].addr = (uint32_t)&pn_buf[0];
-	tx_bd_ring[0].ctrl = 0x85DC;
-
-//	tx_bd_ring[1].addr = (uint32_t)&pn_buf[0];
-	tx_bd_ring[1].ctrl = 0x80000000;
-
-	tx_bd_ring[2].ctrl = 0xC0000000;
-#endif
-
-
-	sys_write32((uint32_t)&tx_bd_ring[0],
-			dev_conf->base_addr + ETH_XLNX_GEM_TXQBASE_OFFSET);
-
-#if 1
-	reg_val  = sys_read32(dev_conf->base_addr + ETH_XLNX_GEM_NWCTRL_OFFSET);
-	reg_val |= (ETH_XLNX_GEM_NWCTRL_TXEN_BIT);
-	sys_write32(reg_val, dev_conf->base_addr + ETH_XLNX_GEM_NWCTRL_OFFSET);
-#endif
-
-
-	reg_val  = sys_read32(dev_conf->base_addr + ETH_XLNX_GEM_NWCTRL_OFFSET);
-	reg_val |= ETH_XLNX_GEM_NWCTRL_STARTTX_BIT;
-	LOG_ERR("START TX");
-	sys_write32(reg_val, dev_conf->base_addr + ETH_XLNX_GEM_NWCTRL_OFFSET);
-
-	return 0;
-#endif
 
 	uint16_t tx_data_length;
 	uint16_t tx_data_remaining;
@@ -443,9 +380,9 @@ static int __attribute__((optimize("O0"))) eth_xlnx_gem_send(const struct device
 	uint8_t bds_reqd;
 	uint8_t curr_bd_idx;
 	uint8_t first_bd_idx;
-	uint32_t reg_val;
 
 	uint32_t reg_ctrl;
+	uint32_t reg_val;
 	int sem_status;
 
 	if (!dev_data->started || !net_if_flag_is_set(dev_data->iface, NET_IF_UP)) {
@@ -595,7 +532,7 @@ static int __attribute__((optimize("O0"))) eth_xlnx_gem_send(const struct device
 #endif
 
 	/* Block until TX has completed */
-	sem_status = k_sem_take(&dev_data->tx_done_sem, K_MSEC(1000));
+	sem_status = k_sem_take(&dev_data->tx_done_sem, K_MSEC(100));
 	if (sem_status < 0) {
 		LOG_ERR("%s TX confirmation timed out", dev->name);
 #ifdef CONFIG_NET_STATISTICS_ETHERNET
@@ -642,8 +579,7 @@ static int eth_xlnx_gem_start_device(const struct device *dev)
 	/* RX and TX enable */
 #if 1
 	reg_val  = sys_read32(dev_conf->base_addr + ETH_XLNX_GEM_NWCTRL_OFFSET);
-	//reg_val |= (ETH_XLNX_GEM_NWCTRL_RXEN_BIT | ETH_XLNX_GEM_NWCTRL_TXEN_BIT);
-	reg_val |= (ETH_XLNX_GEM_NWCTRL_TXEN_BIT);
+	reg_val |= (ETH_XLNX_GEM_NWCTRL_RXEN_BIT | ETH_XLNX_GEM_NWCTRL_TXEN_BIT);
 	sys_write32(reg_val, dev_conf->base_addr + ETH_XLNX_GEM_NWCTRL_OFFSET);
 #endif
 
@@ -1145,7 +1081,6 @@ static void eth_xlnx_gem_set_initial_nwcfg(const struct device *dev)
 	}
 
 	/* Write the assembled register contents to gem.net_cfg */
-	reg_val |= ETH_XLNX_GEM_NWCFG_COPYALLEN_BIT;
 	sys_write32(reg_val, dev_conf->base_addr + ETH_XLNX_GEM_NWCFG_OFFSET);
 }
 
@@ -1173,7 +1108,7 @@ static void eth_xlnx_gem_set_nwcfg_link_speed(const struct device *dev,
 		     ETH_XLNX_GEM_NWCFG_100_BIT |
 		     ETH_XLNX_GEM_NWCFG_FDEN_BIT);
 
-#if 0
+#if 1
 	/* No bits to set for 10 Mbps. 100 Mbps and 1 Gbps set one bit each. */
 	if (PHY_LINK_IS_SPEED_100M(state->speed)) {
 		reg_val |= ETH_XLNX_GEM_NWCFG_100_BIT;
@@ -1186,8 +1121,6 @@ static void eth_xlnx_gem_set_nwcfg_link_speed(const struct device *dev,
 	}
 #endif
 
-	reg_val |= ETH_XLNX_GEM_NWCFG_1000_BIT;
-	reg_val |= ETH_XLNX_GEM_NWCFG_FDEN_BIT;
 	/* Write the assembled register contents to gem.net_cfg */
 	sys_write32(reg_val, dev_conf->base_addr + ETH_XLNX_GEM_NWCFG_OFFSET);
 }
@@ -1292,8 +1225,8 @@ static void eth_xlnx_gem_set_initial_dmacr(const struct device *dev)
 	reg_val |= ((uint32_t)dev_conf->ahb_burst_length &
 		   ETH_XLNX_GEM_DMACR_AHB_BURST_LENGTH_MASK);
 
-	reg_val |= ETH_XLNX_GEM_DMACR_FORCE_MAX_AMBA_BURST_TX;
 #if 0
+	reg_val |= ETH_XLNX_GEM_DMACR_FORCE_MAX_AMBA_BURST_TX;
 	reg_val |= ETH_XLNX_GEM_DMACR_RX_BD_EXTENDED_MODE_EN;
 	reg_val |= ETH_XLNX_GEM_DMACR_TX_BD_EXTENDED_MODE_EN;
 #endif
@@ -1310,7 +1243,7 @@ static void eth_xlnx_gem_set_initial_dmacr(const struct device *dev)
  *
  * @param dev Pointer to the device data
  */
-static __attribute__((optimize("O0"))) void eth_xlnx_gem_configure_buffers(const struct device *dev)
+static void eth_xlnx_gem_configure_buffers(const struct device *dev)
 {
 	const struct eth_xlnx_gem_dev_cfg *dev_conf = dev->config;
 	struct eth_xlnx_gem_dev_data *dev_data = dev->data;

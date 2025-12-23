@@ -265,7 +265,7 @@ static int xlnx_gem_mdio_initialize(const struct device *dev)
 	const struct xlnx_gem_mdio_config *const dev_conf = dev->config;
 
 	uint32_t reg_val;
-	uint32_t mdc_divider = (uint32_t)MDC_DIVIDER_48;
+	uint32_t mdc_divider = (uint32_t)MDC_DIVIDER_64;
 
 	int ret = pinctrl_apply_state(dev_conf->pcfg, PINCTRL_STATE_DEFAULT);
 	if (ret < 0) {
