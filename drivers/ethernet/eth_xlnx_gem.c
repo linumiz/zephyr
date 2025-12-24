@@ -185,6 +185,14 @@ static int eth_xlnx_gem_dev_init(const struct device *dev)
 	eth_xlnx_gem_set_initial_dmacr(dev);	/* Chapter 16.3.2 */
 	eth_xlnx_gem_configure_buffers(dev);	/* Chapter 16.3.5 */
 
+	/* Disable Other Transmit queue register */
+	sys_write32(BIT(0), dev_conf->base_addr + ETH_XLNX_GEM_TRANSMIT_Q1_PTR);
+	sys_write32(BIT(0), dev_conf->base_addr + ETH_XLNX_GEM_TRANSMIT_Q2_PTR);
+
+	/* Disable Other Receive queue register */
+	sys_write32(BIT(0), dev_conf->base_addr + ETH_XLNX_GEM_RECEIVE_Q1_PTR);
+	sys_write32(BIT(0), dev_conf->base_addr + ETH_XLNX_GEM_RECEIVE_Q2_PTR);	
+
 	return 0;
 }
 
@@ -446,9 +454,7 @@ static int eth_xlnx_gem_send(const struct device *dev, struct net_pkt *pkt)
 			     tx_data_remaining : dev_conf->tx_buffer_size);
 
 		/* Update current BD's control word */
-		reg_val = sys_read32(reg_ctrl);
-//			  ETH_XLNX_GEM_TXBD_USED_BIT);
-		reg_val |= ETH_XLNX_GEM_TXBD_WRAP_BIT;
+		reg_val = sys_read32(reg_ctrl) & (ETH_XLNX_GEM_TXBD_USED_BIT | ETH_XLNX_GEM_TXBD_WRAP_BIT);
 		reg_val |= (tx_data_remaining < dev_conf->tx_buffer_size) ?
 			   tx_data_remaining : dev_conf->tx_buffer_size;
 		sys_write32(reg_val, reg_ctrl);
@@ -554,6 +560,7 @@ static int eth_xlnx_gem_start_device(const struct device *dev)
 	/* RX and TX enable */
 	reg_val  = sys_read32(dev_conf->base_addr + ETH_XLNX_GEM_NWCTRL_OFFSET);
 	reg_val |= (ETH_XLNX_GEM_NWCTRL_RXEN_BIT | ETH_XLNX_GEM_NWCTRL_TXEN_BIT);
+//	reg_val |= (ETH_XLNX_GEM_NWCTRL_TXEN_BIT);
 	sys_write32(reg_val, dev_conf->base_addr + ETH_XLNX_GEM_NWCTRL_OFFSET);
 
 	/* Enable all the MAC interrupts */
@@ -808,6 +815,8 @@ static void eth_xlnx_gem_reset_hw(const struct device *dev)
 		    dev_conf->base_addr + ETH_XLNX_GEM_RXQBASE_OFFSET);
 	sys_write32(0x00000000,
 		    dev_conf->base_addr + ETH_XLNX_GEM_TXQBASE_OFFSET);
+
+#if 0
 	sys_write32(0x00000000,
 		    dev_conf->base_addr + ETH_XLNX_GEM_RX1QBASEL_OFFSET);
 	sys_write32(0x00000000,
@@ -816,6 +825,7 @@ static void eth_xlnx_gem_reset_hw(const struct device *dev)
 		    dev_conf->base_addr + ETH_XLNX_GEM_TX1QBASEL_OFFSET);
 	sys_write32(0x00000000,
 		    dev_conf->base_addr + ETH_XLNX_GEM_TX1QBASEH_OFFSET);
+#endif
 }
 
 /**
@@ -845,10 +855,17 @@ static void eth_xlnx_gem_configure_clocks(const struct device *dev,
 	uint32_t tmp;
 	uint32_t clk_ctrl_reg;
 
+	/* ETH_CTL */
 	uint32_t reg_val = sys_read32(0x40480000);
-//	reg_val = ~(1 << 31);
-//	sys_write32(reg_val, 0x40480000);
-	
+
+	reg_val |= BIT(1); /* RGMII mode */
+//	reg_val |= BIT(10); /*REFETH_CLK dvider */
+	reg_val |= BIT(31);
+	sys_write32(reg_val, 0x40480000);
+
+	return 0;
+
+#if 0
 	if (PHY_LINK_IS_SPEED_1000M(state->speed)) {
 		target = 125000000; /* Target frequency: 125 MHz */
 	} else if (PHY_LINK_IS_SPEED_100M(state->speed)) {
@@ -858,6 +875,7 @@ static void eth_xlnx_gem_configure_clocks(const struct device *dev,
 	}
 
 	reg_val |= BIT(1);
+//	reg_val |= BIT(2);
 	reg_val |= BIT(31);
 
 	sys_write32(reg_val, 0x40480000);
@@ -930,6 +948,7 @@ static void eth_xlnx_gem_configure_clocks(const struct device *dev,
 
 	LOG_DBG("%s set clock dividers div0/1 %u/%u for target "
 		"frequency %u Hz", dev->name, div0, div1, target);
+#endif
 }
 
 /**
@@ -953,6 +972,7 @@ static void eth_xlnx_gem_set_initial_nwcfg(const struct device *dev)
 	 */
 	reg_val &= (ETH_XLNX_GEM_NWCFG_MDC_MASK << ETH_XLNX_GEM_NWCFG_MDC_SHIFT);
 
+	reg_val |= ETH_XLNX_GEM_NWCFG_COPYALLEN_BIT;
 	if (dev_conf->ignore_ipg_rxer) {
 		/* [30]     ignore IPG rx_er */
 		reg_val |= ETH_XLNX_GEM_NWCFG_IGNIPGRXERR_BIT;
@@ -993,7 +1013,7 @@ static void eth_xlnx_gem_set_initial_nwcfg(const struct device *dev)
 	design_cfg5_reg_val &= ETH_XLNX_GEM_NWCFG_DBUSW_MASK;
 	reg_val |= (design_cfg5_reg_val << ETH_XLNX_GEM_NWCFG_DBUSW_SHIFT);
 #endif
-	reg_val |= BIT(21);
+	reg_val |= BIT(21); /* data bus width 64-bit */
 	/* [20..18] MDC clock divider -> managed by the MDIO driver */
 	if (dev_conf->discard_rx_fcs) {
 		/* [17]     Discard FCS from received frames */
@@ -1045,6 +1065,7 @@ static void eth_xlnx_gem_set_initial_nwcfg(const struct device *dev)
 	}
 
 	reg_val |= BIT(10);
+//	reg_val |= ETH_XLNX_GEM_DMACR_FORCE_MAX_AMBA_BURST_TX;
 	/* Write the assembled register contents to gem.net_cfg */
 	sys_write32(reg_val, dev_conf->base_addr + ETH_XLNX_GEM_NWCFG_OFFSET);
 }
@@ -1294,12 +1315,14 @@ static void eth_xlnx_gem_configure_buffers(const struct device *dev)
 		    dev_conf->base_addr + ETH_XLNX_GEM_RXQBASE_OFFSET);
 	sys_write32((uint32_t)dev_data->txbd_ring.first_bd,
 		    dev_conf->base_addr + ETH_XLNX_GEM_TXQBASE_OFFSET);
+#if 0
 //	sys_write32(0x00000000, dev_conf->base_addr + ETH_XLNX_GEM_RX1QBASEH_OFFSET);
 	sys_write32((uint32_t)dev_data->rxbd_ring.tie_off_bd,
 		    dev_conf->base_addr + ETH_XLNX_GEM_RX1QBASEH_OFFSET);
 //	sys_write32(0x00000000, dev_conf->base_addr + ETH_XLNX_GEM_TX1QBASEH_OFFSET);
 	sys_write32((uint32_t)dev_data->txbd_ring.tie_off_bd,
 		    dev_conf->base_addr + ETH_XLNX_GEM_TX1QBASEH_OFFSET);
+#endif
 }
 
 /**

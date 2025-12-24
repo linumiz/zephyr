@@ -198,6 +198,19 @@
 #define ETH_XLNX_GEM_TX1QBASEH_OFFSET			0x000004C8
 #define ETH_XLNX_GEM_RX1QBASEL_OFFSET			0x00000480
 #define ETH_XLNX_GEM_RX1QBASEH_OFFSET			0x000004D4
+#define ETH_XLNX_GEM_TSU_TIMER_INCR_SUB_NSEC_OFFSET    0x000001AC
+#define ETH_XLNX_GEM_TSU_TIMER_NSEC_OFFSET             0x000001D4
+#define ETH_XLNX_GEM_TSU_TIMER_INCR_OFFSET             0x000001DC
+#define ETH_XLNX_GEM_JUMBO_MAX_LENGTH_DEF              0x00002800
+#define ETH_XLNX_GEM_AXI_MAX_PIPELINE_DEF              0x00000202
+#define ETH_XLNX_GEM_TSU_TIMER_INCR_SUB_NSEC_DEF       0x55001615
+#define ETH_XLNX_GEM_TSU_TIMER_NSEC_DEF                        0x10afe401
+#define ETH_XLNX_GEM_TSU_TIMER_INCR_DEF                        0x00000005
+#define ETH_XLNX_GEM_TRANSMIT_Q1_PTR                   0x00000440
+#define ETH_XLNX_GEM_TRANSMIT_Q2_PTR                   0x00000444
+#define ETH_XLNX_GEM_RECEIVE_Q1_PTR                    0x00000480
+#define ETH_XLNX_GEM_RECEIVE_Q2_PTR                    0x00000484
+
 
 /*
  * Masks for clearing registers during initialization:
@@ -240,6 +253,11 @@
 #define ETH_XLNX_GEM_NWCTRL_TXEN_BIT			0x00000008
 #define ETH_XLNX_GEM_NWCTRL_RXEN_BIT			0x00000004
 #define ETH_XLNX_GEM_NWCTRL_LOOPEN_BIT			0x00000002
+
+#define ETH_XLNX_GEM_DMACR_TX_BD_EXTENDED_MODE_EN      BIT(29)
+#define ETH_XLNX_GEM_DMACR_RX_BD_EXTENDED_MODE_EN      BIT(28)
+#define ETH_XLNX_GEM_DMACR_FORCE_MAX_AMBA_BURST_TX     BIT(26)
+#define ETH_XLNX_GEM_DMACR_FORCE_MAX_AMBA_BURST_RX     BIT(25)
 
 /*
  * gem.net_cfg:
@@ -466,10 +484,10 @@ static struct eth_xlnx_gem_dev_data eth_xlnx_gem##port##_dev_data = {\
 
 #define ETH_XLNX_GEM_BD_RINGS_DECL(port) \
 struct eth_xlnx_gem##port##_bd_rings_layout {\
-	struct eth_xlnx_gem_bd rxbd_ring[DT_INST_PROP(port, rx_buffer_descriptors)];\
-	struct eth_xlnx_gem_bd txbd_ring[DT_INST_PROP(port, tx_buffer_descriptors)];\
-	struct eth_xlnx_gem_bd tie_off_rx_bd;\
-	struct eth_xlnx_gem_bd tie_off_tx_bd;\
+	struct eth_xlnx_gem_bd rxbd_ring[DT_INST_PROP(port, rx_buffer_descriptors)] __aligned(8);\
+	struct eth_xlnx_gem_bd txbd_ring[DT_INST_PROP(port, tx_buffer_descriptors)] __aligned(8);\
+	struct eth_xlnx_gem_bd tie_off_rx_bd __aligned(8);\
+	struct eth_xlnx_gem_bd tie_off_tx_bd __aligned(8);\
 }
 
 /* Buffer descriptor rings instantiation macro */
@@ -508,10 +526,6 @@ static void eth_xlnx_gem##port##_irq_config(const struct device *dev)\
 {\
 	enable_sys_int(DT_INST_PROP_BY_IDX(port, system_interrupts, SYS_INT_NUM), \
 	DT_INST_PROP_BY_IDX(port, system_interrupts, SYS_INT_PRI), \
-		       (void (*)(const void *))(void *)eth_xlnx_gem_isr, dev); \
-										\
-	enable_sys_int(DT_INST_PROP_BY_IDX(port, system_interrupts, 2), \
-	DT_INST_PROP_BY_IDX(port, system_interrupts, 3), \
 		       (void (*)(const void *))(void *)eth_xlnx_gem_isr, dev); \
 }
 

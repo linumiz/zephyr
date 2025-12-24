@@ -133,7 +133,7 @@ can0: &can0_0 {
 
 	phy-handle = <&eth0_phy>;
 	clock-frequency = <125000000>;
-	local-mac-address = [00 00 00 01 02 03];
+	local-mac-address = [b0 19 21 67 36 00];
 };
 
 &eth0_mdio {

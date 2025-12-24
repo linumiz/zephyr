@@ -87,6 +87,8 @@ int main(void)
 {
 	LOG_INF("Run dhcpv4 client");
 
+	k_msleep(5000);
+
 	net_mgmt_init_event_callback(&mgmt_cb, handler,
 				     NET_EVENT_IPV4_ADDR_ADD);
 	net_mgmt_add_event_callback(&mgmt_cb);

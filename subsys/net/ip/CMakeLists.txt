@@ -16,6 +16,7 @@ zephyr_library_sources(
   net_if.c
   net_timeout.c
   utils.c
+  net_pkt_dump.c
   )
 
 if(CONFIG_NET_OFFLOAD)
