@@ -76,7 +76,6 @@ static int can_infineon_clear_mram(const struct device *dev, uint16_t offset, si
 
 static int can_infineon_get_core_clock(const struct device *dev, uint32_t *rate)
 {
-	uint32_t rate_tmp;
 	const struct can_mcan_config *mcan_cfg = dev->config;
 	const struct can_infineon_config *infineon_cfg = mcan_cfg->custom;
 
@@ -93,7 +92,7 @@ static int can_infineon_clock_enable(const struct device *dev)
 {
 	int ret;
 	uint32_t src_clock_rate;
-	int int_div;
+	uint8_t int_div;
 	uint8_t frac_div;
 	const struct can_mcan_config *mcan_config = dev->config;
 	const struct can_infineon_config *cfg = mcan_config->custom;
@@ -103,9 +102,10 @@ static int can_infineon_clock_enable(const struct device *dev)
 		return ret;
 	}
 
-	int_div = (float)src_clock_rate / cfg->clock_frequency;
-	frac_div = ((int)(int_div * 10))  % 10;
+	int_div = (src_clock_rate / cfg->clock_frequency);
+	frac_div = (((float)src_clock_rate / (float)cfg->clock_frequency) - int_div) * 32;
 
+	LOG_INF("CAN Clk: integer divider (%d), fractional divider (%d)", int_div, frac_div);
 	ret = Cy_SysClk_PeriPclkDisableDivider(cfg->clk_peri_group, cfg->peri_divider,
 					      cfg->peri_divider_inst);
 	if (ret != 0) {
@@ -114,7 +114,7 @@ static int can_infineon_clock_enable(const struct device *dev)
 
 	ret = Cy_SysClk_PeriPclkSetFracDivider(cfg->clk_peri_group, cfg->peri_divider,
 					       cfg->peri_divider_inst, int_div - 1,
-					       16U); /* FIXME use frac div from clock frequency */
+					       frac_div);
 	if (ret != 0) {
 		return ret;
 	}
