@@ -13,6 +13,8 @@
 #include <zephyr/irq.h>
 #include <zephyr/sys/util.h>
 
+#include <zephyr/drivers/clock_control/infineon_peri_clock.h>
+
 #include <cy_sysclk.h>
 
 LOG_MODULE_REGISTER(can_infineon, CONFIG_CAN_LOG_LEVEL);
@@ -27,10 +29,7 @@ struct can_infineon_config {
 	const struct pinctrl_dev_config *pcfg;
 	const struct device *clock;
 	uint32_t clock_frequency;
-	uint32_t peri_divider_inst;
-	uint32_t clk_id;
-	uint32_t clk_peri_group;
-	uint8_t peri_divider;
+	struct infineon_sys_clock clk_info;
 };
 
 static int can_infineon_read_reg(const struct device *dev, uint16_t reg, uint32_t *val)
@@ -88,50 +87,13 @@ static int can_infineon_get_core_clock(const struct device *dev, uint32_t *rate)
 	return 0;
 }
 
-static int can_infineon_clock_enable(const struct device *dev)
+static inline int can_infineon_clock_enable(const struct device *dev)
 {
-	int ret;
-	uint32_t src_clock_rate;
-	uint8_t int_div;
-	uint8_t frac_div;
 	const struct can_mcan_config *mcan_config = dev->config;
 	const struct can_infineon_config *cfg = mcan_config->custom;
 
-	ret = clock_control_get_rate(cfg->clock, 0, &src_clock_rate);
-	if (ret != 0) {
-		return ret;
-	}
-
-	int_div = (src_clock_rate / cfg->clock_frequency);
-	frac_div = (((float)src_clock_rate / (float)cfg->clock_frequency) - int_div) * 32;
-
-	LOG_INF("CAN Clk: integer divider (%d), fractional divider (%d)", int_div, frac_div);
-	ret = Cy_SysClk_PeriPclkDisableDivider(cfg->clk_peri_group, cfg->peri_divider,
-					      cfg->peri_divider_inst);
-	if (ret != 0) {
-		return ret;
-	}
-
-	ret = Cy_SysClk_PeriPclkSetFracDivider(cfg->clk_peri_group, cfg->peri_divider,
-					       cfg->peri_divider_inst, int_div - 1,
-					       frac_div);
-	if (ret != 0) {
-		return ret;
-	}
-
-	ret = Cy_SysClk_PeriPclkEnableDivider(cfg->clk_peri_group, cfg->peri_divider,
-					      cfg->peri_divider_inst);
-	if (ret != 0) {
-		return ret;
-	}
-
-	ret = Cy_SysClk_PeriPclkAssignDivider(cfg->clk_id, cfg->peri_divider,
-					      cfg->peri_divider_inst); 
-	if (ret != 0) {
-		return ret;
-	}
-
-	return 0;
+	return clock_control_set_rate(cfg->clock, (void *)&cfg->clk_info,
+				      (void *)&cfg->clock_frequency);
 }
 
 static int can_infineon_init(const struct device *dev)
@@ -200,6 +162,13 @@ static const struct can_mcan_ops can_infineon_ops = {
 	.clear_mram = can_infineon_clear_mram,
 };
 
+#define CAN_CLK_INFO(n)								\
+        .clk_info = {								\
+                .root_clk_id  = DT_INST_CLOCKS_CELL_BY_IDX(n, 0, root_clk_id),	\
+                .divider_type = DT_INST_CLOCKS_CELL_BY_IDX(n, 0, divider_type),	\
+                .divider_inst = DT_INST_CLOCKS_CELL_BY_IDX(n, 0, divider_inst),	\
+        },
+
 #define CAN_INFINEON_MCAN_INIT(n)					    \
 	CAN_MCAN_DT_INST_BUILD_ASSERT_MRAM_CFG(n);			    \
 	BUILD_ASSERT(CAN_MCAN_DT_INST_MRAM_ELEMENTS_SIZE(n) <=		    \
@@ -219,11 +188,8 @@ static const struct can_mcan_ops can_infineon_ops = {
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),		    \
 		.clock = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(n)),		    \
 		.clock_frequency = DT_INST_PROP(n, clock_frequency),	    \
-		.peri_divider_inst = DT_INST_PROP(n, ifx_peri_div_inst),\
-		.clk_id = DT_INST_PROP(n, ifx_peri_clk),		    \
-		.clk_peri_group = DT_INST_PROP(n, ifx_peri_group),	    \
-		.peri_divider = DT_INST_PROP(n, ifx_peri_div),	    \
-	};							\
+		CAN_CLK_INFO(n)						    \
+	};								    \
 									    \
 	static const struct can_mcan_config can_mcan_cfg_##n =		    \
 		CAN_MCAN_DT_CONFIG_INST_GET(n, &can_infineon_cfg_##n,	    \

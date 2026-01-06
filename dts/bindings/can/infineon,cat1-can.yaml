@@ -18,35 +18,3 @@ properties:
   clock-frequency:
     type: int
     required: true
-
-  ifx,peri-clk:
-    type: int
-    required: true
-    description:
-      Clock selection for peripheral
-
-  ifx,peri-group:
-    type: int
-    required: true
-    description:
-      Peripheral clock divider group and inst for scb uart
-
-  ifx,peri-div:
-    type: int
-    required: true
-    enum:
-      - 0 # 8-bit divider
-      - 1 # 16-bit divider
-      - 2 # 16_5-bit divider
-      - 3 # 24_5-bit divider
-    description:
-      Peripheral clock divider type.
-
-  ifx,peri-div-inst:
-    type: int
-    required: true
-    description:
-      Peripheral clock divider type instance. peripheral clock divider has
-      multiple instnace of same type divider, so this property is used to specifi
-      which instance to be used. please refer device specific datasheet for
-      number of instance present for every divider type.
