@@ -9,6 +9,7 @@
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn_m7.dtsi>
 #include <arm/infineon/cat1c/cyt4dn/memory_partition.dtsi>
 #include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
+#include <zephyr/dt-bindings/clock/infineon_clock.h>
 #include "kit_t2g_c2d6m_lite_common.dtsi"
 #include <zephyr/dt-bindings/pwm/pwm.h>
 #include <dt-bindings/adc/adc.h>
@@ -68,11 +69,7 @@ uart7: &scb7 {
 	compatible = "infineon,cat1-uart-pdl";
 	status = "okay";
 	current-speed = <115200>;
-	clocks = <&clk_hf2>;
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x010F>;
-	ifx,peri-div = <0>; /* 8-bit divider */
-	ifx,peri-div-inst = <0>;
+	clocks = <&clk_peri1 15 IFX_PERI_DIV_16 0>;
 
 	/* UART pins */
 	pinctrl-0 = <&p9_0_scb7_uart_rx &p9_1_scb7_uart_tx>;
@@ -103,13 +100,8 @@ i2c11: &scb11 {
 
 &can0_1 {
 	compatible = "infineon,cat1-can";
-	clocks = <&clk_hf2>;
+	clocks = <&clk_peri1 1 IFX_PERI_DIV_24_5 1>;
 	clock-frequency = <40000000>;
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x0101>;
-	ifx,peri-div = <3>; /* 24-bit divider */
-	ifx,peri-div-inst = <0>;
-
 	pinctrl-0 = <&p5_2_can0_1_tx &p5_3_can0_1_rx>;
 	pinctrl-names = "default";
 };
@@ -117,13 +109,8 @@ i2c11: &scb11 {
 can0: &can0_0 {
 	compatible = "infineon,cat1-can";
 	status = "okay";
-	clocks = <&clk_hf2>;
+	clocks = <&clk_peri1 0 IFX_PERI_DIV_24_5 0>;
 	clock-frequency = <40000000>;
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x0100>;
-	ifx,peri-div = <3>; /* 24-bit divider */
-	ifx,peri-div-inst = <0>;
-
 	pinctrl-0 = <&p5_1_can0_0_rx &p5_0_can0_0_tx>;
 	pinctrl-names = "default";
 };

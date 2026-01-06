@@ -93,3 +93,7 @@
 &clk_hf13 {
 	status = "disabled";
 };
+
+&clk_peri1 {
+	status = "okay";
+};
