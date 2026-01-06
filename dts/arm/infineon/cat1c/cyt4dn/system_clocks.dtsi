@@ -4,13 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
-#define DIV_8_BIT	00
-#define DIV_16_BIT	01
-#define DIV_16_5_BIT	02
-#define DIV_24_5_BIT	03
-
 #include <dt-bindings/clock/ifx_clock_source_def.h>
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
 
 / {
 	clocks {
@@ -280,6 +275,28 @@
 			clock-frequency = <200000000>;
 			ifx,hf-predivider = <IFX_CAT1_CLKHF_NO_DIVIDE>;
 			ifx,hf-instance = <13>;
+		};
+
+		clk_peri0: clk_peri0 {
+			compatible = "infineon,peri-clock";
+			#clock-cells = <3>;
+			clocks = <&clk_hf0>;
+			ifx,peri-clk-inst = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+			ifx,8-bit-max-divider = <9>;
+			ifx,16-bit-max-divider = <16>;
+			ifx,16-5-bit-max-divider = <7>;
+			ifx,24-5-bit-max-divider = <3>;
+		};
+
+		clk_peri1: clk_peri1 {
+			compatible = "infineon,peri-clock";
+			#clock-cells = <3>;
+			clocks = <&clk_hf2>;
+			ifx,peri-clk-inst = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+			ifx,8-bit-max-divider = <3>;
+			ifx,16-bit-max-divider = <4>;
+			ifx,16-5-bit-max-divider = <0>;
+			ifx,24-5-bit-max-divider = <7>;
 		};
 	};
 };

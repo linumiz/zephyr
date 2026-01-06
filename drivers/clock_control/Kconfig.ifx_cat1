@@ -35,3 +35,10 @@ config CLOCK_CONTROL_IFX_CAT1_PERI_CLOCK
 	depends on DT_HAS_INFINEON_CAT1_PERI_DIV_ENABLED
 	help
 	  This option enables the Peripheral clock driver for Infineon CAT1 family.
+
+config CLOCK_CONTROL_IFX_PERI_CLOCK
+	bool "Infineon Peripheral clock driver"
+	default y
+	depends on SOC_FAMILY_INFINEON_CAT1
+	help
+	  This option enables the Peripheral clock driver for Infineon family.
