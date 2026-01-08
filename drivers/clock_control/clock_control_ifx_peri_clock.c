@@ -18,7 +18,7 @@ LOG_MODULE_REGISTER(ifx_peri_clock_control, CONFIG_CLOCK_CONTROL_LOG_LEVEL);
 
 #define DT_DRV_COMPAT			infineon_peri_clock
 
-#define IFX_FRACTION_DIVIDER		32
+#define IFX_FRACTION_DIVIDER_VALUE	32
 #define IFX_PERI_CLK_MAX_DIVIDER	(IFX_PERI_DIV_24_5 + 1)
 
 struct ifx_peri_clock_config {
@@ -80,6 +80,32 @@ out:
 	return 0;
 }
 
+static inline int check_divider_range(uint32_t div_value, uint8_t div_type)
+{
+	int max_div_value;
+
+	switch (div_type) {
+	case IFX_PERI_DIV_8:
+		max_div_value = (1 << 8);
+		break;
+	case IFX_PERI_DIV_16:
+	case IFX_PERI_DIV_16_5:
+		max_div_value = (1 << 16);
+		break;
+	case IFX_PERI_DIV_24_5:
+		max_div_value = (1 << 24);
+		break;
+	default:
+		return -1;
+	}
+
+	if (div_value > max_div_value) {
+		return -1;
+	}
+
+	return 0;
+}
+
 static int clock_control_ifx_peri_clock_set_rate(const struct device *dev,
 						 clock_control_subsys_t sys,
 						 clock_control_subsys_rate_t rate)
@@ -100,8 +126,13 @@ static int clock_control_ifx_peri_clock_set_rate(const struct device *dev,
 		return -EINVAL;
 	}
 
-	k_mutex_lock(&data->lock, K_FOREVER);
 	int_div = (cfg->src_clk_freq / *clk_rate);
+	if (check_divider_range(int_div, clk->divider_type)) {
+		LOG_ERR("Invalid Integer Divider value with Divider type");
+		return -ERANGE;
+	}
+
+	k_mutex_lock(&data->lock, K_FOREVER);
 	ret = Cy_SysClk_PeriPclkDisableDivider(cfg->peri_clk_inst,
 					       clk->divider_type,
 					       clk->divider_inst);
@@ -115,17 +146,23 @@ static int clock_control_ifx_peri_clock_set_rate(const struct device *dev,
 		ret = Cy_SysClk_PeriPclkSetDivider(cfg->peri_clk_inst,
 						   clk->divider_type,
 						   clk->divider_inst,
-						   int_div - 1);
+						   (int_div - 1));
 		break;
 	case IFX_PERI_DIV_16_5:
 	case IFX_PERI_DIV_24_5:
-		uint32_t frac_div = (((float)cfg->src_clk_freq / (float) *clk_rate) \
-					- int_div) * IFX_FRACTION_DIVIDER;
+		uint8_t frac_div = (((float)cfg->src_clk_freq / (float) *clk_rate) \
+					- int_div) * IFX_FRACTION_DIVIDER_VALUE;
+
+		if (frac_div > IFX_FRACTION_DIVIDER_VALUE) {
+			LOG_ERR("Invalid Fractional Divider value with Divider type");
+			ret = -ERANGE;
+			goto out;
+		}
 
 		ret = Cy_SysClk_PeriPclkSetFracDivider(cfg->peri_clk_inst,
 						       clk->divider_type,
 						       clk->divider_inst,
-						       int_div - 1, frac_div);
+						       (int_div - 1), frac_div);
 		break;
 	default:
 		ret = -EINVAL;
