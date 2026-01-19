@@ -39,6 +39,31 @@ Device Drivers and Devicetree
 
 .. zephyr-keep-sorted-start re(^\w)
 
+Controller Area Network (CAN)
+=============================
+
+* Removed ``CONFIG_CAN_MAX_FILTER``, ``CONFIG_CAN_MAX_STD_ID_FILTER``,
+  ``CONFIG_CAN_MAX_EXT_ID_FILTER``, and ``CONFIG_CAN_MAX_MB`` (:github:`100596`). These are replaced
+  by the following driver-specific Kconfig symbols, some of which have had their default value
+  increased to meet typical software needs:
+
+  * :kconfig:option:`CONFIG_CAN_LOOPBACK_MAX_FILTERS` for :dtcompatible:`zephyr,can-loopback`
+  * :kconfig:option:`CONFIG_CAN_MAX32_MAX_FILTERS` for :dtcompatible:`adi,max32-can`
+  * :kconfig:option:`CONFIG_CAN_MCP2515_MAX_FILTERS` for :dtcompatible:`microchip,mcp2515`
+  * :kconfig:option:`CONFIG_CAN_MCP251XFD_MAX_FILTERS` for :dtcompatible:`microchip,mcp251xfd`
+  * :kconfig:option:`CONFIG_CAN_MCUX_FLEXCAN_MAX_FILTERS` for :dtcompatible:`nxp,flexcan`
+  * :kconfig:option:`CONFIG_CAN_MCUX_FLEXCAN_MAX_MB` for :dtcompatible:`nxp,flexcan`
+  * :kconfig:option:`CONFIG_CAN_NATIVE_LINUX_MAX_FILTERS` for
+    :dtcompatible:`zephyr,native-linux-can`
+  * :kconfig:option:`CONFIG_CAN_RCAR_MAX_FILTERS` for :dtcompatible:`renesas,rcar-can`
+  * :kconfig:option:`CONFIG_CAN_SJA1000_MAX_FILTERS` for :dtcompatible:`kvaser,pcican` and
+    :dtcompatible:`espressif,esp32-twai`
+  * :kconfig:option:`CONFIG_CAN_STM32_BXCAN_MAX_EXT_ID_FILTERS` for :dtcompatible:`st,stm32-bxcan`
+  * :kconfig:option:`CONFIG_CAN_STM32_BXCAN_MAX_STD_ID_FILTERS` for :dtcompatible:`st,stm32-bxcan`
+  * :kconfig:option:`CONFIG_CAN_STM32_FDCAN_MAX_EXT_ID_FILTERS` for :dtcompatible:`st,stm32-fdcan`
+  * :kconfig:option:`CONFIG_CAN_STM32_FDCAN_MAX_STD_ID_FILTERS` for :dtcompatible:`st,stm32-fdcan`
+  * :kconfig:option:`CONFIG_CAN_XMC4XXX_MAX_FILTERS` for :dtcompatible:`infineon,xmc4xxx-can-node`
+
 Ethernet
 ========
 
@@ -54,6 +79,11 @@ Ethernet
     * Removed ``CONFIG_ETH_SAM_GMAC_MAC_I2C_INT_ADDRESS_SIZE``
     * Removed ``mac-eeprom`` property from :dtcompatible:`atmel,sam-gmac` and
       :dtcompatible:`atmel,sam0-gmac`
+
+* The ``fixed-link`` property has been removed from :dtcompatible:`ethernet-phy`. Use
+  the new :dtcompatible:`ethernet-phy-fixed-link` compatible instead, if that functionality
+  is needed. There you need to specify the fixed link parameters using the ``default-speeds``
+  property (:github:`100454`).
 
 MDIO
 ====
@@ -110,12 +140,72 @@ STM32
 
   * ``CONFIG_POWER_SUPPLY_EXTERNAL_SOURCE``
 
+* The ST-specific chosen property ``/chosen/zephyr,ccm`` is replaced by ``/chosen/zephyr,dtcm``.
+  Attribute macros ``__ccm_data_section``, ``__ccm_bss_section`` and ``__ccm_noinit_section`` are
+  deprecated, but retained for backwards compatibility; **they will be removed in Zephyr 4.5**.
+  The generic ``__dtcm_{data,bss,noinit}_section`` macros should be used instead. (:github:`100590`)
+
+Shell
+=====
+
+* The :c:func:`shell_set_bypass` now requires a user data pointer to be passed. And accordingly the
+  :c:type:`shell_bypass_cb_t` now has a user data argument. (:github:`100311`)
+
+Stepper
+=======
+
+* For :dtcompatible:`adi,tmc2209`, the property ``msx-gpios`` is now replaced by ``m0-gpios`` and
+  ``m1-gpios`` for consistency with other step/dir stepper drivers.
+
+* Since :github:`91979`, All stepper-drv driver APIs have been refactored out of the stepper API.
+  The following APIs have been moved from :c:group:`stepper_interface` to :c:group:`stepper_drv_interface`:
+
+  * :c:func:`stepper_enable` is replaced by :c:func:`stepper_drv_enable`.
+  * :c:func:`stepper_disable` is replaced by :c:func:`stepper_drv_disable`.
+  * :c:func:`stepper_set_micro_step_res` is replaced by :c:func:`stepper_drv_set_micro_step_res`.
+  * :c:func:`stepper_get_micro_step_res` is replaced by :c:func:`stepper_drv_get_micro_step_res`.
+
+* :c:enum:`stepper_micro_step_resolution` is replaced by :c:enum:`stepper_drv_micro_step_resolution`.
+* ``STEPPER_DRV_EVENT_STALL_DETECTED`` and ``STEPPER_DRV_EVENT_FAULT_DETECTED`` events have been
+  refactored to :c:enum:`stepper_drv_event`.
+
+* :dtcompatible:`zephyr,gpio-step-dir-stepper` implements :c:group:`stepper_interface` for
+  controlling stepper motors via GPIO step and direction signals. Refer to
+  :ref:`stepper-individual-controller-driver` for more details.
+
+  * ``step-gpios``, ``dir-gpios``, ``invert-direction`` and ``counter`` properties are removed
+    from :dtcompatible:`adi,tmc2209`, :dtcompatible:`ti,drv84xx` and :dtcompatible:`allegro,a4979`,
+    these are now are implemented by :dtcompatible:`zephyr,gpio-step-dir-stepper`.
+  * :c:func:`stepper_move_by`, :c:func:`stepper_move_to`, :c:func:`stepper_run`,
+    :c:func:`stepper_stop`, :c:func:`stepper_is_moving`, :c:func:`stepper_set_microstep_interval`
+    and :c:func:`stepper_set_event_callback` APIs are removed from :dtcompatible:`adi,tmc2209`,
+    :dtcompatible:`ti,drv84xx` and :dtcompatible:`allegro,a4979`.
+  * :dtcompatible:`adi,tmc2209`, :dtcompatible:`ti,drv84xx` and :dtcompatible:`allegro,a4979`
+    implement :c:group:`stepper_drv_interface`.
+
+* :c:func:`stepper_enable`, :c:func:`stepper_disable`, :c:func:`stepper_set_micro_step_res` and
+  :c:func:`stepper_get_micro_step_res` APIs are removed from :dtcompatible:`zephyr,h-bridge-stepper`.
+* ``en-gpios`` property is removed from :dtcompatible:`zephyr,h-bridge-stepper`.
+* ``micro-step-res`` property is replaced by ``lut-step-gap`` property in
+  :dtcompatible:`zephyr,h-bridge-stepper`.
+
+* :dtcompatible:`adi,tmc50xx` and :dtcompatible:`adi,tmc51xx` devices are now modeled as MFDs.
+* :dtcompatible:`adi,tmc50xx-stepper` and :dtcompatible:`adi,tmc51xx-stepper` drivers implement
+  :c:group:`stepper_interface`.
+* :dtcompatible:`adi,tmc50xx-stepper-drv` and :dtcompatible:`adi,tmc51xx-stepper-drv` drivers implement
+  :c:group:`stepper_drv_interface`.
+
 USB
 ===
 
   * :dtcompatible:`maxim,max3421e_spi` has been renamed to :dtcompatible:`maxim,max3421e-spi`.
 
 .. zephyr-keep-sorted-stop
+
+Video
+===
+
+* CONFIG_VIDEO_OV7670 is now gone and replaced by CONFIG_VIDEO_OV767X.  This allows supporting both the OV7670 and 0V7675.
 
 Bluetooth
 *********
@@ -152,8 +242,32 @@ Networking
   code cannot use POSIX APIs, then the relevant network API prefix needs to be added to the
   code calling a network API.
 
+Modem
+*****
+
+Modem HL78XX
+============
+
+* The Kconfig options related to HL78XX startup timing have been renamed in
+  :kconfig:option:`CONFIG_MODEM_HL78XX_DEV_*` as follows:
+
+  - ``MODEM_HL78XX_DEV_POWER_PULSE_DURATION`` → ``MODEM_HL78XX_DEV_POWER_PULSE_DURATION_MS``
+  - ``MODEM_HL78XX_DEV_RESET_PULSE_DURATION`` → ``MODEM_HL78XX_DEV_RESET_PULSE_DURATION_MS``
+  - ``MODEM_HL78XX_DEV_STARTUP_TIME`` → ``MODEM_HL78XX_DEV_STARTUP_TIME_MS``
+  - ``MODEM_HL78XX_DEV_SHUTDOWN_TIME`` → ``MODEM_HL78XX_DEV_SHUTDOWN_TIME_MS``
+
+* The default startup timing was changed from 1000 ms to 120 ms to improve
+  initialization reliability across all supported boards.
+
+  Applications depending on the previous defaults must update their configuration.
+
 Other subsystems
 ****************
+
+* Cache
+
+  * Use :kconfig:option:`CONFIG_CACHE_HAS_MIRRORED_MEMORY_REGIONS` instead of
+    :kconfig:option:`CONFIG_CACHE_DOUBLEMAP` as the former is more descriptive of the feature.
 
 JWT
 ===
@@ -161,6 +275,25 @@ JWT
 * Previously deprecated ``CONFIG_JWT_SIGN_RSA_LEGACY`` is removed. This removal happens before
   the usual deprecation period of 2 releases because it has been agreed (see :github:`97660`)
   that Mbed TLS is an external module, so normal deprecation rules do not apply in this case.
+
+Libsbc
+======
+
+* Libsbc (sbc.c and sbc.h) is moved under the Bluetooth subsystem. The sbc.h is in
+  include/zephyr/bluetooth now.
+
+Tracing
+========
+
+* CTF: Changed uint8_t id to uint16_t id in the CTF metadata event header. This
+  doubles the space used for event IDs but allows 65,535 events instead of 255.
+
+  With this change, existing CTF traces with 8-bit IDs won't be compatible.
+
+Settings
+========
+
+* ``CONFIG_SETTINGS_TFM_ITS`` has been renamed to :kconfig:option:`CONFIG_SETTINGS_TFM_PSA`.
 
 Modules
 *******
@@ -174,3 +307,8 @@ Trusted Firmware-M
 
 Architectures
 *************
+
+* Renamed ``CONFIG_ARCH_HAS_COHERENCE`` to :kconfig:option:`CONFIG_CACHE_CAN_SAY_MEM_COHERENCE` as
+  the feature is cache related so move it under cache.
+
+  * Use :c:func:`sys_cache_is_mem_coherent` instead of :c:func:`arch_mem_coherent`.
