@@ -1,0 +1,223 @@
+/*
+ * Copyright (c) 2025 Infineon Technologies AG,
+ * or an affiliate of Infineon Technologies AG.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include <arm/infineon/cat1a/cyt2b7/system_clocks.dtsi>
+#include <infineon/cat1a/mpns/CYT2B75CAE.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/ {
+    model = "Infineon CYTVII-B-E-1M-100-CPU";
+    compatible = "infineon,tviibe1m";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,console = &uart3;
+		zephyr,shell-uart = &uart3;
+	};
+
+    aliases {
+		led0 = &cpu_user_led0;
+		led1 = &bb_user_led0;
+		led2 = &bb_user_led1;
+		led3 = &bb_user_led2;
+		led4 = &bb_user_led3;
+		led5 = &bb_user_led4;
+		led6 = &bb_user_led5;
+		led7 = &bb_user_led6;
+		led8 = &bb_user_led7;
+		led9 = &bb_user_led8;
+        led10 = &bb_user_led9;
+
+        sw0 = &cpu_user_bt0;
+		sw1 = &bb_user_bt1;
+		sw2 = &bb_user_bt2;
+		sw3 = &bb_user_bt3;
+		sw4 = &bb_user_bt4;
+		sw5 = &bb_user_bt5;
+
+    };
+
+    leds {
+		compatible = "gpio-leds";
+
+        cpu_user_led0: led0 {
+			label = "LED_0";
+			gpios = <&gpio_prt8 2 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led0: led1 {
+			label = "LED_1";
+			gpios = <&gpio_prt19 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led1: led2 {
+			label = "LED_2";
+			gpios = <&gpio_prt23 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led2: led3 {
+			label = "LED_3";
+			gpios = <&gpio_prt19 1 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led3: led4 {
+			label = "LED_4";
+			gpios = <&gpio_prt19 0 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led4: led5 {
+			label = "LED_5";
+			gpios = <&gpio_prt17 2 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led5: led6 {
+			label = "LED_6";
+			gpios = <&gpio_prt14 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led6: led7 {
+			label = "LED_7";
+			gpios = <&gpio_prt13 2 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led7: led8 {
+			label = "LED_8";
+			gpios = <&gpio_prt13 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led8: led9 {
+			label = "LED_9";
+			gpios = <&gpio_prt13 4 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led9: led10 {
+			label = "LED_10";
+			gpios = <&gpio_prt13 5 GPIO_ACTIVE_HIGH>;
+		};
+
+	};
+
+    gpio_keys {
+		compatible = "gpio-keys";
+
+		cpu_user_bt0: cpu_user_btn0 {
+			label = "SW_0";
+			gpios = <&gpio_prt6 5 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_0>;
+		};
+
+		bb_user_bt1: bb_user_btn1 {
+			label = "SW_1";
+			gpios = <&gpio_prt13 6 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_1>;
+		};
+
+		bb_user_bt2: bb_user_btn2 {
+			label = "SW_2";
+			gpios = <&gpio_prt13 7 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_2>;
+		};
+
+		bb_user_bt3: bb_user_btn3 {
+			label = "SW_3";
+			gpios = <&gpio_prt14 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_3>;
+		};
+
+		bb_user_bt4: bb_user_btn4 {
+			label = "SW_4";
+			gpios = <&gpio_prt12 4 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_4>;
+		};
+
+		bb_user_bt5: bb_user_btn5 {
+			label = "SW_5";
+			gpios = <&gpio_prt19 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_5>;
+		};
+
+	};
+};
+
+&p13_0_scb3_uart_rx {
+	input-enable;
+};
+
+&p13_1_scb3_uart_tx {
+	drive-push-pull;
+};
+
+uart3: &scb3 {
+	compatible = "infineon,uart";
+	status = "okay";
+	current-speed = <115200>;
+
+	/* UART pins */
+	pinctrl-0 = <&p13_1_scb3_uart_tx &p13_0_scb3_uart_rx>;
+	pinctrl-names = "default";
+};
+
+&gpio_prt6 {
+	status = "okay";
+};
+
+&gpio_prt8 {
+	status = "okay";
+};
+
+&gpio_prt12 {
+	status = "okay";
+};
+
+&gpio_prt13 {
+	status = "okay";
+};
+
+&gpio_prt14 {
+	status = "okay";
+};
+
+&gpio_prt17 {
+	status = "okay";
+};
+
+&gpio_prt19 {
+	status = "okay";
+};
+
+&gpio_prt23 {
+	status = "okay";
+};
+
+
+&path_mux0 {
+	status = "okay";
+};
+
+&path_mux1 {
+	status = "okay";
+};
+
+&path_mux2 {
+	status = "okay";
+};
+
+&path_mux3 {
+	status = "okay";
+};
+
+
+&clk_peri {
+	status = "okay";
+};
+
+&clk_slow {
+	status = "okay";
+};
