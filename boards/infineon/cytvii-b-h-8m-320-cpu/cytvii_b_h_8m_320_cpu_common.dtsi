@@ -5,22 +5,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include <arm/infineon/cat1c/xmc7200/system_clocks.dtsi>
-#include <arm/infineon/cat1c/mpns/cyt4bfccjs.dtsi>
+#include <arm/infineon/cat1c/mpns/cyt4bfcche.dtsi>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
 / {
 	aliases {
 		led0 = &cpu_user_led0;
-		led1 = &bb_user_led1;
-		led2 = &bb_user_led2;
-		led3 = &bb_user_led3;
-		led4 = &bb_user_led4;
-		led5 = &bb_user_led5;
-		led6 = &bb_user_led6;
-		led7 = &bb_user_led7;
-		led8 = &bb_user_led8;
-		led9 = &bb_user_led9;
-		led10 = &bb_user_led10;
+		led1 = &cpu_user_led1;
+		led2 = &bb_user_led0;
+		led3 = &bb_user_led1;
+		led4 = &bb_user_led2;
+		led5 = &bb_user_led3;
+		led6 = &bb_user_led4;
+		led7 = &bb_user_led5;
+		led8 = &bb_user_led6;
+		led9 = &bb_user_led7;
+		led10 = &bb_user_led8;
+		led11 = &bb_user_led9;
 
 		sw0 = &cpu_user_bt0;
 		sw1 = &bb_user_bt1;
@@ -38,53 +39,58 @@
 			gpios = <&gpio_prt23 2 GPIO_ACTIVE_HIGH>;
 		};
 
-		bb_user_led1: led1 {
+		cpu_user_led1: led1 {
 			label = "LED_1";
+			gpios = <&gpio_prt0 0 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led0: led2 {
+			label = "LED_2";
 			gpios = <&gpio_prt32 3 GPIO_ACTIVE_HIGH>;
 		};
 
-		bb_user_led2: led2 {
-			label = "LED_2";
+		bb_user_led1: led3 {
+			label = "LED_3";
 			gpios = <&gpio_prt32 5 GPIO_ACTIVE_HIGH>;
 		};
 
-		bb_user_led3: led3 {
-			label = "LED_3";
+		bb_user_led2: led4 {
+			label = "LED_4";
 			gpios = <&gpio_prt32 2 GPIO_ACTIVE_HIGH>;
 		};
 
-		bb_user_led4: led4 {
-			label = "LED_4";
+		bb_user_led3: led5 {
+			label = "LED_5";
 			gpios = <&gpio_prt31 2 GPIO_ACTIVE_HIGH>;
 		};
 
-		bb_user_led5: led5 {
-			label = "LED_5";
+		bb_user_led4: led6 {
+			label = "LED_6";
 			gpios = <&gpio_prt31 0 GPIO_ACTIVE_HIGH>;
 		};
 
-		bb_user_led6: led6 {
-			label = "LED_6";
+		bb_user_led5: led7 {
+			label = "LED_7";
 			gpios = <&gpio_prt29 7 GPIO_ACTIVE_HIGH>;
 		};
 
-		bb_user_led7: led7 {
-			label = "LED_7";
+		bb_user_led6: led8 {
+			label = "LED_8";
 			gpios = <&gpio_prt29 4 GPIO_ACTIVE_HIGH>;
 		};
 
-		bb_user_led8: led8 {
-			label = "LED_8";
+		bb_user_led7: led9 {
+			label = "LED_9";
 			gpios = <&gpio_prt3 7 GPIO_ACTIVE_HIGH>;
 		};
 
-		bb_user_led9: led9 {
-			label = "LED_9";
+		bb_user_led8: led10 {
+			label = "LED_10";
 			gpios = <&gpio_prt3 5 GPIO_ACTIVE_HIGH>;
 		};
 
-		bb_user_led10: led10 {
-			label = "LED_10";
+		bb_user_led9: led11 {
+			label = "LED_11";
 			gpios = <&gpio_prt2 7 GPIO_ACTIVE_HIGH>;
 		};
 	};
@@ -139,6 +145,10 @@ uart3: &scb3 {
 	pinctrl-0 = <&p13_1_scb3_uart_tx &p13_0_scb3_uart_rx
 		     &p13_2_scb3_uart_rts &p13_3_scb3_uart_cts>;
 	pinctrl-names = "default";
+};
+
+&gpio_prt0 {
+	status = "okay";
 };
 
 &gpio_prt2 {

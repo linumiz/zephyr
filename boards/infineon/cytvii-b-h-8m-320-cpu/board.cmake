@@ -6,4 +6,4 @@
 # Connect to CM0P core
 board_runner_args(openocd "--target-handle=cat1c.cpu.cm0")
 
-include($(ZEPHYR_BASE)/boards/common/openocd.board.cmake)
+include(${ZEPHYR_BASE}/boards/common/openocd.board.cmake)
