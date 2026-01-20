@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 board:
-  name: cytvii-b-h-8m-320-cpu
+  name: cytvii_b_h_8m_320_cpu
   full_name: T2G CYTVII-B-H-8M-320-CPU Evaluation Board
   vendor: infineon
   socs:

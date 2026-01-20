@@ -94,12 +94,50 @@ And the second Cortex®-M7 core:
    :board: cytvii-b-h-8m-320-cpu/cyt4bfcche/m7_1
    :goals: build
 
-.. note:: Only Cortex®-M0+ core is enabled at startup. To enable the first Cortex®-M7 core, add the next code to Cortex®-M0+ application: ``Cy_SysEnableCM7(CORE_CM7_0, CY_CORTEX_M7_0_APPL_ADDR);``, and the next code to enable the second Cortex®-M7 core: ``Cy_SysEnableCM7(CORE_CM7_1, CY_CORTEX_M7_1_APPL_ADDR);``.
-
+.. note:: Only Cortex®-M0+ core is enabled at startup. To enable the first Cortex®-M7 core, add the next code to Cortex®-M0+ application or soc_m0p.c : ``Cy_SysEnableCM7(CORE_CM7_0, CY_CORTEX_M7_0_APPL_ADDR);``, and the next code to enable the second Cortex®-M7 core: ``Cy_SysEnableCM7(CORE_CM7_1, CY_CORTEX_M7_1_APPL_ADDR);``.
 Flashing
 ========
 
 The cytvii-b-h-8m-320-cpu does not include an onboard programmer/debugger to flash/debug use the Cypress MiniProg4 , Arm Standard JTAG (20 pin connector) or any compatible programming tool.
+
+Running on Dual Core
+********************
+
+#. Build the Zephyr kernel and the :zephyr:code-sample:`button` sample application:
+
+   .. zephyr-app-commands::
+      :zephyr-app: samples/basic/button
+      :board: cytvii-b-h-8m-320-cpu/cyt4bfcche/m7_0 or m7_1
+      :goals: build
+      :compact:
+
+#. To flash an image:
+
+   .. zephyr-app-commands::
+      :zephyr-app: samples/basic/button
+      :board: cytvii-b-h-8m-320-cpu/cyt4bfcche/m7_0 or m7_1
+      :goals: flash
+      :compact:
+
+#. Configure Cortex-M0+ to enable Cortex-M7_0/1:
+
+   The last step flash the M7_0/1 image on the flash.  However, Cortex-M0 by default
+   doesn't start the M7_0/1 and nothing will happen.  To enable Cortex-M7_0/1 CPU,
+   add the following code to the M0 application or soc_m0p.c file:
+   .. code-block:: c
+
+      Cy_SysEnableCM7(CORE_CM7_0, CY_CORTEX_M7_0_APPL_ADDR);
+      Cy_SysEnableCM7(CORE_CM7_1, CY_CORTEX_M7_1_APPL_ADDR);
+
+   .. zephyr-app-commands::
+      :zephyr-app: samples/hello_world
+      :board: cytvii-b-h-8m-320-cpu/cyt4bfcche/m0p
+      :goals: build flash
+      :compact:
+
+   Now you can press button SW-0 and see LED-0 blink at same time you have the
+   "Hello World!" on your terminal.
+
 
 Infineon OpenOCD Installation
 =============================
