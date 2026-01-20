@@ -123,3 +123,25 @@ family:
       cpuclusters:
       - name: m0
       - name: m4
+  - name: cyt2b7
+    socs:
+    - name: cyt2b73bas
+    - name: cyt2b73bae
+    - name: cyt2b73cas
+    - name: cyt2b73cae
+    - name: cyt2b74bas
+    - name: cyt2b74bae
+    - name: cyt2b74cas
+    - name: cyt2b74cae
+    - name: cyt2b75bas
+    - name: cyt2b75bae
+    - name: cyt2b75cas
+    - name: cyt2b75cae
+    - name: cyt2b77bas
+    - name: cyt2b77bae
+    - name: cyt2b77cas
+    - name: cyt2b77cae
+    - name: cyt2b78bas
+    - name: cyt2b78bae
+    - name: cyt2b78cas
+    - name: cyt2b78cae

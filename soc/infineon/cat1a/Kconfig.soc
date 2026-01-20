@@ -27,6 +27,8 @@ config SOC_FAMILY_PSOC6_LEGACY_M4
 config SOC_FAMILY_PSOC6_LEGACY_M0
 	bool
 
+config SOC_FAMILY_CYT2B7
+	bool
 # Cypress PSOC™ 6 MCU lines
 config SOC_SERIES_PSOC6_60
 	bool
@@ -59,3 +61,29 @@ config SOC_SERIES
 	default "psoc6_62" if SOC_SERIES_PSOC6_62
 	default "psoc6_63" if SOC_SERIES_PSOC6_63
 	default "psoc6_64" if SOC_SERIES_PSOC6_64
+
+# Infineon Traveo-II CYT2B7 MCU lines
+config SOC_SERIES_CYT2B73
+	bool
+	select SOC_FAMILY_CYT2B7
+	select SOC_FAMILY_INFINEON_CAT1A
+
+config SOC_SERIES_CYT2B74
+	bool
+	select SOC_FAMILY_CYT2B7
+	select SOC_FAMILY_INFINEON_CAT1A
+
+config SOC_SERIES_CYT2B75
+	bool
+	select SOC_FAMILY_CYT2B7
+	select SOC_FAMILY_INFINEON_CAT1A
+
+config SOC_SERIES_CYT2B77
+	bool
+	select SOC_FAMILY_CYT2B7
+	select SOC_FAMILY_INFINEON_CAT1A
+
+config SOC_SERIES_CYT2B78
+	bool
+	select SOC_FAMILY_CYT2B7
+	select SOC_FAMILY_INFINEON_CAT1A

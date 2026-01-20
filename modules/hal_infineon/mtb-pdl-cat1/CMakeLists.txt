@@ -36,6 +36,7 @@ zephyr_library_sources(${pdl_drv_dir}/source/TOOLCHAIN_GCC_ARM/cy_syslib_ext.S)
 
 # Peripheral drivers
 zephyr_library_sources_ifdef(CONFIG_SOC_FAMILY_PSOC6_LEGACY      ${pdl_drv_dir}/source/cy_sysint.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_FAMILY_CYT2B7      ${pdl_drv_dir}/source/cy_sysint.c)
 if(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_sysint.c)
 endif()
@@ -93,7 +94,7 @@ zephyr_library_sources(${pdl_drv_dir}/source/cy_ipc_sema.c)
 zephyr_library_sources(${pdl_drv_dir}/source/cy_prot.c)
 zephyr_library_sources(${pdl_drv_dir}/source/cy_sysclk.c)
 
-if(CONFIG_SOC_FAMILY_INFINEON_CAT1B OR CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+if(CONFIG_SOC_FAMILY_INFINEON_CAT1B OR CONFIG_SOC_FAMILY_INFINEON_CAT1C OR CONFIG_SOC_FAMILY_INFINEON_CAT1A)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_sysclk_v2.c)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_wdt_b.c)
 endif()
@@ -115,6 +116,7 @@ zephyr_library_sources(${pdl_drv_dir}/source/cy_tcpwm_pwm.c)
 
 zephyr_library_sources(${pdl_drv_dir}/source/cy_syspm.c)
 zephyr_library_sources_ifdef(CONFIG_SOC_FAMILY_INFINEON_CAT1C ${pdl_drv_dir}/source/cy_syspm_v3.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_FAMILY_INFINEON_CAT1A ${pdl_drv_dir}/source/cy_syspm_v3.c)
 
 # add IPC_BT driver for CYW208XX devices
 zephyr_library_sources_ifdef(CONFIG_BT_CYW208XX  ${pdl_drv_dir}/source/cy_ipc_bt.c)

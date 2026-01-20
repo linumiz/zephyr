@@ -1,0 +1,29 @@
+/*
+ * Copyright (c) 2025 Infineon Technologies AG,
+ * or an affiliate of Infineon Technologies AG.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
+#include "cyt2b7.dtsi"
+
+/ {
+
+        soc {
+                /delete-node/ gpio@40310080; // gpio_prt1
+                /delete-node/ gpio@40310180; // gpio_prt3
+                /delete-node/ gpio@40310200; // gpio_prt4
+                /delete-node/ gpio@40310480; // gpio_prt9
+                /delete-node/ gpio@40310500; // gpio_prt10
+                /delete-node/ gpio@40310780; // gpio_prt15
+                /delete-node/ gpio@40310800; // gpio_prt16
+                /delete-node/ gpio@40310880; // gpio_prt17
+                /delete-node/ gpio@40310980; // gpio_prt19
+                /delete-node/ gpio@40310A00; // gpio_prt20
+                /delete-node/ gpio@40310B00; // gpio_prt22
+
+}
+
+}
