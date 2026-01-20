@@ -5,18 +5,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * @file
- * @ingroup watchdog_interface
- * @brief Main header file for watchdog driver API.
- */
-
 #ifndef ZEPHYR_INCLUDE_DRIVERS_WATCHDOG_H_
 #define ZEPHYR_INCLUDE_DRIVERS_WATCHDOG_H_
 
 /**
- * @brief Interfaces for watchdog devices.
- * @defgroup watchdog_interface Watchdog
+ * @brief Watchdog Interface
+ * @defgroup watchdog_interface Watchdog Interface
  * @since 1.0
  * @version 1.0.0
  * @ingroup io_interfaces
@@ -82,6 +76,8 @@ struct wdt_window {
 	uint32_t min;
 	/** Upper limit of watchdog feed timeout in milliseconds. */
 	uint32_t max;
+	/** Warning or Alarm limit of watchdog feed timeout in milliseconds. */
+	uint32_t warn_limit;
 };
 
 /**

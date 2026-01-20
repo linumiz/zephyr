@@ -18,6 +18,7 @@ set(edge_dir ${template_dir}/files)
 if(CONFIG_SOC_FAMILY_INFINEON_CAT1A)
   zephyr_include_directories(${cat1a_dir}/COMPONENT_MTB)
   zephyr_include_directories(${cat1a_dir}/COMPONENT_MTB/COMPONENT_CM33/HEADER_FILES)
+  zephyr_include_directories(${cat1a_dir}/COMPONENT_MTB/HEADER_FILES)
 
   zephyr_library_sources_ifdef(CONFIG_CPU_CORTEX_M4
     ${cat1a_dir}/COMPONENT_MTB/COMPONENT_CM4/system_psoc6_cm4.c)

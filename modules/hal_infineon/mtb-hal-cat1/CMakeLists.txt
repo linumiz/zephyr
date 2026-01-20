@@ -60,6 +60,18 @@ zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_PSOC6_04_68_QFN
 zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_PSOC6_04_80_TQFP
   ${hal_cat1a_dir}/source/pin_packages/cyhal_psoc6_04_80_tqfp.c)
 
+
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2B7_64_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe1m_64_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2B7_80_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe1m_80_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2B7_100_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe1m_100_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2B7_144_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe1m_144_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2B7_176_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe1m_176_lqfp.c)
+
 zephyr_library_sources_ifdef(CONFIG_SOC_SERIES_CYW20829
   ${hal_cat1b_dir}/source/pin_packages/cyhal_cyw20829_48_qfn.c)
 zephyr_library_sources_ifdef(CONFIG_SOC_SERIES_CYW20829
@@ -87,6 +99,8 @@ zephyr_library_sources_ifdef(CONFIG_SOC_DIE_PSOC6_03
   ${hal_cat1a_dir}/source/triggers/cyhal_triggers_psoc6_03.c)
 zephyr_library_sources_ifdef(CONFIG_SOC_DIE_PSOC6_04
   ${hal_cat1a_dir}/source/triggers/cyhal_triggers_psoc6_04.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_DIE_CYT2B7
+  ${hal_cat1a_dir}/source/triggers/cyhal_triggers_tviibe1m.c)
 
 # High level interface for interacting with CAT1 hardware
 zephyr_library_sources_ifdef(CONFIG_USE_INFINEON_FLASH   ${hal_dir}/source/cyhal_nvm.c)
