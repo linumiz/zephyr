@@ -1065,3 +1065,10 @@ Architectures
     * ``CONFIG_NO_FPU``
     * ``CONFIG_SINGLE_PRECISION_FPU``
     * ``CONFIG_DOUBLE_PRECISION_FPU``
+
+Crypto
+******
+
+* Added AES CFB and OFB cipher mode identifiers to the crypto API
+  (``include/zephyr/crypto/cipher.h``). This change is additive and does not affect existing
+  applications.
