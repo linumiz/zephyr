@@ -22,14 +22,15 @@ if (CONFIG_SOC_FAMILY_INFINEON_CAT1 OR CONFIG_SOC_FAMILY_PSOC6_LEGACY)
   ## Add mtb-templates-cat1 sources for CAT1 devices
   add_subdirectory(mtb-template-cat1)
 
+if (CONFIG_SOC_SERIES_CYT4DN)
   add_subdirectory(serial-memory-ms)
   add_subdirectory(zephyr-ifx-cycfg)
   add_subdirectory(mtb-hal-t2gc2d6m)
 endif()
+endif()
 
 if (CONFIG_SOC_FAMILY_INFINEON_CAT1 AND NOT CONFIG_SOC_FAMILY_PSOC6_LEGACY)
   ## Add mtb-hal-cat1 sources for CAT1 devices
-#  add_subdirectory(mtb-hal-cat1)
 
   ## Add catcm0p sleep images for CM0 Devices
   if(CONFIG_SOC_PSOC6_CM0P_IMAGE_SLEEP)
@@ -39,7 +40,10 @@ if (CONFIG_SOC_FAMILY_INFINEON_CAT1 AND NOT CONFIG_SOC_FAMILY_PSOC6_LEGACY)
   ## Add abstraction-rtos sources
   add_subdirectory(abstraction-rtos)
 
-#  add_subdirectory(serial-flash)
+if(CONFIG_SOC_SERIES_XMC7200)
+  add_subdirectory(mtb-hal-cat1)
+  add_subdirectory(serial-flash)
+endif()
 
 endif()
 
