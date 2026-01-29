@@ -235,9 +235,9 @@ can0: &can0_0 {
 	pinctrl-0 = <&p3_1_eth_mdc &p3_0_eth_mdio>;
 	pinctrl-names = "default";
 
-	eth0_phy: phy@1 {
+	eth0_phy: phy@0 {
 		compatible = "ethernet-phy";
-		reg = <0x1>;
+		reg = <0x0>;
 		status = "okay";
 	};
 };

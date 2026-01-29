@@ -2527,7 +2527,7 @@
             eth0_mac: ethernet {
                 compatible = "xlnx,gem";
                 status = "disabled";
-                system-interrupts = <83 4>, <84 4>;
+                system-interrupts = <556 4>, <557 4>;
                 amba-ahb-burst-length = <XLNX_GEM_AMBA_AHB_BURST_INCR4>;
                 hw-rx-buffer-size = <XLNX_GEM_HW_RX_BUFFER_SIZE_8KB>;
                 hw-rx-buffer-offset = <0>;
