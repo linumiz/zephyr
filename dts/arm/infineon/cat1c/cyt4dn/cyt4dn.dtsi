@@ -2475,13 +2475,16 @@
 			reg = <0x40900000 0x100000>;
 			#io-channel-cells = <1>;
 			system-interrupts = <160 3>;
-			status = "okay";
+			clock-frequency = <26670000>;
+			ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+			ifx,peri-clk = <0x0114>;
+			ifx,peri-div = <0>; /* 8-bit divider */
+			ifx,peri-div-inst = <2>;
 		};
 
 		eth0: ethernet@40480000 {
-                       compatible = "xlnx,gem-controller";
-		       reg = <0x40481000 0x1000>,
-			     <0x40480000 0x1000>;
+			compatible = "xlnx,gem-controller";
+			reg = <0x40481000 0x1000>, <0x40480000 0x1000>;
 
 			eth0_mac: ethernet {
 				compatible = "xlnx,gem";
