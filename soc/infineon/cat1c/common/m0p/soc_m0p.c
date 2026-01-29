@@ -74,13 +74,18 @@ void soc_prep_hook(void)
 	SystemCoreClockUpdate();
 
 	cat1c_m0p_srom_init();
+}
 
-#if DT_NODE_HAS_STATUS(DT_NODELABEL(m7_0), okay)
-	Cy_SysEnableCM7(CORE_CM7_0, DT_REG_ADDR(DT_NODELABEL(code_flash)) +
+static int soc_start_cm7()
+{
+#if CONFIG_INFINEON_CAT1C_START_M7_0
+	Cy_SysEnableCM7(CORE_CM7_0, DT_REG_ADDR(DT_NODELABEL(code_flash0)) +
 					    DT_REG_ADDR(DT_NODELABEL(m7_0_partition)));
 #endif
-#if DT_NODE_HAS_STATUS(DT_NODELABEL(m7_1), okay)
-	Cy_SysEnableCM7(CORE_CM7_1, DT_REG_ADDR(DT_NODELABEL(code_flash)) +
+#if CONFIG_INFINEON_CAT1C_START_M7_1
+	Cy_SysEnableCM7(CORE_CM7_1, DT_REG_ADDR(DT_NODELABEL(code_flash0)) +
 					    DT_REG_ADDR(DT_NODELABEL(m7_1_partition)));
 #endif
+	return 0;
 }
+SYS_INIT(soc_start_cm7, PRE_KERNEL_2, 0);

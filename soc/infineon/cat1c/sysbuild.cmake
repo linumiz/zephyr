@@ -25,5 +25,5 @@ if(SB_CONFIG_M0P_LAUNCHER)
 
   #string(CONCAT launcher_snippet "infineon-" ${launcher_main})
 
-  #sysbuild_cache_set(VAR ${image}_SNIPPET APPEND REMOVE_DUPLICATES ${launcher_snippet})
+  set_config_bool(${image} CONFIG_INFINEON_CAT1C_START_M7_0 1)
 endif()
