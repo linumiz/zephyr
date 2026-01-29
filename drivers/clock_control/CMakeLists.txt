@@ -26,7 +26,7 @@ zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_NPCX                clock_cont
 zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_NRF                 clock_control_nrf.c)
 zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_NRF_DRIVER_CALIBRATION nrf_clock_calibration.c)
 zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_RV32M1_PCC          clock_control_rv32m1_pcc.c)
-zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_INFINEON_CAT1       clock_control_ifx.c)
+zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_INFINEON_CAT1       clock_control_ifx.c clock_control_ifx_cat1_hf_clock.c)
 zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_IFX_CAT1_FIXED_CLOCK       clock_control_ifx_cat1_fixed_clock.c)
 zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_IFX_CAT1_FIXED_FACTOR_CLOCK       clock_control_ifx_cat1_fixed_factor_clock.c)
 zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_IFX_CAT1_PERI_CLOCK       clock_control_ifx_cat1_peri_clock.c)
