@@ -38,7 +38,7 @@ static void cat1c_m0p_srom_init()
 	volatile const uint32_t *const volatile vectorTable = (uint32_t *)_vector_start;
 #endif
 	/* The array syntax is necessary to avoid out-of-bounds warnings in some compilers. */
-	volatile uint32_t (*const volatile sromTable)[32] = (uint32_t (*)[32])0x00000000;
+	volatile uint32_t(*const volatile sromTable)[32] = (uint32_t(*)[32])0x00000000;
 
 #if defined(CONFIG_SRAM_VECTOR_TABLE)
 	/* Use IRQ0 and IRQ1 handlers from SROM vector table */
