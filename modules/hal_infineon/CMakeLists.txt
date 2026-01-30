@@ -58,3 +58,11 @@ endif()
 if (CONFIG_BT_PSOC6_BLESS)
 add_subdirectory(bless)
 endif()
+
+if (CONFIG_HAS_INFINEON_TC3XX_HAL)
+  add_subdirectory(${ZEPHYR_HAL_INFINEON_MODULE_DIR}/tc3xx tc3xx)
+endif()
+
+if (CONFIG_HAS_INFINEON_TC4XX_HAL)
+  add_subdirectory(${ZEPHYR_HAL_INFINEON_MODULE_DIR}/tc4xx tc4xx)
+endif()
