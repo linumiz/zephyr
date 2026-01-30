@@ -1,0 +1,50 @@
+# Copyright (c) 2024 Infineon Technologies AG
+# SPDX-License-Identifier: Apache-2.0
+
+# Infineon Aurix 2nd Generation Devices
+
+config SOC_SERIES_TC3XX
+	select SOC_FAMILY_AURIX
+	help
+	  Enable support for TC3XX MCU series
+
+config SOC_SERIES
+    default "tc3xx" if SOC_SERIES_TC3XX
+
+config SOC_TC37A
+	bool
+	select SOC_SERIES_TC3XX
+
+config SOC_TC37AED
+	bool
+	select SOC_SERIES_TC3XX
+
+config SOC_TC38A
+	bool
+	select SOC_SERIES_TC3XX
+
+config SOC_TC39B
+	bool
+	select SOC_SERIES_TC3XX
+
+config SOC_TC375TP
+	bool
+	select SOC_TC37A
+
+config SOC_TC377TX
+	bool
+	select SOC_TC37AED
+
+config SOC_TC387QP
+	bool
+	select SOC_TC38A
+	
+config SOC_TC397XP 
+	bool
+	select SOC_TC39B
+
+config SOC
+	default "tc375tp" if SOC_TC375TP
+	default "tc377tx" if SOC_TC377TX
+	default "tc387qp" if SOC_TC3787QP
+	default "tc397xp" if SOC_TC397XP
