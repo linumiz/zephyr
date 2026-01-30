@@ -1,0 +1,16 @@
+# Copyright (c) 2024 Infineon Technologies AG
+# SPDX-License-Identifier: Apache-2.0
+
+config PINCTRL_TC3X
+	bool "Infineon TC3x pin controller driver"
+	default y
+	depends on DT_HAS_INFINEON_TC3XX_PINCTRL_ENABLED
+	help
+	  Enables Infineon TC3x pin controller driver
+
+config PINCTRL_TC4X
+	bool "Infineon TC4x pin controller driver"
+	default y
+	depends on DT_HAS_INFINEON_TC4XX_PINCTRL_ENABLED
+	help
+	  Enables Infineon TC4x pin controller driver
