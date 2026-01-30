@@ -1,0 +1,37 @@
+if SOC_SERIES_TC4XX
+
+config NUM_IRQS
+    default 2048
+
+config AURIX_CORE_TOS
+	default 0 if TRICORE_CORE_ID = 0
+	default 1 if TRICORE_CORE_ID = 1
+	default 2 if TRICORE_CORE_ID = 2
+	default 3 if TRICORE_CORE_ID = 3
+	default 4 if TRICORE_CORE_ID = 4
+	default 5 if TRICORE_CORE_ID = 5
+	default 6 if TRICORE_CORE_ID = 6
+
+config AURIX_NEXT_CORE_START_ADDRESS
+	default 0x80400000 if (AURIX_NEXT_CORE_ID=1)
+	default 0x80800000 if (AURIX_NEXT_CORE_ID=2)
+	default 0x80A00000 if (AURIX_NEXT_CORE_ID=3)
+	default 0x80E00000 if (AURIX_NEXT_CORE_ID=4)
+	default 0x81200000 if (AURIX_NEXT_CORE_ID=5)
+	default 0
+
+#config ETH_DWC_ETHER_XGMAC_DMA_PER_CH_IRQ
+#	default y
+
+#config ETH_DWC_ETHER_QOS_DMA_PER_CH_IRQ
+#	default y
+
+config TRICORE_MPU_CODE_REGIONS
+	default 16
+
+config TRICORE_MPU_DATA_REGIONS
+	default 24
+
+config TRICORE_MPU_PROTECTION_SETS
+	default 8
+endif
