@@ -1,0 +1,19 @@
+/*
+ * Copyright (c) 2026 Linumiz
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	cm7_data: cm7_data@10080000 {
+		compatible = "soc-nv-flash";
+		reg = <0x10080000 DT_SIZE_K(5824)>;
+		write-block-size = <512>;
+		erase-block-size = <512>;
+	};
+
+	cm7_code: cm7_code@28004000 {
+		compatible = "mmio-sram";
+		reg = <0x28004800  DT_SIZE_K(622)>;
+	};
+};

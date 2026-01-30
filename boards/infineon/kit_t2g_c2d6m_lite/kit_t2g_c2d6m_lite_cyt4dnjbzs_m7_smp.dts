@@ -1,0 +1,78 @@
+/*
+ * Copyright (c) 2026 Linumiz
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <arm/infineon/cat1c/cyt4dn/cyt4dn.dtsi>
+#include <arm/infineon/cat1c/cyt4dn/system_clocks.dtsi>
+#include <arm/infineon/cat1c/cyt4dn/cyt4dn_m7.dtsi>
+#include <arm/infineon/cat1c/cyt4dn/memory_partition_smp.dtsi>
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
+#include "kit_t2g_c2d6m_lite_common.dtsi"
+
+/ {
+
+	model = "Infineon Evaluation board for CYT4DNJBZS M7";
+	compatible = "infineon,kit_t2g_c2d6m_lite", "infineon,cyt4dn";
+
+	cpus {
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-m7";
+			reg = <0>;
+			clock-frequency = <320000000>;
+		};
+
+		cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-m7";
+			reg = <1>;
+			clock-frequency = <320000000>;
+		};
+	};
+
+	aliases {
+		uart-7 = &uart7;
+		led0 = &user_led0;
+		led1 = &user_led1;
+	};
+
+	chosen {
+		zephyr,sram = &cm7_code;
+		zephyr,flash = &cm7_data;
+		zephyr,dtcm = &dtcm;
+		zephyr,itcm = &itcm;
+		zephyr,console = &uart7;
+		zephyr,shell-uart = &uart7;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		user_led0: led_0 {
+			label = "LED_0";
+			gpios = <&gpio_prt7 5 GPIO_ACTIVE_HIGH>;
+		};
+
+		user_led1: led_1 {
+			label = "LED_1";
+			gpios = <&gpio_prt7 7 GPIO_ACTIVE_HIGH>;
+		};
+	};
+};
+
+uart7: &scb7 {
+	compatible = "infineon,cat1-uart-pdl";
+	status = "okay";
+	current-speed = <115200>;
+	clocks = <&clk_hf2>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x010F>;
+	ifx,peri-div = <0>; /* 8-bit divider */
+	ifx,peri-div-inst = <0>;
+
+	/* UART pins */
+	pinctrl-0 = <&p9_0_scb7_uart_rx &p9_1_scb7_uart_tx>;
+	pinctrl-names = "default";
+};
