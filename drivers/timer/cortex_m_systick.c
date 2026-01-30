@@ -546,5 +546,20 @@ static int sys_clock_driver_init(void)
 	return 0;
 }
 
+#if defined(CONFIG_SMP) && defined(CONFIG_SOC_CYT4DNJBZS_M7_SMP)
+void smp_timer_init()
+{
+	NVIC_SetPriority(SysTick_IRQn, _IRQ_PRIO_OFFSET);
+	last_load = CYC_PER_TICK;
+	overflow_cyc = 0U;
+	SysTick->LOAD = last_load - 1;
+	SysTick->VAL = 0; /* resets timer to last_load */
+	SysTick->CTRL |= (SysTick_CTRL_ENABLE_Msk |
+			  SysTick_CTRL_TICKINT_Msk |
+			  SysTick_CTRL_CLKSOURCE_Msk);
+	return;
+}
+#endif
+
 SYS_INIT(sys_clock_driver_init, PRE_KERNEL_2,
 	 CONFIG_SYSTEM_CLOCK_INIT_PRIORITY);
