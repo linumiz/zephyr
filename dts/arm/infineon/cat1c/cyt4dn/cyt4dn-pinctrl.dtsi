@@ -247,6 +247,12 @@
 				drive-push-pull;
 				input-enable;
 			};
+
+                        /omit-if-no-ref/ p4_1_tc0_28_tr: p4_1_tc0_28_tr {
+				pinmux = <DT_CAT1_PINMUX(4, 1, HSIOM_SEL_ACT_2)>;
+				drive-push-pull;
+				input-enable;
+                        };
 		};
 	};
 };
