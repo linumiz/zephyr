@@ -118,9 +118,35 @@ SECTION_SUBSEC_FUNC(TEXT,_reset_section,__start)
      * z_main_stack here.
      *
      */
+
+#if defined(CONFIG_CPU_CORTEX_M7) && defined(CONFIG_SOC_CYT4DNJBZS_M7_SMP)
+    /* Distinguish CPU core by reading CPUSS_IDENTITY register */
+    /* M7_0: MS=0xE, M7_1: MS=0xD, M0P: MS=0x0 (bits 11:8) */
+    ldr r1, =0x40200000          /* Load CPUSS_IDENTITY register address */
+    ldr r0, [r1]                 /* Read CPUSS_IDENTITY value */
+    lsr r0, r0, #8               /* Shift right by 8 to get MS field in bits 3:0 */
+    and r0, r0, #0xF             /* Mask to get only 4 bits (MS field) */
+    cmp r0, #0xD                 /* Compare with 0xD (M7_1's MS value) */
+    beq core1_init               /* If M7_1, branch to secondary init */
+#endif
+
     ldr r0, =z_main_stack + CONFIG_MAIN_STACK_SIZE
     msr msp, r0
+    b continue_boot              /* Skip secondary core setup */
 
+#if defined(CONFIG_CPU_CORTEX_M7) && defined(CONFIG_SOC_CYT4DNJBZS_M7_SMP)
+core1_init:
+    /* Set MSP to CPU1's interrupt stack top */
+    ldr r0, =z_interrupt_stacks
+    ldr r1, =(CONFIG_ISR_STACK_SIZE + MPU_GUARD_ALIGN_AND_SIZE)
+    /* Calculate offset: 2 * (ISR_STACK_SIZE + MPU_GUARD) to get top of CPU1 stack */
+    lsl r1, r1, #1               /* Multiply by 2: r1 = 2 * stack_size */
+    add r0, r0, r1               /* r0 = base + (2 * stack_size) */
+    msr msp, r0                  /* Set MSP to top of CPU1's interrupt stack */
+    b z_secondary_init           /* Jump to secondary core init routine */
+#endif
+
+continue_boot:
     /* Note: Make sure that variables like z_sys_post_kernel
      *       are set after the call to arch_pm_s2ram_resume
      *       to avoid any issues with suspend/resume path.
