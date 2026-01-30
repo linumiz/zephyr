@@ -1,0 +1,15 @@
+/* Copyright (c) 2024 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <infineon/tc4xx/tc4d7xp.dtsi>
+#include "kit_tc4x7_com_trb.dtsi"
+
+
+/ {
+	model = "Infineon TC4D7XP COM Triboard";
+	compatible = "infineon,kit_tc4d7xp_com_trb",
+	             "infineon,tc4d7xp",
+	             "infineon,tc4xx";
+};

@@ -1,0 +1,167 @@
+/* Copyright (c) 2024 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include "kit_tc4x7_com_trb-pinctrl.dtsi"
+#include <infineon/tc4xx/tc4x7_com-gpio_irq.h>
+#include <zephyr/dt-bindings/i2c/i2c.h>
+
+/ {
+	leds: leds {
+		compatible = "gpio-leds";
+		led0: led_0 {
+			gpios = <&p33 0 GPIO_ACTIVE_LOW>;
+		};
+		led1: led_1 {
+			gpios = <&p33 1 GPIO_ACTIVE_LOW>;
+		};
+		led2: led_2 {
+			gpios = <&p33 4 GPIO_ACTIVE_LOW>;
+		};
+		led3: led_3 {
+			gpios = <&p33 5 GPIO_ACTIVE_LOW>;
+		};
+		led4: led_4 {
+			gpios = <&p13 0 GPIO_ACTIVE_LOW>;
+		};
+		led5: led_5 {
+			gpios = <&p13 1 GPIO_ACTIVE_LOW>;
+		};
+		led6: led_6 {
+			gpios = <&p13 2 GPIO_ACTIVE_LOW>;
+		};
+		led7: led_7 {
+			gpios = <&p13 3 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	aliases {
+		led0 = &led0;
+	};
+};
+
+&p00 {
+	status = "okay";
+};
+&p10 {
+	status = "okay";
+	irq-sources = <GPIO_P10_2_IRQ_TIM0_2>, <GPIO_P10_3_IRQ_TIM1_3>;
+};
+&p13 {
+	status = "okay";
+};
+&p33 {
+	status = "okay";
+};
+
+&uart0 {
+	pinctrl-0 = <&uart0_default>;
+	pinctrl-names = "default";
+};
+
+&mdio0 {
+	pinctrl-0 = <&geth0_p0_mdio>;
+	pinctrl-names = "default";
+	geth0_phy: phy@1 {
+		compatible = "realtek,rtl822x";
+		reg = <1>;
+		reset-gpios = <&p00 10 GPIO_ACTIVE_LOW>;
+		int-gpios = <&p10 2 GPIO_ACTIVE_LOW>;
+		realtek,serdes-interface = "2500Base-X+SGMII";
+		realtek,serdes-auto-negotiation;
+	};
+	geth1_phy: phy@2 {
+		compatible = "realtek,rtl822x";
+		reg = <2>;
+		reset-gpios = <&p00 11 GPIO_ACTIVE_LOW>;
+		int-gpios = <&p10 3 GPIO_ACTIVE_LOW>;
+		realtek,serdes-interface = "2500Base-X+SGMII";
+		realtek,serdes-auto-negotiation;
+	};
+};
+
+&xpcs0 {
+	phy-handle = <&geth0_phy>;
+};
+&xpcs1 {
+	phy-handle = <&geth1_phy>;
+};
+
+&eth0 {
+	phy-handle = <&xpcs0>;
+	phy-connection-type = "usxgmii";
+};
+&eth1 {
+	phy-handle = <&xpcs1>;
+	phy-connection-type = "usxgmii";
+};
+
+&mdio5 {
+	pinctrl-0 = <&geth0_p1_mdio>;
+	pinctrl-names = "default";
+};
+
+&i2c0 {
+	pinctrl-0 = <&eeprom_i2c>;
+	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_FAST>;
+
+	geth0_eeprom: eeprom@50 {
+		compatible = "microchip,24aa025e64", "atmel,at24";
+		reg = <0x50>;
+		size = <DT_SIZE_K(2)>;
+		pagesize = <16>;
+		address-width = <8>;
+		timeout = <5>;
+	};
+
+	geth1_eeprom: eeprom@51 {
+		compatible = "microchip,24aa025e64", "atmel,at24";
+		reg = <0x51>;
+		size = <DT_SIZE_K(2)>;
+		pagesize = <16>;
+		address-width = <8>;
+		timeout = <5>;
+	};
+};
+
+&fosc {
+	clock-frequency = <DT_FREQ_M(25)>;
+	status = "okay";
+};
+
+&sys_pll {
+	p-div = <1>;
+	n-div = <20>;
+};
+
+&per_pll {
+	p-div = <1>;
+	n-div = <32>;
+};
+
+&fpll0 {
+	k-div = <1>;
+	k-pre-div = "1.0";
+};
+
+&fpll1 {
+	k-div = <5>;
+	k-pre-div = "1.0";
+};
+
+&fpll2 {
+	k-div = <2>;
+	k-pre-div = "2.0";
+};
+
+&fpll3 {
+	k-div = <1>;
+	k-pre-div = "2.0";
+};
+
+&fpllppu {
+	k-div = <1>;
+	k-pre-div = "1.1";
+};

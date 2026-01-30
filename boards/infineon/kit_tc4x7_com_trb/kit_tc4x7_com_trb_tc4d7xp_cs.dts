@@ -1,0 +1,24 @@
+/*
+ * Copyright (c) 2024 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include <infineon/tc4xx/tc4d7xp.dtsi>
+#include "kit_tc4d7xp_com_trb.dtsi"
+
+/ {
+	model = "Infineon TC47D Triboard";
+	compatible = "infineon,kit_tc4d7xp_com_trb", "infineon,tc4d7xp",
+						"infineon,tc4xx";
+
+	chosen {
+		zephyr,flash = &flashcs;
+		zephyr,sram = &dsramcs;
+		zephyr,dtcm = &dsramcs;
+		zephyr,itcm = &psramcs;
+	};
+
+};

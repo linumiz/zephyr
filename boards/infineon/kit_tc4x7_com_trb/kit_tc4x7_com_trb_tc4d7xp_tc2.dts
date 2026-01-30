@@ -1,0 +1,18 @@
+/*
+ * Copyright (c) 2024 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include "kit_tc4x7_com_trb_tc4d7xp.dtsi"
+
+/ {
+	chosen {
+		zephyr,flash = &flash2;
+		zephyr,sram = &dsram2;
+		zephyr,dtcm = &dsram2;
+		zephyr,itcm = &psram2;
+	};
+};

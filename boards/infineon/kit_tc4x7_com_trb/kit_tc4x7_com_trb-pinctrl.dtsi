@@ -1,0 +1,43 @@
+#include <infineon/tc4xx/tc4x7_com-pinctrl.h>
+
+&pinctrl {
+	uart0_default: uart0_default {
+		group1 {
+			pinmux = <ASCLIN0_TX_P14_0>;
+			output-enable;
+		};
+		group2 {
+			pinmux = <ASCLIN0_RX_P14_1>;
+		};
+	};
+
+	geth0_p0_mdio: geth0_p0_mdio {
+		group1 {
+			pinmux = <GETH0_P0_MDC_P16_11>;
+			output-enable;
+		};
+		group2 {
+			pinmux = <GETH0_PX_MDIO_P16_14>;
+		};
+	};
+
+	geth0_p1_mdio: geth0_p1_mdio {
+		group1 {
+			pinmux = <GETH0_P1_MDC_P16_11>;
+			output-enable;
+		};
+		group2 {
+			pinmux = <GETH0_PX_MDIO_P16_14>;
+		};
+	};
+	eeprom_i2c: eeprom_i2c {
+		group1 {
+			pinmux = <I2C0_SCL_IN_P15_4>, <I2C0_SDA_IN_P15_5>;
+		};
+		group2 {
+			pinmux = <I2C0_SCL_OUT_P15_4>, <I2C0_SDA_OUT_P15_5>;
+			output-enable;
+			drive-open-drain;
+		};
+	};
+};
