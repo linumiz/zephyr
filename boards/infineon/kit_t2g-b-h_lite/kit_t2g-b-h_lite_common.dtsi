@@ -18,6 +18,8 @@
 		led2 = &user_led3;
 		sw0 = &user_bt1;
 		sw1 = &user_bt2;
+		watchdog0= &watchdog0;
+		dma0=&dma0;
 	};
 
 	leds {
@@ -277,6 +279,31 @@ can0: &can0_0 {
 	};
 };
 
+i2c0: &scb4 {
+	compatible = "infineon,cat1-i2c-pdl";
+	status = "okay";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	/* I2C pins */
+	pinctrl-0 = <&p6_1_scb4_i2c_sda &p6_2_scb4_i2c_scl>;
+	pinctrl-names = "default";
+
+	clocks = <&clk_hf2>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0113>;
+	ifx,peri-div = <0>; /* 8-bit divider */
+	ifx,peri-div-inst = <1>;
+};
+
+&watchdog0 {
+	status = "okay";
+};
+
+&dma0 {
+	status = "okay";
+};
 
 &gpio_prt0 {
 	status = "okay";
