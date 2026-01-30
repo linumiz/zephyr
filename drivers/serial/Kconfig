@@ -21,6 +21,7 @@ config SERIAL_HAS_DRIVER
 
 config SERIAL_SUPPORT_ASYNC
 	bool
+	default y
 	help
 	  This is an option to be enabled by individual serial driver
 	  to signal that the driver and hardware supports async operation.
