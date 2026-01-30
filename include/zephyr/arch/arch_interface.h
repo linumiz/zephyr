@@ -33,6 +33,7 @@
 #include <zephyr/types.h>
 #include <zephyr/arch/cpu.h>
 #include <zephyr/irq_offload.h>
+#include <zephyr/kernel_structs.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -471,9 +472,19 @@ void arch_irq_offload_init(void);
  * @{
  */
 #ifdef CONFIG_SMP
+#if defined(CONFIG_CPU_CORTEX_M7) && defined(CONFIG_SOC_CYT4DNJBZS_M7_SMP)
+extern uint32_t z_ifx_core_id();
+static inline struct _cpu *arch_curr_cpu(void)
+{
+	uint32_t core;
+	core = z_ifx_core_id();
+
+	return &_kernel.cpus[core];
+}
+#else
 /** Return the CPU struct for the currently executing CPU */
 static inline struct _cpu *arch_curr_cpu(void);
-
+#endif
 
 /**
  * @brief Processor hardware ID

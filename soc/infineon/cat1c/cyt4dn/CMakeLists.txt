@@ -3,6 +3,7 @@
 
 zephyr_compile_definitions_ifdef(CONFIG_SOC_CYT4DNJBZS_M7_0 CORE_NAME_CM7_0)
 zephyr_compile_definitions_ifdef(CONFIG_SOC_CYT4DNJBZS_M7_1 CORE_NAME_CM7_1)
+zephyr_compile_definitions_ifdef(CONFIG_SOC_CYT4DNJBZS_M7_SMP CORE_NAME_CM7_0)
 
 zephyr_include_directories(../common)
 

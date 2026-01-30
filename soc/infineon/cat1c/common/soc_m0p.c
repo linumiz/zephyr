@@ -96,7 +96,7 @@ void system_irq_init(void)
 void soc_prep_hook(void)
 {
 #define CM7_0_FLASH_BASE_ADDRESS	0x10080000
-#define CM7_1_FLASH_BASE_ADDRESS	0x10358000
+#define CM7_1_FLASH_BASE_ADDRESS	0x10080000
 
 	Cy_WDT_Unlock();
 	Cy_WDT_Disable();

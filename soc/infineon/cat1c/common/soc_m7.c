@@ -42,6 +42,14 @@ __attribute__((section(".itcm"))) void sys_int_handler(uint32_t intrNum)
 {
 	uint32_t system_int_idx;
 
+#if defined(CONFIG_SMP)
+	if ((_FLD2VAL(CPUSS_CM7_0_INT_STATUS_SYSTEM_INT_VALID, CPUSS_CM7_0_INT_STATUS[intrNum]))) {
+		system_int_idx = _FLD2VAL(CPUSS_CM7_0_INT_STATUS_SYSTEM_INT_IDX,
+					  CPUSS_CM7_0_INT_STATUS[intrNum]);
+		struct _isr_table_entry *entry = &sys_int_table[system_int_idx];
+		(entry->isr)(entry->arg);
+	}
+#else
 #ifdef CORE_NAME_CM7_0
 	if ((_FLD2VAL(CPUSS_CM7_0_INT_STATUS_SYSTEM_INT_VALID, CPUSS_CM7_0_INT_STATUS[intrNum]))) {
 		system_int_idx = _FLD2VAL(CPUSS_CM7_0_INT_STATUS_SYSTEM_INT_IDX,
@@ -57,6 +65,7 @@ __attribute__((section(".itcm"))) void sys_int_handler(uint32_t intrNum)
 		struct _isr_table_entry *entry = &sys_int_table[system_int_idx];
 		(entry->isr)(entry->arg);
 	}
+#endif
 #endif
 	NVIC_ClearPendingIRQ((IRQn_Type)intrNum);
 }
