@@ -138,6 +138,23 @@ config XTENSA
 	help
 	  Xtensa architecture
 
+config TRICORE
+	bool
+	select ARCH_IS_SET
+	select USE_SWITCH
+	select USE_SWITCH_SUPPORTED
+	select ATOMIC_OPERATIONS_BUILTIN if "$(ZEPHYR_TOOLCHAIN_VARIANT)" = "llvm"
+	select ATOMIC_OPERATIONS_C if "$(ZEPHYR_TOOLCHAIN_VARIANT)" != "llvm"
+	select ARCH_HAS_CODE_DATA_RELOCATION
+	select ARCH_HAS_THREAD_LOCAL_STORAGE
+    # select ARCH_HAS_TIMING_FUNCTIONS  # Not implemented yet
+	# select ARCH_SUPPORTS_COREDUMP # Not implemented yet
+	select ARCH_SUPPORTS_ROM_START
+	select BARRIER_OPERATIONS_BUILTIN if "$(ZEPHYR_TOOLCHAIN_VARIANT)" = "llvm"
+	imply XIP
+	help
+	  TriCore architecture
+
 config ARCH_POSIX
 	bool
 	select ARCH_IS_SET
@@ -230,7 +247,7 @@ config SRAM_BASE_ADDRESS
 	  /chosen/zephyr,sram in devicetree. The user should generally avoid
 	  changing it via menuconfig or in configuration files.
 
-if ARC || ARM || ARM64 || X86 || RISCV || RX
+if ARC || ARM || ARM64 || X86 || RISCV || RX || TRICORE
 
 # Workaround for not being able to have commas in macro arguments
 DT_CHOSEN_Z_FLASH := zephyr,flash
@@ -253,7 +270,7 @@ config FLASH_BASE_ADDRESS
 	  normally set by the board's defconfig file and the user should generally
 	  avoid modifying it via the menu configuration.
 
-endif # ARM || ARM64 || ARC || X86 || RISCV || RX
+endif # ARM || ARM64 || ARC || X86 || RISCV || RX || TRICORE
 
 if ARCH_HAS_TRUSTED_EXECUTION
 

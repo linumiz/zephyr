@@ -29,3 +29,6 @@ archs:
   - name: rx
     path: rx
     full_name: Renesas RX
+  - name: tricore
+    path: tricore
+    full_name: Infineon TriCore
