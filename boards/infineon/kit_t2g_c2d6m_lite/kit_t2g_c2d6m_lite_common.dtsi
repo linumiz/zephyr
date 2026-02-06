@@ -7,6 +7,202 @@
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn.dtsi>
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn-pinctrl.dtsi>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
+#include <zephyr/dt-bindings/pwm/pwm.h>
+
+/ {
+	aliases {
+		uart-7 = &uart7;
+		uart-9 = &uart9;
+		led0 = &user_led1;
+		led1 = &user_led2;
+		led2 = &user_led3;
+		sw0 = &user_bt1;
+		sw1 = &user_bt2;
+		pwm-led0 = &pwm_led0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		user_led1: user_led1 {
+			label = "LED_1";
+			gpios = <&gpio_prt7 5 GPIO_ACTIVE_HIGH>;
+		};
+		user_led2: user_led2 {
+			label = "LED_2";
+			gpios = <&gpio_prt7 6 GPIO_ACTIVE_HIGH>;
+		};
+		user_led3: user_led3 {
+			label = "LED_3";
+			gpios = <&gpio_prt7 7 GPIO_ACTIVE_HIGH>;
+		};
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+
+		user_bt1: user_btn1 {
+			label = "SW_1";
+			gpios = <&gpio_prt0 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_0>;
+		};
+		user_bt2: user_btn2 {
+			label = "SW_2";
+			gpios = <&gpio_prt0 3 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_1>;
+		};
+	};
+
+	pwmleds {
+		compatible = "pwm-leds";
+
+		pwm_led0: pwm_led_0 {
+			pwms = <&pwm0_26 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+		};
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		sram_srom: memory@28000000 {
+			reg = <0x28000000 DT_SIZE_K(2)>;
+		};
+		sram_m0plus: memory@28000800 {
+			reg = <0x28000800 DT_SIZE_K(30)>;
+		};
+		sram_m7_0: memory@28008000 {
+			reg = <0x28008000 DT_SIZE_K(224)>;
+		};
+		sram_m7_1: memory@28040000 {
+			reg = <0x28040000 DT_SIZE_K(256)>;
+		};
+	};
+};
+
+&code_flash {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		m0p_partition: partition_m0p@0 {
+			label = "m0p_partition";
+			reg = <0x0 DT_SIZE_K(512)>;
+			status = "disabled";
+		};
+		m7_0_partition: partition@80000 {
+			label = "m7_0_partition";
+			reg = <0x80000 DT_SIZE_K(2656)>;
+		};
+		m7_1_partition: partition@318000 {
+			label = "m7_1_partition";
+			reg = <0x318000 DT_SIZE_K(3168)>;
+		};
+	};
+};
+
+
+spi0: &scb0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "infineon,cat1-spi-pdl";
+
+	pinctrl-0 = <&p11_3_scb0_spi_mosi &p11_0_scb0_spi_miso &p11_2_scb0_spi_clk>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpio_prt11 1 GPIO_ACTIVE_LOW>;
+
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0108>;
+	ifx,peri-div = <1>; /* 16-bit divider */
+	ifx,peri-div-inst = <3>;
+
+	slow@0 {
+		compatible = "test-spi-loopback-slow";
+		reg = <0>;
+		spi-max-frequency = <3000000>;
+	};
+
+	fast@0 {
+		compatible = "test-spi-loopback-fast";
+		reg = <0>;
+		spi-max-frequency = <3000000>;
+	};
+};
+
+uart7: &scb7 {
+	compatible = "infineon,cat1-uart-pdl";
+	current-speed = <115200>;
+	clocks = <&clk_hf2>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x010F>;
+	ifx,peri-div = <0>; /* 8-bit divider */
+	ifx,peri-div-inst = <0>;
+
+	/* UART pins */
+	pinctrl-0 = <&p9_0_scb7_uart_rx &p9_1_scb7_uart_tx>;
+	pinctrl-names = "default";
+};
+
+uart9: &scb9 {
+	compatible = "infineon,cat1-uart-pdl";
+	current-speed = <115200>;
+	clocks = <&clk_hf2>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0111>;
+	ifx,peri-div = <0>; /* 8-bit divider */
+	ifx,peri-div-inst = <1>;
+
+	/* UART pins */
+	pinctrl-0 = <&p29_0_scb9_uart_rx &p29_1_scb9_uart_tx>;
+	pinctrl-names = "default";
+};
+
+i2c11: &scb11 {
+       compatible = "infineon,cat1-i2c-pdl";
+
+       #address-cells = <1>;
+       #size-cells = <0>;
+
+       pinctrl-0 = <&p0_4_scb11_i2c_scl &p0_5_scb11_i2c_sda>;
+       pinctrl-names = "default";
+
+       clocks = <&clk_hf2>;
+       ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+       ifx,peri-clk = <0x0113>;
+       ifx,peri-div = <0>; /* 8-bit divider */
+       ifx,peri-div-inst = <1>;
+
+       accel@53 {
+               compatible = "adi,adxl345";
+               reg = <0x53>;
+       };
+};
+
+can0: &can0_0 {
+	compatible = "infineon,cat1-can";
+	clocks = <&clk_hf2>;
+	clock-frequency = <40000000>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0100>;
+	ifx,peri-div = <3>; /* 24-bit divider */
+	ifx,peri-div-inst = <0>;
+
+	pinctrl-0 = <&p5_1_can0_0_rx &p5_0_can0_0_tx>;
+	pinctrl-names = "default";
+};
+
+&can0_1 {
+	compatible = "infineon,cat1-can";
+	clocks = <&clk_hf2>;
+	clock-frequency = <40000000>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0101>;
+	ifx,peri-div = <3>; /* 24-bit divider */
+	ifx,peri-div-inst = <0>;
+
+	pinctrl-0 = <&p5_2_can0_1_tx &p5_3_can0_1_rx>;
+	pinctrl-names = "default";
+};
 
 &gpio_prt0 {
 	status = "okay";
@@ -37,6 +233,10 @@
 };
 
 &gpio_prt8 {
+	status = "okay";
+};
+
+&gpio_prt29 {
 	status = "okay";
 };
 

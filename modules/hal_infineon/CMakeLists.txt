@@ -15,9 +15,21 @@ endif()
 if (CONFIG_SOC_FAMILY_INFINEON_CAT1 OR CONFIG_SOC_FAMILY_PSOC6_LEGACY)
   ## Add core-lib sources for CAT1 devices
   add_subdirectory(core-lib)
-
+   ## Add mtb-hal-cat1 sources for CAT1 devices
+  #add_subdirectory(mtb-hal-cat1)
   ## Add mtb-pdl-cat1 sources for CAT1 devices
   add_subdirectory(mtb-pdl-cat1)
+  if(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+    add_custom_command(TARGET modules_hal_infineon POST_BUILD
+        COMMAND ${CMAKE_OBJCOPY}
+          -W Cy_Srom_SetResponseHandler
+          -W Cy_SysInt_Init
+          -W Cy_SysInt_SetSystemIrqVector
+          -W Cy_SysInt_GetSystemIrqVector
+          $<TARGET_FILE:modules_hal_infineon>
+        COMMENT "Set weak for PDL symbols to hook into Zephyr APIs"
+    )
+  endif()
 
   ## Add mtb-templates-cat1 sources for CAT1 devices
   add_subdirectory(mtb-template-cat1)
@@ -25,14 +37,15 @@ if (CONFIG_SOC_FAMILY_INFINEON_CAT1 OR CONFIG_SOC_FAMILY_PSOC6_LEGACY)
   add_subdirectory(serial-memory-ms)
   add_subdirectory(zephyr-ifx-cycfg)
   add_subdirectory(mtb-hal-t2gc2d6m)
+  add_subdirectory(mtb-hal-cat1)
 endif()
 
 if (CONFIG_SOC_FAMILY_INFINEON_CAT1 AND NOT CONFIG_SOC_FAMILY_PSOC6_LEGACY)
   ## Add mtb-hal-cat1 sources for CAT1 devices
-#  add_subdirectory(mtb-hal-cat1)
+ # add_subdirectory(mtb-hal-cat1)
 
   ## Add catcm0p sleep images for CM0 Devices
-  if(CONFIG_SOC_PSOC6_CM0P_IMAGE_SLEEP)
+  if(CONFIG_SOC_PSOC6_CM0P_IMAGE_SLEEP OR CONFIG_SOC_CYT4DN_CM0P_IMAGE_SLEEP)
     add_subdirectory(cat1cm0p)
   endif()
 

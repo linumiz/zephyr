@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2026 Infineon Technologies AG
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <arm/infineon/cat1c/traveo2-8m/cyt4bf_m0p.dtsi>
+#include "kit_t2g-b-h_lite_common.dtsi"
+
+/ {
+	model = "Infineon Traveo II Body High LiteKit M0+";
+	compatible = "infineon,kit_t2g-b-h_lite", "infineon,T2G_C2D";
+
+	chosen {
+		zephyr,sram = &sram_m0plus;
+		zephyr,flash = &code_flash0;
+		zephyr,code-partition = &m0p_partition;
+		/* Modify the following properties to enable uart */
+		/* zephyr,console = &uart7; */
+		/* zephyr,shell-uart = &uart7; */
+	};
+};

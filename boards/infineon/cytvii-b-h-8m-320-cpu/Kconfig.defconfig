@@ -1,0 +1,13 @@
+# Copyright 2026 Infineon Technologies AG
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_CYTVII_B_H_8M_320_CPU
+
+config NET_L2_ETHERNET
+	default y if NETWORKING
+
+config HAS_INFINEON_M0P_LAUNCHER_IMAGE
+    bool
+    default y
+
+endif

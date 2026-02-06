@@ -1,0 +1,17 @@
+# Copyright (c) 2026 Infineon Technologies AG
+# SPDX-License-Identifier: Apache-2.0
+#
+
+identifier: kit_t2g-b-h_lite/cyt4bf8cds/m7_1 
+name: KIT T2G Body High LITE (M7_1)
+type: mcu
+arch: arm
+ram: 640
+flash: 6336
+toolchain:
+  - zephyr
+  - gnuarmemb
+supported:
+  - gpio
+  - uart
+vendor: infineon

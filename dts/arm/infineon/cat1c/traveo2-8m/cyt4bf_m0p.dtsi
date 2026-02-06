@@ -1,0 +1,34 @@
+/*
+ * Copyright (c) 2025 Linumiz GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <mem.h>
+#include <arm/armv6-m.dtsi>
+#include <zephyr/dt-bindings/memory-attr/memory-attr-arm.h>
+
+/ {
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		m0: cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-m0+";
+			reg = <0>;
+			clock-frequency = <100000000>;
+		};
+	};
+
+	rom: memory@0 {
+		compatible = "zephyr,memory-region";
+		reg = <0x0 DT_SIZE_K(64)>;
+		zephyr,memory-region = "ROM";
+		zephyr,memory-attr = <DT_MEM_ARM_MPU_FLASH>;
+	};
+};
+
+&nvic {
+	arm,num-irq-priority-bits = <2>;
+};

@@ -5,11 +5,9 @@
  */
 
 #include <stdio.h>
-#include <cmsis_gcc.h>
 
 int main(void)
 {
-	__WFI();
 	printf("Hello World! %s\n", CONFIG_BOARD_TARGET);
 
 	return 0;

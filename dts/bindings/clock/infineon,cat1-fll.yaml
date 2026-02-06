@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Infineon Technologies AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+description: Infineon CAT1 FLL Driver
+
+compatible: "infineon,cat1-fll"
+
+include: [base.yaml, clock-controller.yaml]
+
+properties:
+  reg:
+    required: true
+
+  clock-frequency:
+    type: int
+    required: true
+    description: |
+      FLL output frequency in Hz

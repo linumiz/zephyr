@@ -1,0 +1,30 @@
+/*
+ * Copyright (c) 2025 Infineon Technologies AG,
+ * or an affiliate of Infineon Technologies AG.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <arm/infineon/cat1c/traveo2-8m/cyt4bfcche.dtsi>
+#include <arm/infineon/cat1c/traveo2-8m/system_clocks.dtsi>
+#include <arm/infineon/cat1c/traveo2-8m/cyt4bf_m0p.dtsi>
+#include "cytvii_b_h_8m_320_cpu_common.dtsi"
+#include "cytvii_b_h_8m_320_cpu_cyt4bfcche_m0p_pinctrl.dtsi"
+
+/ {
+	model = "Infineon Evaluation board for CYT4BFCCHE M0";
+	compatible = "infineon,cytvii-b-h-8m-320-cpu", "infineon,CYTVIIBH8M";
+
+	chosen {
+		zephyr,sram = &sram_m0plus;
+		zephyr,flash = &code_flash0;
+		zephyr,code-partition = &m0p_partition;
+		zephyr,console = &uart3;
+		zephyr,shell-uart = &uart3;
+	};
+};
+
+&uart3 {
+	status = "okay";
+};

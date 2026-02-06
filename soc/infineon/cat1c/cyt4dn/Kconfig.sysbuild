@@ -1,0 +1,6 @@
+if SOC_SERIES_CYT4DN
+
+config HAS_INFINEON_M0P_LAUNCHER_IMAGE
+    default y
+
+endif

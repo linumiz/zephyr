@@ -1,0 +1,118 @@
+/*
+ * Copyright (c) 2026 Infineon Technologies AG
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <arm/infineon/cat1c/traveo2-8m/cyt4bf8cds.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
+#include <zephyr/dt-bindings/pwm/pwm.h>
+
+&pinctrl {
+	/omit-if-no-ref/ p12_0_can0_0_tx: p12_0_can0_0_tx {
+		pinmux = <DT_CAT1_PINMUX(5, 0, HSIOM_SEL_ACT_13)>;
+		drive-push-pull;
+	};
+	/omit-if-no-ref/ p12_1_can0_0_rx: p12_1_can0_0_rx {
+		pinmux = <DT_CAT1_PINMUX(5, 1, HSIOM_SEL_ACT_13)>;
+		input-enable;
+	};
+
+	/omit-if-no-ref/ p18_0_eth_ref_clk: p18_0_eth_ref_clk {
+		pinmux = <DT_CAT1_PINMUX(18, 0, HSIOM_SEL_ACT_12)>;
+		input-enable;
+	};
+	/omit-if-no-ref/ p18_4_eth_txd_0: p18_4_eth_txd_0 {
+		pinmux = <DT_CAT1_PINMUX(18, 4, HSIOM_SEL_ACT_12)>;
+		drive-push-pull;
+	};
+	/omit-if-no-ref/ p18_5_eth_txd_1: p18_5_eth_txd_1 {
+		pinmux = <DT_CAT1_PINMUX(18, 5, HSIOM_SEL_ACT_12)>;
+		drive-push-pull;
+	};
+	/omit-if-no-ref/ p18_1_eth_tx_en: p18_1_eth_tx_en {
+		pinmux = <DT_CAT1_PINMUX(18, 1, HSIOM_SEL_ACT_12)>;
+		drive-push-pull;
+	};
+	/omit-if-no-ref/ p19_0_eth_rxd_0: p19_0_eth_rxd_0 {
+		pinmux = <DT_CAT1_PINMUX(19, 0, HSIOM_SEL_ACT_12)>;
+		input-enable;
+	};
+	/omit-if-no-ref/ p19_1_eth_rxd_1: p19_1_eth_rxd_1 {
+		pinmux = <DT_CAT1_PINMUX(19, 1, HSIOM_SEL_ACT_12)>;
+		input-enable;
+	};
+	/omit-if-no-ref/ p21_5_eth_rx_ctl: p21_5_eth_rx_ctl {
+		pinmux = <DT_CAT1_PINMUX(21, 5, HSIOM_SEL_ACT_12)>;
+		input-enable;
+	};
+	/omit-if-no-ref/ p3_1_eth_mdc: p3_1_eth_mdc {
+		pinmux = <DT_CAT1_PINMUX(3, 1, HSIOM_SEL_ACT_12)>;
+		drive-push-pull;
+	};
+	/omit-if-no-ref/ p3_0_eth_mdio: p3_0_eth_mdio {
+		pinmux = <DT_CAT1_PINMUX(3, 0, HSIOM_SEL_ACT_12)>;
+		drive-push-pull;
+		input-enable;
+	};
+	/omit-if-no-ref/ p6_3_smif0_clk: p6_3_smif0_clk {
+		pinmux = <DT_CAT1_PINMUX(6, 3, HSIOM_SEL_ACT_11)>;
+		drive-push-pull;
+	};
+	/omit-if-no-ref/ p6_5_smif0_sel0: p6_5_smif0_sel0 {
+		pinmux = <DT_CAT1_PINMUX(6, 5, HSIOM_SEL_ACT_11)>;
+		drive-push-pull;
+	};
+	/omit-if-no-ref/ p7_0_smif0_sel1: p7_0_smif0_sel1 {
+		pinmux = <DT_CAT1_PINMUX(7, 0, HSIOM_SEL_ACT_11)>;
+		drive-push-pull;
+	};
+	/omit-if-no-ref/ p7_1_smif0_data0: p7_1_smif0_data0 {
+		pinmux = <DT_CAT1_PINMUX(7, 1, HSIOM_SEL_ACT_11)>;
+		drive-push-pull;
+		input-enable;
+	};
+	/omit-if-no-ref/ p7_2_smif0_data1: p7_2_smif0_data1 {
+		pinmux = <DT_CAT1_PINMUX(7, 2, HSIOM_SEL_ACT_11)>;
+		drive-push-pull;
+		input-enable;
+	};
+	/omit-if-no-ref/ p7_3_smif0_data2: p7_3_smif0_data2 {
+		pinmux = <DT_CAT1_PINMUX(7, 3, HSIOM_SEL_ACT_11)>;
+		drive-push-pull;
+		input-enable;
+	};
+	/omit-if-no-ref/ p7_4_smif0_data3: p7_4_smif0_data3 {
+		pinmux = <DT_CAT1_PINMUX(7, 4, HSIOM_SEL_ACT_11)>;
+		drive-push-pull;
+		input-enable;
+	};
+	/omit-if-no-ref/ p7_5_smif0_data4: p7_5_smif0_data4 {
+		pinmux = <DT_CAT1_PINMUX(7, 5, HSIOM_SEL_ACT_11)>;
+		drive-push-pull;
+		input-enable;
+	};
+	/omit-if-no-ref/ p8_0_smif0_data5: p8_0_smif0_data5 {
+		pinmux = <DT_CAT1_PINMUX(8, 0, HSIOM_SEL_ACT_11)>;
+		drive-push-pull;
+		input-enable;
+	};
+	/omit-if-no-ref/ p8_1_smif0_data6: p8_1_smif0_data6 {
+		pinmux = <DT_CAT1_PINMUX(8, 1, HSIOM_SEL_ACT_11)>;
+		drive-push-pull;
+		input-enable;
+	};
+	/omit-if-no-ref/ p8_2_smif0_data7: p8_2_smif0_data7 {
+		pinmux = <DT_CAT1_PINMUX(8, 2, HSIOM_SEL_ACT_11)>;
+		drive-push-pull;
+		input-enable;
+	};
+};
+
+&p0_0_scb0_uart_rx {
+	input-enable;
+};
+
+&p0_1_scb0_uart_tx {
+	drive-push-pull;
+};

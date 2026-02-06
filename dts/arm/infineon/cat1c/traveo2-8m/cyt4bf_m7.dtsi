@@ -1,0 +1,55 @@
+/*
+ * Copyright (c) 2025 Linumiz GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <mem.h>
+#include <arm/armv7-m.dtsi>
+#include <zephyr/dt-bindings/memory-attr/memory-attr-arm.h>
+
+/ {
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		m7_0: cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-m7";
+			reg = <1>;
+			clock-frequency = <320000000>;
+			status = "disabled";
+		};
+		m7_1: cpu@2 {
+			device_type = "cpu";
+			compatible = "arm,cortex-m7";
+			reg = <2>;
+			clock-frequency = <320000000>;
+			status = "disabled";
+		};
+	};
+
+	itcm: itcm@0 {
+		compatible = "zephyr,memory-region", "arm,itcm";
+		reg = <0x00000000 DT_SIZE_K(64)>;
+		zephyr,memory-region = "ITCM";
+	};
+
+	dtcm: dtcm@20000000 {
+		compatible = "zephyr,memory-region", "arm,dtcm";
+		reg = <0x20000000 DT_SIZE_K(64)>;
+		zephyr,memory-region = "DTCM";
+	};
+
+	rom: memory@1000000 {
+		compatible = "zephyr,memory-region";
+		reg = <0x01000000 DT_SIZE_K(64)>;
+		zephyr,memory-region = "ROM";
+		zephyr,memory-attr = <DT_MEM_ARM_MPU_FLASH>;
+		status = "disabled";
+	};
+};
+
+&nvic {
+	arm,num-irq-priority-bits = <3>;
+};

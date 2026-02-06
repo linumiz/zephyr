@@ -25,5 +25,5 @@ if(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
   set(zephyr_ifx_cycfg_dir ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/zephyr-ifx-cycfg/kit_t2g_c2d6m_lite)
 
   zephyr_include_directories(${zephyr_ifx_cycfg_dir})
-  zephyr_library_sources(${zephyr_ifx_cycfg_dir}/cycfg_qspi_memslot.c)
+  zephyr_library_sources_ifdef(CONFIG_INFINEON_SERIAL_MEMORY_QSPI ${zephyr_ifx_cycfg_dir}/cycfg_qspi_memslot.c)
 endif()
