@@ -44,6 +44,8 @@
 			};
 			/omit-if-no-ref/ p6_2_scb4_i2c_scl: p6_2_scb4_i2c_scl {
 				pinmux = <DT_CAT1_PINMUX(6, 2, HSIOM_SEL_ACT_6)>;
+				drive-open-drain;
+				input-enable;
 			};
 			/omit-if-no-ref/ p7_2_scb5_i2c_scl: p7_2_scb5_i2c_scl {
 				pinmux = <DT_CAT1_PINMUX(7, 2, HSIOM_SEL_ACT_6)>;
@@ -103,6 +105,8 @@
 			};
 			/omit-if-no-ref/ p6_1_scb4_i2c_sda: p6_1_scb4_i2c_sda {
 				pinmux = <DT_CAT1_PINMUX(6, 1, HSIOM_SEL_ACT_6)>;
+				drive-open-drain;
+				input-enable;
 			};
 			/omit-if-no-ref/ p7_1_scb5_i2c_sda: p7_1_scb5_i2c_sda {
 				pinmux = <DT_CAT1_PINMUX(7, 1, HSIOM_SEL_ACT_6)>;

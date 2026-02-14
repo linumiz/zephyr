@@ -73,6 +73,9 @@ zephyr_library_sources(${hal_cat1c_dir}/source/pin_packages/cyhal_xmc7200_320_bg
 zephyr_library_sources_ifdef(CONFIG_SOC_DIE_CYW20829
   ${hal_cat1b_dir}/source/triggers/cyhal_triggers_cyw20829.c)
 
+zephyr_library_sources_ifdef(CONFIG_SOC_SERIES_CYT4BF
+  ${hal_cat1c_dir}/source/triggers/cyhal_triggers_xmc7200.c)  
+
 zephyr_library_sources_ifdef(CONFIG_SOC_DIE_PSOC6_01
   ${hal_cat1a_dir}/source/triggers/cyhal_triggers_psoc6_01.c)
 zephyr_library_sources_ifdef(CONFIG_SOC_DIE_PSOC6_02

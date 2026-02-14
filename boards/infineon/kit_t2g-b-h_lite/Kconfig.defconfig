@@ -6,4 +6,8 @@ if BOARD_KIT_T2G_B_H_LITE
 config NET_L2_ETHERNET
 	default y if NETWORKING
 
+config HAS_INFINEON_M0P_LAUNCHER_IMAGE
+	bool 
+	default y
+
 endif

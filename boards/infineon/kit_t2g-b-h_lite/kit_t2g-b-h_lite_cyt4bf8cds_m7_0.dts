@@ -30,21 +30,16 @@
 	status = "okay";
 };
 
+&mbox {
+	status = "okay";
+};
+
 &uart0 {
 	status = "okay";
 };
 
 &can0 {
 	status = "okay";
-};
-
-&adc0 {
-	status = "okay";
-	clock-frequency = <26670000>;
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x0114>;
-	ifx,peri-div = <0>; /* 8-bit divider */
-	ifx,peri-div-inst = <2>;
 };
 
 &eth0_mac {
