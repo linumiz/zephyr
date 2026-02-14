@@ -49,10 +49,10 @@ LOG_MODULE_REGISTER(flash_test, LOG_LEVEL_INF);
 int main(void)
 {
 	/* Use the zephyr_flash_controller for the flash driver */
-	//const struct device *flash_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+	const struct device *flash_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
 
 	/* Use the smif_0 or smif_1 for the flash driver */
-	const struct device *flash_dev = DEVICE_DT_GET(DT_NODELABEL(smif_1));
+	// const struct device *flash_dev = DEVICE_DT_GET(DT_NODELABEL(smif0));
 	int ret;
 
 /* Option 1: 64-byte data array - For WFLASH */

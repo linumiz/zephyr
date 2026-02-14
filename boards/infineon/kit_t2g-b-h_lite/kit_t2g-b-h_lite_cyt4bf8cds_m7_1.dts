@@ -18,8 +18,8 @@
 		zephyr,dtcm = &dtcm;
 		zephyr,itcm = &itcm;
 		zephyr,code-partition = &m7_1_partition;
-		zephyr,console = &uart7;
-		zephyr,shell-uart = &uart7;
+		zephyr,console = &uart0;
+		zephyr,shell-uart = &uart0;
 		zephyr,canbus = &can0;
 	};
 };
@@ -28,7 +28,11 @@
 	status = "okay";
 };
 
-&uart7 {
+&mbox {
+	status = "okay";
+};
+
+&uart0 {
 	status = "okay";
 };
 

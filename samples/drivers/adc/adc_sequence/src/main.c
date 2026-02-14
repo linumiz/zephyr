@@ -50,7 +50,7 @@ int main(void)
 		.resolution = CONFIG_SEQUENCE_RESOLUTION,
 		.options = &options,
 	};
-
+	printf("ADC device ready: %p (%s)\n", adc, adc->name);
 	if (!device_is_ready(adc)) {
 		printf("ADC controller device %s not ready\n", adc->name);
 		return 0;
@@ -75,13 +75,24 @@ int main(void)
 	for (int k = 0; k < 10; k++) {
 #endif
 		printf("ADC sequence reading [%u]:\n", count++);
-		k_msleep(1000);
+		// k_msleep(1000);
+		printf("DEBUG: Entering adc_read()...\n");
 
+		k_timeout_t timeout = K_MSEC(5000);  // 5 sec timeout
 		err = adc_read(adc, &sequence);
 		if (err < 0) {
 			printf("Could not read (%d)\n", err);
-			continue;
+			// continue;
+		}else {
+    		printf("adc_read() returned OK! Raw sample[0] = %d\n", channel_reading[0][0]);
 		}
+
+		k_msleep(500);
+		printf("DEBUG: adc_read() succeeded! CHANNEL_COUNT = %zu\n", CHANNEL_COUNT);
+
+		if (CHANNEL_COUNT == 0) {
+            printf("WARNING: No channels defined in devicetree!\n");
+        }
 
 		for (size_t channel_index = 0U; channel_index < CHANNEL_COUNT; channel_index++) {
 			int32_t val_mv;

@@ -20,6 +20,7 @@
 void enable_sys_int(uint32_t int_num, uint32_t priority, void (*isr)(const void *), const void *arg)
 {
 	irq_connect_dynamic(int_num, priority, isr, arg, 0);
+	irq_enable(int_num);
 }
 
 /* Cy_SysInt_Init wrapper for Zephyr IRQ integration */
@@ -96,6 +97,23 @@ void z_soc_irq_disable(unsigned int irq)
 	CPUSS_CM7_0_SYSTEM_INT_CTL[irq] &= ~CPUSS_CM7_0_SYSTEM_INT_CTL_CPU_INT_VALID_Msk;
 #else
 	CPUSS_CM7_1_SYSTEM_INT_CTL[irq] &= ~CPUSS_CM7_1_SYSTEM_INT_CTL_CPU_INT_VALID_Msk;
+#endif
+}
+
+int z_soc_irq_is_enabled(unsigned int irq)
+{
+	if (irq > CPUSS_SYSTEM_INT_NR) {
+		return 0;
+	}
+
+#ifdef CONFIG_INFINEON_CAT1C_M0PLUS
+	return (CPUSS_CM0_SYSTEM_INT_CTL[irq] & CPUSS_CM0_SYSTEM_INT_CTL_CPU_INT_VALID_Msk) != 0;
+#elif CONFIG_INFINEON_CAT1C_M7_0
+	return (CPUSS_CM7_0_SYSTEM_INT_CTL[irq] & CPUSS_CM7_0_SYSTEM_INT_CTL_CPU_INT_VALID_Msk) !=
+	       0;
+#else
+	return (CPUSS_CM7_1_SYSTEM_INT_CTL[irq] & CPUSS_CM7_1_SYSTEM_INT_CTL_CPU_INT_VALID_Msk) !=
+	       0;
 #endif
 }
 
