@@ -10,6 +10,10 @@ compatible: "infineon,peri-div"
 include: [clock-controller.yaml, base.yaml]
 
 properties:
+  clocks:
+    description: |
+      Clock reference source
+
   peri-group:
     type: uint8-array
     default: [00, 00]
@@ -76,3 +80,9 @@ properties:
       &tcpwm0_0 : resource-channel = <0>
       &tcpwm0_4 : resource-channel = <4>
       &tcpwm1_2 : resource-channel = <2>
+
+  "#clock-cells":
+    const: 1
+
+clock-cells:
+  - root-clk-id

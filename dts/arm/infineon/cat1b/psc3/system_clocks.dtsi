@@ -174,7 +174,7 @@
 		/* Peripheral 0, Clock Group 0 */
 		/* 24.5-bit */
 		peri0_group0_24_5bit_0: peri0_group0_24_5bit_0 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 00]; /* inst#, group# */
 			div-type = <DIV_24_5_BIT>;
@@ -186,7 +186,7 @@
 		/* Peripheral 0, Clock Group 1 */
 		/* 8-bit */
 		peri0_group1_8bit_0: peri0_group1_8bit_0 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 01]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -198,7 +198,7 @@
 		/* Peripheral 0, Clock Group 4 */
 		/* 8-bit */
 		peri0_group4_8bit_0: peri0_group4_8bit_0 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 04]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -208,7 +208,7 @@
 		};
 
 		peri0_group4_8bit_1: peri0_group4_8bit_1 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 04]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -219,7 +219,7 @@
 
 		/* 16-bit */
 		peri0_group4_16bit_0: peri0_group4_16bit_0 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 04]; /* inst#, group# */
 			div-type = <DIV_16_BIT>;
@@ -230,7 +230,7 @@
 
 		/* 16.5-bit */
 		peri0_group4_16_5bit_0: peri0_group4_16_5bit_0 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 04]; /* inst#, group# */
 			div-type = <DIV_16_5_BIT>;
@@ -240,7 +240,7 @@
 		};
 
 		peri0_group4_16_5bit_1: peri0_group4_16_5bit_1 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 04]; /* inst#, group# */
 			div-type = <DIV_16_5_BIT>;
@@ -250,7 +250,7 @@
 		};
 
 		peri0_group4_16_5bit_2: peri0_group4_16_5bit_2 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 04]; /* inst#, group# */
 			div-type = <DIV_16_5_BIT>;
@@ -261,7 +261,7 @@
 
 		/* 24.5-bit */
 		peri0_group4_24_5bit_0: peri0_group4_24_5bit_0 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 04]; /* inst#, group# */
 			div-type = <DIV_24_5_BIT>;
@@ -273,7 +273,7 @@
 		/* Peripheral 0, Clock Group 5 */
 		/* 8-bit */
 		peri0_group5_8bit_0: peri0_group5_8bit_0 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -283,7 +283,7 @@
 		};
 
 		peri0_group5_8bit_1: peri0_group5_8bit_1 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -293,7 +293,7 @@
 		};
 
 		peri0_group5_8bit_2: peri0_group5_8bit_2 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -303,7 +303,7 @@
 		};
 
 		peri0_group5_8bit_3: peri0_group5_8bit_3 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -313,7 +313,7 @@
 		};
 
 		peri0_group5_8bit_4: peri0_group5_8bit_4 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -323,7 +323,7 @@
 		};
 
 		peri0_group5_8bit_5: peri0_group5_8bit_5 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -333,7 +333,7 @@
 		};
 
 		peri0_group5_8bit_6: peri0_group5_8bit_6 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -343,7 +343,7 @@
 		};
 
 		peri0_group5_8bit_7: peri0_group5_8bit_7 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -353,7 +353,7 @@
 		};
 
 		peri0_group5_8bit_8: peri0_group5_8bit_8 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -363,7 +363,7 @@
 		};
 
 		peri0_group5_8bit_9: peri0_group5_8bit_9 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_8_BIT>;
@@ -374,7 +374,7 @@
 
 		/* 16-bit */
 		peri0_group5_16bit_0: peri0_group5_16bit_0 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_16_BIT>;
@@ -384,7 +384,7 @@
 		};
 
 		peri0_group5_16bit_1: peri0_group5_16bit_1 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_16_BIT>;
@@ -394,7 +394,7 @@
 		};
 
 		peri0_group5_16bit_2: peri0_group5_16bit_2 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_16_BIT>;
@@ -404,7 +404,7 @@
 		};
 
 		peri0_group5_16bit_3: peri0_group5_16bit_3 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 05]; /* inst#, group# */
 			div-type = <DIV_16_BIT>;
@@ -416,7 +416,7 @@
 		/* Peripheral 0, Clock Group 6 */
 		/* 16.5-bit */
 		peri0_group6_16_5bit_0: peri0_group6_16_5bit_0 {
-			#clock-cells = <0>;
+			#clock-cells = <1>;
 			compatible = "infineon,peri-div";
 			peri-group = [00 06]; /* inst#, group# */
 			div-type = <DIV_16_5_BIT>;

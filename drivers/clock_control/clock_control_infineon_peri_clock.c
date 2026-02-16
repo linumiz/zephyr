@@ -25,9 +25,13 @@
 struct ifx_peri_clock_data {
 	struct ifx_cat1_resource_inst hw_resource;
 	struct ifx_cat1_clock clock;
+	struct k_mutex lock;
 	uint16_t divider;
 	CySCB_Type *reg_addr;
+	uint8_t src_clk_id;
 };
+
+#define IFX_FRACTION_DIVIDER		32
 
 #if defined(CY_IP_MXPERI) || defined(CY_IP_M0S8PERI)
 
@@ -74,11 +78,96 @@ static inline en_clk_dst_t peri_pclk_build_en_clk_dst(uint8_t output, uint8_t gr
 	return clk_dst;
 }
 
+static int clock_ifx_periclk_set_rate(const struct device *dev,
+				      clock_control_subsys_t sys,
+				      clock_control_subsys_rate_t rate)
+{
+	struct ifx_peri_clock_data *const data = dev->data;
+	struct ifx_cat1_clock *clock = &data->clock;
+	en_clk_dst_t clk_dst;
+	uint32_t *clk_rate = (int32_t *)rate;
+	uint32_t peri_src_clk;
+	uint32_t divider;
+	int err;
+
+	if ((rate == NULL) || (sys == NULL)) {
+		return -EINVAL;
+	}
+
+	k_mutex_lock(&data->lock, K_FOREVER);
+	clk_dst = peri_pclk_build_en_clk_dst(*(uint8_t *)sys, clock->group, clock->instance);
+	peri_src_clk = Cy_SysClk_ClkHfGetFrequency(data->src_clk_id);
+	divider = peri_src_clk / *clk_rate;
+	err = Cy_SysClk_PeriPclkDisableDivider(clk_dst,
+					       IFX_CAT1_PERIPHERAL_GROUP_GET_DIVIDER_TYPE(clock->block),
+					       clock->channel);
+	if (err !=  CY_SYSCLK_SUCCESS) {
+		goto out;
+	}
+
+	if ((data->clock.block & CLK_FRAC_DIV_MODE) == 0) {
+		err = Cy_SysClk_PeriPclkSetDivider(clk_dst,
+						   IFX_CAT1_PERIPHERAL_GROUP_GET_DIVIDER_TYPE(clock->block),
+						   clock->channel,  divider - 1);
+	} else {
+		uint32_t frac_div = (((float)peri_src_clk / (float) *clk_rate) \
+					- divider) * IFX_FRACTION_DIVIDER;
+
+		err = Cy_SysClk_PeriPclkSetFracDivider(clk_dst,
+						       IFX_CAT1_PERIPHERAL_GROUP_GET_DIVIDER_TYPE(clock->block),
+						       clock->channel, divider - 1, frac_div);
+	}
+
+	if (err != CY_SYSCLK_SUCCESS) {
+		goto out;
+	}
+
+	err = Cy_SysClk_PeriPclkEnableDivider(clk_dst,
+					      IFX_CAT1_PERIPHERAL_GROUP_GET_DIVIDER_TYPE(clock->block),
+					      clock->channel);
+	if (err != CY_SYSCLK_SUCCESS) {
+		goto out;
+	}
+
+	err = Cy_SysClk_PeriPclkAssignDivider(clk_dst,
+					      IFX_CAT1_PERIPHERAL_GROUP_GET_DIVIDER_TYPE(clock->block),
+					      clock->channel);
+
+out:
+	k_mutex_unlock(&data->lock);
+
+	return err;
+}
+
+static int clock_ifx_periclk_get_rate(const struct device *dev,
+				      clock_control_subsys_t sys,
+				      uint32_t *rate)
+{
+	struct ifx_peri_clock_data *const data = dev->data;
+	struct ifx_cat1_clock *clock = &data->clock;
+	en_clk_dst_t clk_dst;
+
+	if ((rate == NULL) || (sys == NULL)) {
+		return -EINVAL;
+	}
+
+	k_mutex_lock(&data->lock, K_FOREVER);
+	clk_dst = peri_pclk_build_en_clk_dst(*(uint8_t *)sys, clock->group, clock->instance);
+	*rate =	Cy_SysClk_PeriPclkGetFrequency(clk_dst,
+				       IFX_CAT1_PERIPHERAL_GROUP_GET_DIVIDER_TYPE(clock->block),
+				       clock->channel);
+	k_mutex_unlock(&data->lock);
+
+	return 0;
+}
+
 static int ifx_cat1_peri_clock_init(const struct device *dev)
 {
 	struct ifx_peri_clock_data *const data = dev->data;
 	en_clk_dst_t clk_dst;
 	int err;
+
+	k_mutex_init(&data->lock);
 
 	/* PDL calls to set the and enable peri clock divider use the en_clk_dst_t
 	 * enumeration. This enumeration contains the peripheral clock instance, peripheral
@@ -124,6 +213,11 @@ static int ifx_cat1_peri_clock_init(const struct device *dev)
 	return 0;
 }
 
+static DEVICE_API(clock_control, clock_ifx_periclk_driver_api) = {
+	.get_rate = clock_ifx_periclk_get_rate,
+	.set_rate = clock_ifx_periclk_set_rate,
+};
+
 #if defined(CONFIG_SOC_FAMILY_INFINEON_EDGE)
 #define PERI_CLOCK_INIT(n)                                                                         \
 	.clock = {                                                                                 \
@@ -136,6 +230,7 @@ static int ifx_cat1_peri_clock_init(const struct device *dev)
 	},
 #else
 #define PERI_CLOCK_INIT(n)                                                                         \
+	.src_clk_id = DT_INST_PROP_BY_PHANDLE(n, clocks, instance),				   \
 	.clock = {                                                                                 \
 		.block = IFX_CAT1_PERIPHERAL_GROUP_ADJUST(DT_INST_PROP_BY_IDX(n, peri_group, 1),   \
 							  DT_INST_PROP(n, div_type)),              \
@@ -154,6 +249,7 @@ static int ifx_cat1_peri_clock_init(const struct device *dev)
 		PERI_CLOCK_INIT(n)};                                                               \
                                                                                                    \
 	DEVICE_DT_INST_DEFINE(n, &ifx_cat1_peri_clock_init, NULL, &ifx_cat1_peri_clock##n##_data,  \
-			      NULL, PRE_KERNEL_1, CONFIG_CLOCK_CONTROL_INIT_PRIORITY, NULL);
+			      NULL, PRE_KERNEL_1, CONFIG_CLOCK_CONTROL_INIT_PRIORITY,		   \
+			      &clock_ifx_periclk_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(INFINEON_CAT1_PERI_CLOCK_INIT)
