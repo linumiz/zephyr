@@ -23,6 +23,7 @@
 		zephyr,flash = &slot0_partition;
 		zephyr,console = &uart3;
 		zephyr,shell-uart = &uart3;
+		zephyr,canbus = &can1;
 	};
 };
 
@@ -31,13 +32,14 @@ uart3: &scb3 {
 	status = "okay";
 	current-speed = <115200>;
 
-	clocks = <&peri0_group4_8bit_0>;
+	clocks = <&peri0_group4_8bit_0 3>;
 
 	pinctrl-0 = <&p6_3_scb3_uart_tx &p6_2_scb3_uart_rx &p6_1_scb3_uart_rts &p6_0_scb3_uart_cts>;
 	pinctrl-names = "default";
 };
 
 &peri0_group4_8bit_0 {
+	clocks = <&clk_hf2>;
 	status = "okay";
 	resource-type = <IFX_RSC_SCB>;
 	resource-instance = <3>;
@@ -129,5 +131,24 @@ uart3: &scb3 {
 
 &clk_hf3 {
 	source-path = <IFX_CLK_HF_IN_CLKPATH2>;
+	status = "okay";
+};
+
+&peri0_group4_16_5bit_0 {
+        status = "okay";
+	clocks = <&clk_hf2>;
+        resource-type = <IFX_RSC_CAN>;
+	resource-instance = <3>;
+};
+
+&can1 {
+	status = "okay";
+	clock-frequency = <40000000>;
+	clocks = <&peri0_group4_16_5bit_0 5>;
+	pinctrl-0 = <&p5_2_can1_rx &p5_3_can1_tx>;
+        pinctrl-names = "default";
+};
+
+&gpio_prt5 {
 	status = "okay";
 };
