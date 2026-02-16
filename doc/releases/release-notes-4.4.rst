@@ -85,10 +85,21 @@ Deprecated APIs and options
       :c:member:`bt_conn_le_info.interval_us` instead. Note that the units have changed:
       ``interval`` was in units of 1.25 milliseconds, while ``interval_us`` is in microseconds.
 
+* I2S
+
+  * The following macros have been deprecated and are replaced with equivalent macros whose names
+    are aligned with the `latest revision of the I2S specification`_.
+
+    * :c:macro:`I2S_OPT_BIT_CLK_MASTER` -> :c:macro:`I2S_OPT_BIT_CLK_CONTROLLER`
+    * :c:macro:`I2S_OPT_FRAME_CLK_MASTER` -> :c:macro:`I2S_OPT_FRAME_CLK_CONTROLLER`
+    * :c:macro:`I2S_OPT_BIT_CLK_SLAVE` -> :c:macro:`I2S_OPT_BIT_CLK_TARGET`
+    * :c:macro:`I2S_OPT_FRAME_CLK_SLAVE` -> :c:macro:`I2S_OPT_FRAME_CLK_TARGET`
+
+.. _latest revision of the I2S specification: https://www.nxp.com/docs/en/user-manual/UM11732.pdf
+
 * POSIX
 
   * :kconfig:option:`CONFIG_XOPEN_STREAMS` was deprecated. Instead, use :kconfig:option:`CONFIG_XSI_STREAMS`
-
 * Sensors
 
   * NXP
@@ -132,6 +143,8 @@ New APIs and options
   * Audio
 
     * :c:func:`bt_bap_ep_get_conn`
+    * :c:member:`bt_ccp_call_control_client_cb.user_data`
+    * :kconfig:option:`CONFIG_BT_TBS_MAX_FRIENDLY_NAME_LENGTH`
 
   * Host
 
@@ -168,6 +181,10 @@ New APIs and options
     * Added :kconfig:option:`SB_CONFIG_MCUBOOT_DIRECT_XIP_GENERATE_VARIANT` which allows for
       generating slot 1 images automatically in sysbuild projects when using MCUboot in
       direct-xip mode.
+
+* CPUFreq
+
+  * :kconfig:option:`CONFIG_CPU_FREQ_POLICY_PRESSURE`
 
 * Display
 
@@ -269,6 +286,10 @@ New APIs and options
   * :kconfig:option:`CONFIG_SETTINGS_SAVE_SINGLE_SUBTREE_WITHOUT_MODIFICATION`
   * :kconfig:option:`CONFIG_SETTINGS_SAVE_SINGLE_SUBTREE_WITHOUT_MODIFICATION_VALUE_SIZE`
 
+* Shell
+
+  * :c:func:`shell_readline` for :ref:`user input <shell-readline>`
+
 * Sys
 
   * :c:macro:`COND_CASE_1`
@@ -342,12 +363,15 @@ New Drivers
 
   * Added new stm32 BSEC driver that provides means to program and read OTP fuses
     (:dtcompatible:`st,stm32-bsec`). (:github:`102403`)
+  * Added SiFli SF32LB eFuse OTP driver (:dtcompatible:`sifli,sf32lb-efuse`).
+    (:github:`101926`)
   * :dtcompatible:`nxp,ocotp` (:github:`102567` & :github:`103089`)
 
 New Samples
 ***********
 
 * :zephyr:code-sample:`ble_peripheral_ans`
+* :zephyr:code-sample:`cpu_freq_pressure`
 
 ..
   Same as above, this will also be recomputed at the time of the release.
@@ -379,6 +403,9 @@ Other notable changes
 
   * https://trustedfirmware-m.readthedocs.io/en/tf-mv2.2.2/releases/2.2.1.html
   * https://trustedfirmware-m.readthedocs.io/en/tf-mv2.2.2/releases/2.2.2.html
+
+* NXP SoC DTSI files have been reorganized by moving them into family-specific
+  subdirectories under ``dts/arm/nxp``.
 
 ..
   Any more descriptive subsystem or driver changes. Do you really want to write

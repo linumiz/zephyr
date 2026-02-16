@@ -565,9 +565,7 @@ int nrf_wifi_set_twt(const struct device *dev,
 
 		twt_info.dialog_token = twt_params->dialog_token;
 		twt_info.twt_wake_ahead_duration = twt_params->setup.twt_wake_ahead_duration;
-#ifndef CONFIG_NRF71_ON_IPC
 		twt_info.twt_req_timeout = CONFIG_NRF_WIFI_TWT_SETUP_TIMEOUT_MS;
-#endif /* CONFIG_NRF71_ON_IPC */
 		status = nrf_wifi_sys_fmac_twt_setup(rpu_ctx_zep->rpu_ctx,
 					   vif_ctx_zep->vif_idx,
 					   &twt_info);
@@ -1130,13 +1128,11 @@ int nrf_wifi_set_bss_max_idle_period(const struct device *dev,
 		return ret;
 	}
 
-	if (((int)bss_max_idle_period < 0) ||
-	    (bss_max_idle_period > 64000)) {
+	if (bss_max_idle_period > 64000) {
 		/* 0 or value less than 64000 is passed to f/w.
 		 * All other values considered as invalid.
 		 */
-		LOG_ERR("%s: Invalid max_idle_period value : %d",
-			__func__, (int)bss_max_idle_period);
+		LOG_ERR("%s: Invalid max_idle_period value : %d", __func__, bss_max_idle_period);
 		return ret;
 	}
 

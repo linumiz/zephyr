@@ -9,6 +9,7 @@
 #include <zephyr/dt-bindings/pinctrl/renesas/pinctrl-ra.h>
 #include <zephyr/dt-bindings/clock/ra_clock.h>
 #include <zephyr/dt-bindings/pwm/ra_pwm.h>
+#include <zephyr/dt-bindings/i2c/i2c.h>
 #include <zephyr/dt-bindings/misc/renesas/ra-elc/ra4l1-elc.h>
 #include <freq.h>
 
@@ -153,9 +154,9 @@
 			status = "disabled";
 		};
 
-		pinctrl: pin-controller@4001F800 {
+		pinctrl: pin-controller@4001f800 {
 			compatible = "renesas,ra-pinctrl-pfs";
-			reg = <0x4001F800 0x3c0>;
+			reg = <0x4001f800 0x3c0>;
 			status = "okay";
 		};
 
@@ -403,6 +404,7 @@
 			compatible = "renesas,ra-iic";
 			channel = <0>;
 			reg = <0x4009f000 0x100>;
+			clocks = <&pclkb MSTPB 9>;
 			status = "disabled";
 		};
 

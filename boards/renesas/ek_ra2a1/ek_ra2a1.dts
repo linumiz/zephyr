@@ -115,7 +115,7 @@
 	pinctrl-names = "default";
 	#address-cells = <1>;
 	#size-cells = <0>;
-	clock-frequency = <DT_FREQ_M(1)>;
+	clock-frequency = <I2C_BITRATE_FAST>;
 	interrupts = <0 1>, <1 1>, <2 1>, <3 1>;
 	interrupt-names = "rxi", "txi", "tei", "eri";
 	status = "okay";
@@ -159,7 +159,7 @@
 		ssdiv = "1.00";
 		so = <0x108>;
 		snum = <0x01>;
-		sdpa = <0x0B>;
+		sdpa = <0x0b>;
 		on-freq = <3>;
 		off-freq = <3>;
 		drift-freq = <255>;

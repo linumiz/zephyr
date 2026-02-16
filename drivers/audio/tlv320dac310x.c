@@ -47,7 +47,7 @@ static void codec_soft_reset(const struct device *dev);
 static int codec_configure_dai(const struct device *dev, audio_dai_cfg_t *cfg);
 static int codec_configure_clocks(const struct device *dev,
 				  struct audio_codec_cfg *cfg);
-static int codec_configure_filters(const struct device *dev,
+static void codec_configure_filters(const struct device *dev,
 				   audio_dai_cfg_t *cfg);
 static enum osr_multiple codec_get_osr_multiple(audio_dai_cfg_t *cfg);
 static void codec_configure_output(const struct device *dev);
@@ -100,7 +100,7 @@ static int codec_configure(const struct device *dev,
 		ret = codec_configure_dai(dev, &cfg->dai_cfg);
 	}
 	if (ret == 0) {
-		ret = codec_configure_filters(dev, &cfg->dai_cfg);
+		codec_configure_filters(dev, &cfg->dai_cfg);
 	}
 	codec_configure_output(dev);
 
@@ -222,11 +222,11 @@ static int codec_configure_dai(const struct device *dev, audio_dai_cfg_t *cfg)
 
 	/* configure I2S interface */
 	val = IF_CTRL_IFTYPE(IF_CTRL_IFTYPE_I2S);
-	if (cfg->i2s.options & I2S_OPT_BIT_CLK_MASTER) {
+	if (cfg->i2s.options & I2S_OPT_BIT_CLK_CONTROLLER) {
 		val |= IF_CTRL_BCLK_OUT;
 	}
 
-	if (cfg->i2s.options & I2S_OPT_FRAME_CLK_MASTER) {
+	if (cfg->i2s.options & I2S_OPT_FRAME_CLK_CONTROLLER) {
 		val |= IF_CTRL_WCLK_OUT;
 	}
 
@@ -316,7 +316,7 @@ static int codec_configure_clocks(const struct device *dev,
 			dac_clk, mod_clk);
 	LOG_DBG("NDAC: %u MDAC: %u OSR: %u", ndac, mdac, osr);
 
-	if (i2s->options & I2S_OPT_BIT_CLK_MASTER) {
+	if (i2s->options & I2S_OPT_BIT_CLK_CONTROLLER) {
 		bclk_div = osr * mdac / (i2s->word_size * 2U); /* stereo */
 		if ((bclk_div * i2s->word_size * 2) != (osr * mdac)) {
 			LOG_ERR("Unable to generate BCLK %u from MCLK %u",
@@ -337,7 +337,7 @@ static int codec_configure_clocks(const struct device *dev,
 	codec_write_reg(dev, OSR_MSB_ADDR, (uint8_t)((osr >> 8) & OSR_MSB_MASK));
 	codec_write_reg(dev, OSR_LSB_ADDR, (uint8_t)(osr & OSR_LSB_MASK));
 
-	if (i2s->options & I2S_OPT_BIT_CLK_MASTER) {
+	if (i2s->options & I2S_OPT_BIT_CLK_CONTROLLER) {
 		codec_write_reg(dev, BCLK_DIV_ADDR,
 				BCLK_DIV(bclk_div) | BCLK_DIV_POWER_UP);
 	}
@@ -352,7 +352,7 @@ static int codec_configure_clocks(const struct device *dev,
 	return 0;
 }
 
-static int codec_configure_filters(const struct device *dev,
+static void codec_configure_filters(const struct device *dev,
 				   audio_dai_cfg_t *cfg)
 {
 	enum proc_block proc_blk;
@@ -373,7 +373,6 @@ static int codec_configure_filters(const struct device *dev,
 	}
 
 	codec_write_reg(dev, PROC_BLK_SEL_ADDR, PROC_BLK_SEL(proc_blk));
-	return 0;
 }
 
 static enum osr_multiple codec_get_osr_multiple(audio_dai_cfg_t *cfg)

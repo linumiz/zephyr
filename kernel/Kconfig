@@ -83,11 +83,14 @@ config PREEMPT_ENABLED
 
 config PRIORITY_CEILING
 	int "Priority inheritance ceiling"
-	default -127
+	default -128
+	range -128 127
 	help
-	  This defines the minimum priority value (i.e. the logically
-	  highest priority) that a thread will acquire as part of
-	  k_mutex priority inheritance.
+	  This defines the minimum priority value (i.e. the logically highest
+	  priority) that a thread will acquire as part of the k_mutex priority
+	  inheritance. Setting this to a priority level at or lower than the
+	  the idle thread's priority level disables the k_mutex priority
+	  inheritance algorithm.
 
 config NUM_METAIRQ_PRIORITIES
 	int "Number of very-high priority 'preemptor' threads"
@@ -431,6 +434,13 @@ config CURRENT_THREAD_USE_TLS
 	help
 	  Use thread local storage to store the current thread. This avoids a
 	  syscall if userspace is enabled.
+
+config NONZERO_SPINLOCK_SIZE
+	bool "Force spinlock to have non-zero size"
+	help
+	  This option indicates that the spinlock structure must have a
+	  non-zero size (such as if used in an array). It is automatically
+	  selected when using C++.
 
 endmenu
 

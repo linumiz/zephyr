@@ -1200,8 +1200,6 @@ erase_end:
 static int flash_stm32_xspi_read(const struct device *dev, off_t addr,
 				 void *data, size_t size)
 {
-	const struct flash_stm32_xspi_config *dev_cfg = dev->config;
-	struct flash_stm32_xspi_data *dev_data = dev->data;
 	int ret = 0;
 
 	if (!xspi_address_is_valid(dev, addr, size)) {
@@ -1216,8 +1214,6 @@ static int flash_stm32_xspi_read(const struct device *dev, off_t addr,
 	}
 
 #if defined(CONFIG_STM32_MEMMAP) || (defined(CONFIG_STM32_APP_IN_EXT_FLASH) && defined(CONFIG_XIP))
-	ARG_UNUSED(dev_cfg);
-	ARG_UNUSED(dev_data);
 	/*
 	 * When the call is made by an app executing in external flash,
 	 * skip the memory-mapped mode check
@@ -1243,7 +1239,11 @@ static int flash_stm32_xspi_read(const struct device *dev, off_t addr,
 	LOG_DBG("Memory-mapped read from 0x%08lx, len %zu", mmap_addr, size);
 	memcpy(data, (void *)mmap_addr, size);
 	return ret;
-#else
+
+#else /* CONFIG_STM32_MEMMAP || (CONFIG_STM32_APP_IN_EXT_FLASH && CONFIG_XIP) */
+	const struct flash_stm32_xspi_config *dev_cfg = dev->config;
+	struct flash_stm32_xspi_data *dev_data = dev->data;
+
 	XSPI_RegularCmdTypeDef cmd = xspi_prepare_cmd(dev_cfg->data_mode, dev_cfg->data_rate);
 
 	if (dev_cfg->data_mode != XSPI_OCTO_MODE) {
@@ -1337,8 +1337,6 @@ static int flash_stm32_xspi_write(const struct device *dev, off_t addr,
 	xspi_lock_thread(dev);
 
 #ifdef CONFIG_STM32_MEMMAP
-	ARG_UNUSED(dev_data);
-
 	if (stm32_xspi_is_memorymap(dev)) {
 		/* Abort ongoing transfer to force CS high/BUSY deasserted */
 		ret = stm32_xspi_abort(dev);
@@ -2085,11 +2083,6 @@ static int flash_stm32_xspi_init(const struct device *dev)
 	uint32_t prescaler = STM32_XSPI_CLOCK_PRESCALER_MIN;
 	int ret;
 
-	if (!device_is_ready(DEVICE_DT_GET(STM32_CLOCK_CONTROL_NODE))) {
-		LOG_ERR("clock control device not ready");
-		return -ENODEV;
-	}
-
 #if defined(CONFIG_STM32_APP_IN_EXT_FLASH) && defined(CONFIG_XIP)
 	/* If MemoryMapped then configure skip init
 	 * Check clock status first as reading CR register without bus clock doesn't work on N6
@@ -2115,9 +2108,16 @@ static int flash_stm32_xspi_init(const struct device *dev)
 		return -ENOTSUP;
 	}
 #if defined(CONFIG_SOC_SERIES_STM32H7RSX)
-	LL_PWR_EnableXSPIM2();
 	__HAL_RCC_SBS_CLK_ENABLE();
-	LL_SBS_EnableXSPI2SpeedOptim();
+	if (dev_data->hxspi.Instance == XSPI1) {
+		LL_PWR_EnableXSPIM1();
+		LL_SBS_EnableXSPI1SpeedOptim();
+	} else if (dev_data->hxspi.Instance == XSPI2) {
+		LL_PWR_EnableXSPIM2();
+		LL_SBS_EnableXSPI2SpeedOptim();
+	} else {
+		__ASSERT(0, "Not an XSPI instance?!");
+	}
 #endif /* CONFIG_SOC_SERIES_STM32H7RSX */
 
 	/* Signals configuration */
@@ -2473,9 +2473,6 @@ static int flash_stm32_xspi_init(const struct device *dev)
 #else
 #define XSPI_DMA_CHANNEL(node, dir, DIR, src, dest)
 #endif /* CONFIG_USE_STM32_HAL_DMA */
-
-#define XSPI_FLASH_MODULE(drv_id, flash_id)				\
-		(DT_DRV_INST(drv_id), xspi_nor_flash_##flash_id)
 
 #define DT_WRITEOC_PROP_OR(inst, default_value)							\
 	COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, writeoc),					\

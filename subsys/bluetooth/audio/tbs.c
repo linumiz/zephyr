@@ -1,7 +1,7 @@
 /* Bluetooth TBS - Telephone Bearer Service
  *
  * Copyright (c) 2020 Bose Corporation
- * Copyright (c) 2021-2024 Nordic Semiconductor ASA
+ * Copyright (c) 2021-2025 Nordic Semiconductor ASA
  * Copyright 2025 NXP
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -30,7 +30,6 @@
 #include <zephyr/sys/__assert.h>
 #include <zephyr/sys/atomic.h>
 #include <zephyr/sys/byteorder.h>
-#include <zephyr/sys/check.h>
 #include <zephyr/sys/util.h>
 #include <zephyr/sys/util_macro.h>
 #include <zephyr/sys/util_utf8.h>
@@ -82,7 +81,7 @@ struct tbs_inst {
 	uint16_t optional_opcodes;
 	uint16_t status_flags;
 	struct bt_tbs_in_uri incoming_uri;
-	struct bt_tbs_in_uri friendly_name;
+	struct bt_tbs_friendly_name friendly_name;
 	struct bt_tbs_in_uri in_call;
 	char uri_scheme_list[CONFIG_BT_TBS_MAX_SCHEME_LIST_LENGTH];
 	struct bt_tbs_terminate_reason terminate_reason;
@@ -966,12 +965,12 @@ static void notify_handler_cb(struct bt_conn *conn, void *data)
 	}
 
 	if (flags->call_friendly_name_changed) {
-		LOG_DBG("Notifying Friendly Name: call index 0x%02x, URI %s",
-			inst->friendly_name.call_index, inst->friendly_name.uri);
+		LOG_DBG("Notifying Friendly Name: call index 0x%02x, name %s",
+			inst->friendly_name.call_index, inst->friendly_name.name);
 
 		err = notify(conn, BT_UUID_TBS_FRIENDLY_NAME, inst->attrs, &inst->friendly_name,
 			     sizeof(inst->friendly_name.call_index) +
-				     strlen(inst->friendly_name.uri));
+				     strlen(inst->friendly_name.name));
 		if (err == 0) {
 			flags->call_friendly_name_changed = false;
 		} else {
@@ -1529,7 +1528,7 @@ static uint8_t join_calls(struct tbs_inst *inst, const struct bt_tbs_call_cp_joi
 	uint8_t call_state;
 
 	if ((inst->optional_opcodes & BT_TBS_FEATURE_JOIN) == 0) {
-		return BT_TBS_RESULT_CODE_OPCODE_NOT_SUPPORTED;
+		return BT_TBS_RESULT_CODE_OPERATION_NOT_POSSIBLE;
 	}
 
 	/* Check length */
@@ -1927,19 +1926,19 @@ static ssize_t read_friendly_name(struct bt_conn *conn, const struct bt_gatt_att
 		LOG_DBG("Value dirty for %p", (void *)conn);
 		ret = BT_GATT_ERR(BT_TBS_ERR_VAL_CHANGED);
 	} else {
-		const struct bt_tbs_in_uri *friendly_name = &inst->friendly_name;
+		const struct bt_tbs_friendly_name *friendly_name = &inst->friendly_name;
 
 		flags->call_friendly_name_dirty = false;
 
-		LOG_DBG("Index: 0x%02x call index 0x%02x, URI %s", inst_index(inst),
-			friendly_name->call_index, friendly_name->uri);
+		LOG_DBG("Index: 0x%02x call index 0x%02x, name %s", inst_index(inst),
+			friendly_name->call_index, friendly_name->name);
 
 		if (friendly_name->call_index == BT_TBS_FREE_CALL_INDEX) {
-			LOG_DBG("URI not set");
+			LOG_DBG("Friendly name not set");
 			ret = 0;
 		} else {
 			const size_t val_len =
-				sizeof(friendly_name->call_index) + strlen(friendly_name->uri);
+				sizeof(friendly_name->call_index) + strlen(friendly_name->name);
 
 			ret = bt_gatt_attr_read(conn, attr, buf, len, offset, friendly_name,
 						val_len);
@@ -2257,7 +2256,7 @@ int bt_tbs_register_bearer(const struct bt_tbs_register_param *param)
 {
 	int ret = -ENOEXEC;
 
-	CHECKIF(!valid_register_param(param)) {
+	if (!valid_register_param(param)) {
 		LOG_DBG("Invalid parameters");
 
 		return -EINVAL;
@@ -2773,7 +2772,8 @@ static void tbs_inst_remote_incoming(struct tbs_inst *inst, const char *to, cons
 
 	if (friendly_name) {
 		inst->friendly_name.call_index = call->index;
-		utf8_lcpy(inst->friendly_name.uri, friendly_name, sizeof(inst->friendly_name.uri));
+		utf8_lcpy(inst->friendly_name.name, friendly_name,
+			  sizeof(inst->friendly_name.name));
 	} else {
 		inst->friendly_name.call_index = BT_TBS_FREE_CALL_INDEX;
 	}
