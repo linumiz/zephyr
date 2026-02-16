@@ -792,6 +792,9 @@ static void spi_stm32_complete(const struct device *dev, int status)
 				ll_func_disable_spi(spi);
 			}
 #endif /* DT_HAS_COMPAT_STATUS_OKAY(st_stm32h7_spi) */
+			if (LL_SPI_HALF_DUPLEX_RX == LL_SPI_GetTransferDirection(spi)) {
+				ll_func_disable_spi(spi);
+			}
 		}
 
 		spi_stm32_cs_control(dev, false);
@@ -1013,7 +1016,7 @@ static int spi_stm32_configure(const struct device *dev,
 
 	LL_SPI_DisableCRC(spi);
 
-	if (spi_cs_is_gpio(config) || !IS_ENABLED(CONFIG_SPI_STM32_USE_HW_SS)) {
+	if (spi_cs_is_gpio(config) || cfg->soft_nss) {
 #if DT_HAS_COMPAT_STATUS_OKAY(st_stm32h7_spi)
 		if ((SPI_OP_MODE_GET(config->operation) == SPI_OP_MODE_MASTER) &&
 		    (LL_SPI_GetNSSPolarity(spi) == LL_SPI_NSS_POLARITY_LOW)) {
@@ -1028,7 +1031,6 @@ static int spi_stm32_configure(const struct device *dev,
 			LL_SPI_SetNSSMode(spi, LL_SPI_NSS_HARD_OUTPUT);
 		}
 	}
-
 	if ((config->operation & SPI_OP_MODE_SLAVE) != 0U) {
 		LL_SPI_SetMode(spi, LL_SPI_MODE_SLAVE);
 	} else {
@@ -1846,6 +1848,7 @@ static int spi_stm32_init(const struct device *dev)
 			   (.midi_clocks = DT_INST_PROP(id, midi_clock),))	\
 		IF_ENABLED(DT_HAS_COMPAT_STATUS_OKAY(st_stm32h7_spi),		\
 			   (.mssi_clocks = DT_INST_PROP(id, mssi_clock),))	\
+		.soft_nss = DT_INST_PROP(id, st_soft_nss),			\
 	};									\
 										\
 	IF_ENABLED(CONFIG_SPI_RTIO,						\
