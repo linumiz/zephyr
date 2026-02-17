@@ -14,7 +14,7 @@ LOG_MODULE_REGISTER(app, LOG_LEVEL_INF);
 #include <string.h>
 #include <zephyr/drivers/spi.h>
 
-#define SPIBB_NODE	DT_NODELABEL(spibb0)
+#define SPIBB_NODE	DT_NODELABEL(spi1)
 
 /*
  * writes 5 9bit words, you can check the output with a logic analyzer

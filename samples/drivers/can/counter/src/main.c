@@ -35,6 +35,8 @@ struct k_work_poll change_led_work;
 struct k_work state_change_work;
 enum can_state current_state;
 struct can_bus_err_cnt current_err_cnt;
+enum can_state state;
+struct can_bus_err_cnt err_cnt;
 
 CAN_MSGQ_DEFINE(change_led_msgq, 2);
 CAN_MSGQ_DEFINE(counter_msgq, 2);
@@ -287,6 +289,8 @@ int main(void)
 		can_send(can_dev, &change_led_frame, K_FOREVER,
 			 tx_irq_callback,
 			 "LED change");
+		can_get_state(can_dev, &state, &err_cnt);
+printf("Initial state: %s\n", state_to_str(state));
 		k_sleep(SLEEP_TIME);
 
 		UNALIGNED_PUT(sys_cpu_to_be16(counter),
