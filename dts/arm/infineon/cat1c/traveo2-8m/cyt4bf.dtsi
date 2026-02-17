@@ -97,7 +97,7 @@
         clocking: clocking {
             compatible = "infineon,cat1-clocking";
         };
-        
+
         mbox: mbox@40220000 {
             compatible = "infineon,cat1-mbox-pdl";
             reg = <0x40220000 0x10000>;
@@ -2420,7 +2420,7 @@
             compatible = "infineon,ifx-sar";
             reg = <0x40900000 0x100000>;
             #io-channel-cells = <1>;
-            system-interrupts = <160 3>;
+            system-interrupts = <123 3>;
             clock-frequency = <26670000>;
             ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
             ifx,peri-clk = <0x0114>;

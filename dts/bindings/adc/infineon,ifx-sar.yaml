@@ -29,6 +29,7 @@ description: |
 compatible: "infineon,ifx-sar"
 
 include: [adc-controller.yaml, "infineon,system-interrupts.yaml", pinctrl-device.yaml]
+
 properties:
   reg:
     required: true

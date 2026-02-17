@@ -1,0 +1,316 @@
+/*
+ * Copyright (c) 2025 Infineon Technologies AG,
+ * or an affiliate of Infineon Technologies AG.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <arm/infineon/cat1c/traveo2-8m/system_clocks.dtsi>
+#include <arm/infineon/cat1c/traveo2-8m/cyt4bfbche.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
+#include "kit_t2g_b_h_evk_cyt4bfbche_m0p-pinctrl.dtsi"
+#include <dt-bindings/adc/adc.h>
+
+/ {
+	aliases {
+		uart-3 = &uart3;
+		led0 = &user_led0;
+		led1 = &user_led1;
+		led2 = &user_led2;
+		sw0 = &user_bt0;
+		sw1 = &user_bt1;
+		watchdog0 = &watchdog0;
+		dma0 = &dma0;
+		smif0 = &smif0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		user_led0: led_0 {
+			label = "LED_0";
+			gpios = <&gpio_prt16 1 GPIO_ACTIVE_LOW>;
+		};
+
+		user_led1: led_1 {
+			label = "LED_1";
+			gpios = <&gpio_prt16 2 GPIO_ACTIVE_LOW>;
+		};
+
+		user_led2: led_2 {
+			label = "LED_2";
+			gpios = <&gpio_prt16 3 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+
+		user_bt0: user_btn0 {
+			label = "SW_1";
+			gpios = <&gpio_prt21 4 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_0>;
+		};
+
+		user_bt1: user_btn1 {
+			label = "SW_2";
+			gpios = <&gpio_prt17 3 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_1>;
+		};
+	};
+        reserved-memory {
+		#address-cells = <1>;
+        #size-cells = <1>;
+        sram_srom: memory@28000000 {
+            reg = <0x28000000 DT_SIZE_K(2)>;
+        };
+        sram_m0plus: memory@28000800 {
+            reg = <0x28000800 DT_SIZE_K(12)>; /* Reduced to fit in 14KB sram0 */
+        };
+        sram_m7_0: memory@28040000  {
+            reg = <0x28040000  DT_SIZE_K(256)>; /* Full sram1 */
+        };
+        sram_m7_1: memory@28084000 {
+            reg = <0x28084000 DT_SIZE_K(112)>; /* sram2, after 16KB IPC at 0x28080000 */
+		};
+	};
+};
+
+&code_flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		m0p_partition: partition_m0p@0 {
+			label = "m0p_partition";
+			reg = <0x0 DT_SIZE_K(512)>;
+			status = "disabled";
+		};
+		m7_0_partition: partition@80000 {
+			label = "m7_0_partition";
+			reg = <0x80000 DT_SIZE_K(2048)>;
+		};
+		m7_1_partition: partition@280000 {
+			label = "m7_1_partition";
+			reg = <0x280000 DT_SIZE_K(5568)>;
+		};
+	};
+};
+
+uart3: &scb3 {
+	compatible = "infineon,cat1-uart-pdl";
+	current-speed = <115200>;
+	clocks = <&clk_hf2>;
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+    ifx,peri-clk = <0x0121>;
+    ifx,peri-div = <0>; /* 8-bit divider */
+    ifx,peri-div-inst = <0>;
+
+	/* UART pins */
+	pinctrl-0 = <&p13_1_scb3_uart_tx &p13_0_scb3_uart_rx>;
+	pinctrl-names = "default";
+};
+
+can0: &can0_0 {
+	compatible = "infineon,cat1-can";
+	clocks = <&clk_hf2>;
+	clock-frequency = <40000000>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0100>;
+	ifx,peri-div = <3>; /* 24-bit divider */
+	ifx,peri-div-inst = <0>;
+
+	pinctrl-0 = <&p0_2_can0_0_tx &p0_3_can0_0_rx>;
+	pinctrl-names = "default";
+};
+
+&adc0 {
+	status = "okay";
+	clock-frequency = <26670000>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x012A>;
+	ifx,peri-div = <0>; /* 8-bit divider */
+	ifx,peri-div-inst = <2>;
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+};
+
+i2c9: &scb9 {
+    compatible = "infineon,cat1-i2c-pdl";
+    status = "okay";
+
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    /* I2C pins */
+    pinctrl-0 = <&p15_1_scb9_i2c_sda &p15_2_scb9_i2c_scl>;
+    pinctrl-names = "default";
+
+    clocks = <&clk_hf2>;
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+    ifx,peri-clk = <0x0127>;
+    ifx,peri-div = <0>; /* 8-bit divider */
+    ifx,peri-div-inst = <1>;
+};
+
+&eth0_mac {
+	status = "okay";
+	pinctrl-0 = <&p26_6_eth_tx_clk &p26_2_eth_txd_0 &p26_3_eth_txd_1
+	&p26_4_eth_txd_2 &p26_5_eth_txd_3 &p26_1_eth_tx_en
+	&p27_3_eth_rx_clk &p26_7_eth_rxd_0 &p27_0_eth_rxd_1
+	&p27_1_eth_rxd_2 &p27_2_eth_rxd_3 &p27_4_eth_rx_ctl>;
+	pinctrl-names = "default";
+	phy-connection-type = "rgmii";
+	phy-handle = <&eth0_phy>;
+	clock-frequency = <125000000>;
+	local-mac-address = [b0 19 21 67 36 00];
+};
+
+&eth0_mdio {
+	status = "okay";
+	pinctrl-0 = <&p27_5_eth_mdc &p27_6_eth_mdio>;
+	pinctrl-names = "default";
+
+	eth0_phy: phy@0 {
+		compatible = "ti,dp83867";
+		reg = <0x0>;
+		status = "okay";
+		reset-gpios = <&gpio_prt27 7 GPIO_ACTIVE_LOW>;
+	};
+};
+
+/* QSPI External NOR Flash */
+&smif0 {
+    status = "okay";
+    pinctrl-0 = <
+        &p6_3_smif0_clk &p6_5_smif0_sel0
+        &p7_1_smif0_data0 &p7_2_smif0_data1
+        &p7_3_smif0_data2 &p7_4_smif0_data3
+    >;
+    pinctrl-names = "default";
+
+    norflash0: s25hl512t@0 {
+		status ="okay";
+        compatible = "soc-nv-flash";
+        reg = <0x00000000 DT_SIZE_M(64)>;
+        write-block-size = <512>;
+        erase-block-size = <DT_SIZE_K(256)>;
+
+        partitions {
+            compatible = "fixed-partitions";
+            #address-cells = <1>;
+            #size-cells = <1>;
+        };
+
+    };
+};
+
+
+&can0 {
+    status = "okay";
+};
+
+&watchdog0 {
+	status = "okay";
+};
+
+&dma0 {
+	status = "okay";
+};
+
+&eth0_mac {
+       status = "disabled";
+};
+
+&eth0_mdio {
+       status = "disabled";
+};
+
+&gpio_prt16 {
+	status = "okay";
+};
+
+&gpio_prt17 {
+	status = "okay";
+};
+
+&gpio_prt21 {
+	status = "okay";
+};
+
+&gpio_prt13 {
+    status = "okay";
+};
+
+&gpio_prt15 {
+    status = "okay";
+};
+
+&gpio_prt26 {
+    status = "okay";
+};
+
+&gpio_prt27 {
+    status = "okay";
+};
+
+&gpio_prt6 {
+    status = "okay";
+};
+
+&gpio_prt7 {
+    status = "okay";
+};
+
+&work_flash0 {
+	status = "okay";
+};
+
+&work_flash1 {
+	status = "okay";
+};
+
+&clk_eco {
+	status = "okay";
+	clock-frequency = <16000000>;
+};
+
+&pll0 {
+	status = "okay";
+};
+&pll1 {
+	status = "okay";
+};
+&pll2 {
+	status = "okay";
+};
+
+
+&clk_hf0 {
+	status = "okay";
+};
+&clk_hf1 {
+	status = "okay";
+};
+&clk_hf2 {
+	status = "okay";
+};
+&clk_hf3 {
+	status = "okay";
+};
+&clk_hf4 {
+	status = "okay";
+};
+&clk_hf5 {
+	status = "okay";
+};
+&clk_hf6 {
+	status = "okay";
+};
+&clk_hf7 {
+	status = "disabled";
+};
+

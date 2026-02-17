@@ -98,6 +98,9 @@ zephyr_library_sources_ifdef(CONFIG_SOC_DIE_PSOC6_04
 zephyr_library_sources_ifdef(CONFIG_SOC_DIE_CYT2B7
   ${hal_cat1a_dir}/source/triggers/cyhal_triggers_tviibe1m.c)
 
+zephyr_library_sources_ifdef(CONFIG_SOC_SERIES_CYT4BF
+  ${hal_cat1c_dir}/source/triggers/cyhal_triggers_xmc7200.c)
+
 # High level interface for interacting with CAT1 hardware
 zephyr_library_sources_ifdef(CONFIG_USE_INFINEON_FLASH   ${hal_dir}/source/cyhal_nvm.c)
 zephyr_library_sources_ifdef(CONFIG_USE_INFINEON_I2C     ${hal_dir}/source/cyhal_i2c.c)

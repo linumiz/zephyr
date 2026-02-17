@@ -1,0 +1,35 @@
+/*
+ * Copyright (c) 2025 Infineon Technologies AG,
+ * or an affiliate of Infineon Technologies AG.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <arm/infineon/cat1c/traveo2-8m/cyt4bfbche.dtsi>
+#include <arm/infineon/cat1c/traveo2-8m/system_clocks.dtsi>
+#include <arm/infineon/cat1c/traveo2-8m/cyt4bf_m7.dtsi>
+#include "kit_t2g_b_h_evk_cyt4bfbche_m0p-pinctrl.dtsi"
+#include "kit_t2g_b_h_evk_common.dtsi"
+
+/ {
+	model = "Infineon Evaluation board for CYT4BFBCHE M7_1";
+	compatible = "infineon,kit_t2g_b_h_evk", "infineon,TVIIBH8M";
+
+	chosen {
+		zephyr,sram = &sram_m7_1;
+		zephyr,flash = &code_flash0;
+		zephyr,dtcm = &dtcm;
+		zephyr,itcm = &itcm;
+		zephyr,code-partition = &m7_1_partition;
+		zephyr,console = &uart3;
+		zephyr,shell-uart = &uart3;
+	};
+};
+&m7_1 {
+	status = "okay";
+};
+
+&uart3 {
+	status = "okay";
+};
