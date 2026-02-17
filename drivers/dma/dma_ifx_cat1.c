@@ -419,8 +419,10 @@ static int ifx_cat1_dma_start(const struct device *dev, uint32_t channel)
 	/* Enable DMA interrupt source. */
 	Cy_DMA_Channel_SetInterruptMask(cfg->regs, channel, CY_DMA_INTR_MASK);
 
+#if !defined(CONFIG_SOC_FAMILY_CYT2B7)
 	/* Enable the interrupt  */
 	irq_enable(data->channels[channel].irq);
+#endif
 
 	/* Enable DMA channel */
 	Cy_DMA_Channel_Enable(cfg->regs, channel);
@@ -682,6 +684,21 @@ static DEVICE_API(dma, ifx_cat1_dma_api) = {
 	.get_status = ifx_cat1_dma_get_status,
 };
 
+#if (CONFIG_SOC_FAMILY_CYT2B7)
+#define IRQ_CONFIGURE(n, inst)                                                                     \
+	static const struct ifx_cat1_dma_irq_context irq_context##inst##n = {                      \
+		.dev = DEVICE_DT_INST_GET(inst),                                                   \
+		.channel = n,                                                                      \
+	};                                                                                         \
+                                                                                                   \
+	enable_sys_int(DT_INST_IRQ_BY_IDX(inst, n, irq),	                    		   \
+		       DT_INST_IRQ_BY_IDX(inst, n, priority),                    		   \
+	               (void (*)(const void *))(void *)ifx_cat1_dma_isr,                           \
+	               &irq_context##inst##n);                                                     \
+                                                                                                   \
+	ifx_cat1_dma_channels##inst[n].irq = DT_INST_IRQ_BY_IDX(inst, n, irq);
+
+#else
 #define IRQ_CONFIGURE(n, inst)                                                                     \
 	static const struct ifx_cat1_dma_irq_context irq_context##inst##n = {                      \
 		.dev = DEVICE_DT_INST_GET(inst),                                                   \
@@ -692,6 +709,7 @@ static DEVICE_API(dma, ifx_cat1_dma_api) = {
 		    ifx_cat1_dma_isr, &irq_context##inst##n, 0);                                   \
                                                                                                    \
 	ifx_cat1_dma_channels##inst[n].irq = DT_INST_IRQ_BY_IDX(inst, n, irq);
+#endif
 
 #define CONFIGURE_ALL_IRQS(inst, n) LISTIFY(n, IRQ_CONFIGURE, (), inst)
 

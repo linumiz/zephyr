@@ -23,7 +23,7 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(uart_ifx_cat1, CONFIG_UART_LOG_LEVEL);
 
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7)
 extern void cyhal_uart_irq_handler(cyhal_uart_t *cyhal_uart_irq_obj);
 #endif
 
@@ -88,7 +88,7 @@ struct ifx_cat1_uart_config {
 	const struct pinctrl_dev_config *pcfg;
 	CySCB_Type *reg_addr;
 	struct uart_config dt_cfg;
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7)
 	uint16_t irq_num;
 #endif
 	uint8_t irq_priority;
@@ -481,6 +481,34 @@ static void ifx_cat1_uart_irq_callback_set(const struct device *dev,
 
 	/* Register a uart general callback handler  */
 	cyhal_uart_register_callback(uart_obj, _uart_event_callback_irq_mode, (void *)dev);
+}
+
+static void ifx_cat1_uart_irq_handler(const struct device *dev)
+{
+	/*
+	 * This function clears the interrupt and makes a callback.
+	 * It does not handle events.
+	 */
+	const struct ifx_cat1_uart_config *const config = dev->config;
+	struct ifx_cat1_uart_data *const data = dev->data;
+
+	/* Clear all interrupts that could have been configured */
+	CySCB_Type *base = config->reg_addr;
+	uint32_t locRxErr = (CY_SCB_UART_RECEIVE_ERR & Cy_SCB_GetRxInterruptStatusMasked(base));
+	uint32_t locTxErr = (CY_SCB_UART_TRANSMIT_ERR & Cy_SCB_GetTxInterruptStatusMasked(base));
+	uint32_t rx_clear = locRxErr | CY_SCB_UART_RX_NOT_EMPTY;
+	uint32_t tx_clear = locTxErr | CY_SCB_UART_TX_EMPTY | CY_SCB_UART_TX_OVERFLOW |
+			    CY_SCB_TX_INTR_UART_NACK | CY_SCB_TX_INTR_UART_ARB_LOST;
+
+	Cy_SCB_ClearRxInterrupt(base, rx_clear);
+	Cy_SCB_ClearTxInterrupt(base, tx_clear);
+
+	/* Call the callback with the callback data.
+	 * This does not guarantee a separate callback per event.
+	 */
+	if (data->irq_cb != NULL) {
+		data->irq_cb(dev, data->irq_cb_data);
+	}
 }
 
 #endif /* CONFIG_UART_INTERRUPT_DRIVEN */
@@ -975,10 +1003,10 @@ static int ifx_cat1_uart_init(const struct device *dev)
 		return -ENOTSUP;
 	}
 
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_UART_INTERRUPT_DRIVEN)
+#if ( (CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_UART_INTERRUPT_DRIVEN) || (CONFIG_SOC_FAMILY_CYT2B7 && CONFIG_UART_INTERRUPT_DRIVEN) )
 	/* Enable the UART interrupt */
 	enable_sys_int(config->irq_num, config->irq_priority,
-		       (void (*)(const void *))(void *)cyhal_uart_irq_handler, &data->obj);
+		       (void (*)(const void *))(void *)ifx_cat1_uart_irq_handler, dev);
 #endif
 
 	/* Perform initial Uart configuration */
@@ -1115,7 +1143,7 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 #define UART_DMA_CHANNEL(index, dir, ch_dir, src_data_size, dst_data_size)
 #endif /* CONFIG_UART_ASYNC_API */
 
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7)
 #define IRQ_INFO(n)                                                                                \
 	.irq_num = DT_INST_PROP_BY_IDX(n, system_interrupts, SYS_INT_NUM),                         \
 	.irq_priority = DT_INST_PROP_BY_IDX(n, system_interrupts, SYS_INT_PRI)};

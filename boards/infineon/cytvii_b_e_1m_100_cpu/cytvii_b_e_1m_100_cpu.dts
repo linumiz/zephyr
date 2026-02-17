@@ -1,0 +1,299 @@
+/*
+ * Copyright (c) 2025 Infineon Technologies AG,
+ * or an affiliate of Infineon Technologies AG.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include <arm/infineon/cat1a/cyt2b7/system_clocks.dtsi>
+#include <arm/infineon/cat1a/cyt2b7/cyt2b7.100-lqfp.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
+#include <zephyr/dt-bindings/adc/adc.h>
+#include <common/freq.h>
+#include "cytvii_b_e_1m_100_cpu_pinctrl.dtsi"
+
+/ {
+    model = "Infineon CYTVII-B-E-1M-100-CPU";
+    compatible = "infineon,tviibe1m";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,console = &uart3;
+		zephyr,shell-uart = &uart3;
+		zephyr,canbus = &can0;
+	};
+
+    aliases {
+		led0 = &cpu_user_led0;
+		led1 = &bb_user_led0;
+		led2 = &bb_user_led1;
+		led3 = &bb_user_led2;
+		led4 = &bb_user_led3;
+		led5 = &bb_user_led4;
+		led6 = &bb_user_led5;
+		led7 = &bb_user_led6;
+		led8 = &bb_user_led7;
+		led9 = &bb_user_led8;
+        led10 = &bb_user_led9;
+
+        sw0 = &cpu_user_bt0;
+		sw1 = &bb_user_bt1;
+		sw2 = &bb_user_bt2;
+		sw3 = &bb_user_bt3;
+		sw4 = &bb_user_bt4;
+		sw5 = &bb_user_bt5;
+		watchdog0 = &watchdog0;
+		spi1 = &spi1;
+
+    };
+
+    leds {
+		compatible = "gpio-leds";
+
+        cpu_user_led0: led0 {
+			label = "LED_0";
+			gpios = <&gpio_prt8 2 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led0: led1 {
+			label = "LED_1";
+			gpios = <&gpio_prt19 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led1: led2 {
+			label = "LED_2";
+			gpios = <&gpio_prt23 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led2: led3 {
+			label = "LED_3";
+			gpios = <&gpio_prt19 1 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led3: led4 {
+			label = "LED_4";
+			gpios = <&gpio_prt19 0 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led4: led5 {
+			label = "LED_5";
+			gpios = <&gpio_prt17 2 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led5: led6 {
+			label = "LED_6";
+			gpios = <&gpio_prt14 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led6: led7 {
+			label = "LED_7";
+			gpios = <&gpio_prt13 2 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led7: led8 {
+			label = "LED_8";
+			gpios = <&gpio_prt13 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led8: led9 {
+			label = "LED_9";
+			gpios = <&gpio_prt13 4 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led9: led10 {
+			label = "LED_10";
+			gpios = <&gpio_prt13 5 GPIO_ACTIVE_HIGH>;
+		};
+
+	};
+
+    gpio_keys {
+		compatible = "gpio-keys";
+
+		cpu_user_bt0: cpu_user_btn0 {
+			label = "SW_0";
+			gpios = <&gpio_prt6 5 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_0>;
+		};
+
+		bb_user_bt1: bb_user_btn1 {
+			label = "SW_1";
+			gpios = <&gpio_prt13 6 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_1>;
+		};
+
+		bb_user_bt2: bb_user_btn2 {
+			label = "SW_2";
+			gpios = <&gpio_prt13 7 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_2>;
+		};
+
+		bb_user_bt3: bb_user_btn3 {
+			label = "SW_3";
+			gpios = <&gpio_prt14 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_3>;
+		};
+
+		bb_user_bt4: bb_user_btn4 {
+			label = "SW_4";
+			gpios = <&gpio_prt12 4 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_4>;
+		};
+
+		bb_user_bt5: bb_user_btn5 {
+			label = "SW_5";
+			gpios = <&gpio_prt19 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_5>;
+		};
+
+	};
+};
+
+uart3: &scb3 {
+	compatible = "infineon,cat1-uart-pdl";
+	status = "okay";
+	current-speed = <115200>;
+	clocks = <&clk_hf0>;
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+    ifx,peri-clk = <0x0017>;
+    ifx,peri-div = <0>; /* 8-bit divider */
+    ifx,peri-div-inst = <0>;
+	/* UART pins */
+	pinctrl-0 = <&p13_1_scb3_uart_tx &p13_0_scb3_uart_rx>;
+	pinctrl-names = "default";
+};
+
+i2c7: &scb7 {
+	  compatible = "infineon,cat1-i2c-pdl";
+      status = "okay";
+	  clocks = <&clk_hf0>;
+	  ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	  ifx,peri-clk = <0x001B>;
+	  ifx,peri-div = <1>; /* 8-bit divider */
+	  ifx,peri-div-inst = <1>;
+      #address-cells = <1>;
+      #size-cells = <0>;
+      pinctrl-0 = <&p0_1_scb7_i2c_scl &p0_0_scb7_i2c_sda>;
+      pinctrl-names = "default";
+};
+
+spi1: &scb1 {
+	compatible = "infineon,cat1-spi-pdl";
+	status = "okay";
+
+	pinctrl-0 = <&p18_0_scb1_spi_miso &p18_1_scb1_spi_mosi &p18_2_scb1_spi_scl>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpio_prt18 3 GPIO_ACTIVE_LOW>;
+
+	clocks = <&clk_hf0>;
+   	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+    ifx,peri-clk = <0x0015>;
+    ifx,peri-div = <1>; /* 16-bit divider */
+    ifx,peri-div-inst = <3>;
+
+	w25q128jvsq2449_spi: spi-nor-flash@0 {
+	compatible = "jedec,spi-nor";
+	reg = <0>;
+	spi-max-frequency = <DT_FREQ_M(8)>;
+	size = <DT_SIZE_M(128)>; /* 64 Mbits */
+	status = "okay";
+	jedec-id = [ef 40 18];
+	};
+};
+
+can0: &can0_0 {
+    compatible = "infineon,cat1-can";
+	status = "okay";
+    clocks = <&clk_hf0>;
+    clock-frequency = <40000000>;
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+    ifx,peri-clk = <0x0006>;
+    ifx,peri-div = <3>; /* 24-bit divider */
+    ifx,peri-div-inst = <0>;
+
+    pinctrl-0 = <&p2_0_can0_0_tx &p2_1_can0_0_rx>;
+    pinctrl-names = "default";
+};
+
+
+adc0: &adc0 {
+       status = "okay";
+	    clocks = <&clk_hf0>;
+       clock-frequency = <10670000>;
+       ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+       ifx,peri-clk = <0x001C>;
+       ifx,peri-div = <1>; /* 8-bit divider */
+       ifx,peri-div-inst = <2>;
+	   #io-channel-cells = <1>;
+		#address-cells = <1>;
+   		#size-cells = <0>;
+};
+
+&gpio_prt6 {
+	status = "okay";
+};
+
+&gpio_prt8 {
+	status = "okay";
+};
+
+&gpio_prt12 {
+	status = "okay";
+};
+
+&gpio_prt13 {
+	status = "okay";
+};
+
+&gpio_prt14 {
+	status = "okay";
+};
+
+&gpio_prt17 {
+	status = "okay";
+};
+
+&gpio_prt18 {
+	status = "okay";
+};
+
+&gpio_prt19 {
+	status = "okay";
+};
+
+&gpio_prt22 {
+	status = "okay";
+};
+
+&gpio_prt23 {
+	status = "okay";
+};
+
+&pll0 {
+	status = "okay";
+};
+
+&clk_eco {
+    status = "okay";
+    clock-frequency = <16000000>;
+};
+
+&clk_hf0 {
+	status = "okay";
+};
+
+&clk_hf1 {
+	status = "okay";
+};
+
+&clk_hf2 {
+	status = "okay";
+};
+
+&watchdog0 {
+	status = "okay";
+};

@@ -1,0 +1,7 @@
+# Copyright (c) 2025 Infineon Technologies AG,
+# or an affiliate of Infineon Technologies AG.
+
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_CYTVII_B_E_1M_100_CPU
+		select SOC_CYT2B75CAE
