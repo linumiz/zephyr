@@ -1,0 +1,39 @@
+/*
+ * Copyright (c) 2025 Linumiz GmbH
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
+
+/ {
+    zephyr,user {
+        io-channels = <&adc0 0>;
+    };
+};
+
+&pinctrl {
+    /* Configure P6.0 (VR1 Potentiometer) for analog input */
+    p6_0_pass0_sar0_an0: p6_0_pass0_sar0_an0 {
+        pinmux = <DT_CAT1_PINMUX(6, 0, HSIOM_SEL_AMUXA)>;
+    };
+};
+
+&adc0 {
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    pinctrl-0 = <&p6_0_pass0_sar0_an0>;
+    pinctrl-names = "default";
+
+
+    channel@0 {
+        reg = <0>;
+        zephyr,gain = "ADC_GAIN_1";
+        zephyr,reference = "ADC_REF_VDD_1";
+        zephyr,vref-mv = <3300>;  /* VDDA = 3.3V reference */
+
+        zephyr,input-positive = <0>;  /* AN0 mapped to P6.0 (Potentiometer VR1) */ 
+        zephyr,resolution = <12>;
+        zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 1)>;
+    };
+};

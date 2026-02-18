@@ -24,6 +24,7 @@
 		watchdog0= &watchdog0;
 		dma0=&dma0;
 		adc0=&adc0;
+		i2c0=&i2c0;
 	};
 
 	leds {
@@ -119,6 +120,20 @@ uart0: &scb0 {
 	/omit-if-no-ref/ p12_1_can0_0_rx: p12_1_can0_0_rx {
 		pinmux = <DT_CAT1_PINMUX(5, 1, HSIOM_SEL_ACT_13)>;
 		input-enable;
+	};
+
+	/* SPI3 pinctrl overrides with proper direction configuration */
+	/omit-if-no-ref/ p13_0_scb3_spi_m_miso: p13_0_scb3_spi_m_miso {
+		pinmux = <DT_CAT1_PINMUX(13, 0, HSIOM_SEL_ACT_9)>;
+		input-enable;  /* Critical: MISO must be input to receive data */
+	};
+	/omit-if-no-ref/ p13_1_scb3_spi_m_mosi: p13_1_scb3_spi_m_mosi {
+		pinmux = <DT_CAT1_PINMUX(13, 1, HSIOM_SEL_ACT_9)>;
+		drive-push-pull;  /* MOSI is output */
+	};
+	/omit-if-no-ref/ p13_2_scb3_spi_m_clk: p13_2_scb3_spi_m_clk {
+		pinmux = <DT_CAT1_PINMUX(13, 2, HSIOM_SEL_ACT_9)>;
+		drive-push-pull;  /* CLK is output */
 	};
 
 	/omit-if-no-ref/ p18_0_eth_ref_clk: p18_0_eth_ref_clk {
@@ -237,8 +252,9 @@ spi1: &scb3 {
     pinctrl-names = "default";
     cs-gpios = <&gpio_prt13 3 GPIO_ACTIVE_LOW>;
 
+    clocks = <&clk_hf2>;
     ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-    ifx,peri-clk = <0x0108>;
+    ifx,peri-clk = <0x0121>;
     ifx,peri-div = <1>; /* 16-bit divider */
     ifx,peri-div-inst = <3>;
 
@@ -256,7 +272,7 @@ spi1: &scb3 {
        status = "okay";
        clock-frequency = <26670000>;
        ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-       ifx,peri-clk = <0x0114>;
+       ifx,peri-clk = <0x012A>;
        ifx,peri-div = <0>; /* 8-bit divider */
        ifx,peri-div-inst = <2>;
 };
@@ -293,11 +309,11 @@ spi1: &scb3 {
 	>;
 	pinctrl-names = "default";
 
-	hyperflash0: hyperflash0@0 {
+	/* S25HL512T Quad SPI NOR Flash - Slot 0 (512 Mbit = 64 MB) */
+	flash0: flash0@60000000 {
 		compatible = "soc-nv-flash";
-		reg = <0x00000000 DT_SIZE_M(512)>;
-		write-block-size = <256>;
-		erase-block-size = <4096>;
+		status = "okay";
+		reg = <0x60000000 DT_SIZE_M(64)>;
 
 		partitions {
 			#address-cells = <1>;
@@ -305,11 +321,12 @@ spi1: &scb3 {
 			compatible = "fixed-partitions";
 		};
 	};
-	hyperflash1: hyperflash0@1 {
+
+	/* S25HL512T Quad SPI NOR Flash - Slot 1 (512 Mbit = 64 MB) */
+	flash1: flash1@64000000 {
 		compatible = "soc-nv-flash";
-		reg = <0x00000000 DT_SIZE_M(512)>;
-		write-block-size = <256>;
-		erase-block-size = <4096>;
+		status = "okay";
+		reg = <0x64000000 DT_SIZE_M(64)>;
 
 		partitions {
 			#address-cells = <1>;
@@ -319,6 +336,31 @@ spi1: &scb3 {
 	};
 };
 
+i2c0: &scb4 {
+	compatible = "infineon,cat1-i2c-pdl";
+	status = "okay";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	/* I2C pins */
+	pinctrl-0 = <&p6_1_scb4_i2c_sda &p6_2_scb4_i2c_scl>;
+	pinctrl-names = "default";
+
+	clocks = <&clk_hf2>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0122>;
+	ifx,peri-div = <0>; /* 8-bit divider */
+	ifx,peri-div-inst = <1>;
+};
+
+&watchdog0 {
+	status = "okay";
+};
+
+&dma0 {
+	status = "okay";
+};
 
 &gpio_prt0 {
 	status = "okay";

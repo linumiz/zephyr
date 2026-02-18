@@ -1,0 +1,29 @@
+/*
+ * Copyright (c) 2026 Infineon Technologies
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/* SPI loopback test configuration for KIT_T2G-B-H_LITE
+ *
+ * Hardware setup:
+ * Connect MISO to MOSI pins for loopback:
+ *   P13.0 (MISO) <--> P13.1 (MOSI)
+ *
+ * Or use internal loopback if supported by enabling CONFIG_SPI_LOOPBACK_MODE_LOOP
+ */
+
+&spi1 {
+	/* Add test loopback device nodes */
+	slow@0 {
+		compatible = "test-spi-loopback-slow";
+		reg = <0>;
+		spi-max-frequency = <500000>;  /* 500 kHz */
+	};
+
+	fast@0 {
+		compatible = "test-spi-loopback-fast";
+		reg = <0>;
+		spi-max-frequency = <4000000>;  /* 4 MHz */
+	};
+};

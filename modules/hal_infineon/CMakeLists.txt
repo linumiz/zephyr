@@ -36,8 +36,8 @@ if (CONFIG_SOC_FAMILY_INFINEON_CAT1 OR CONFIG_SOC_FAMILY_PSOC6_LEGACY)
 
   # add_subdirectory(serial-memory-ms)
   add_subdirectory(zephyr-ifx-cycfg)
-  # add_subdirectory(mtb-hal-t2gc2d6m)
-  add_subdirectory(mtb-hal-cat1)
+  add_subdirectory(mtb-hal-t2gc2d6m)
+  #add_subdirectory(mtb-hal-cat1)
 endif()
 
 if (CONFIG_SOC_FAMILY_INFINEON_CAT1 AND NOT CONFIG_SOC_FAMILY_PSOC6_LEGACY)
