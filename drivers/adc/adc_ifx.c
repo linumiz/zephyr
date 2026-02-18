@@ -55,27 +55,19 @@ static void ifx_cat1_sar_isr(const struct device *dev)
 	uint32_t last_channel = find_msb_set(channels)-1;
 	uint32_t ch = 0;
 	uint32_t status = Cy_SAR2_Channel_GetInterruptStatus(config->base, last_channel);
-	
-	LOG_INF("ISR entered! last_ch=%d, status=0x%08x", last_channel, status);
-	
 	Cy_SAR2_Channel_ClearInterrupt(config->base, last_channel, CY_SAR2_INT_GRP_DONE);
 	
 	if (status & CY_SAR2_INT_GRP_DONE) {
-		LOG_INF("GRP_DONE interrupt - reading channels");
 		while (channels != 0)
 		{
 			ch = find_lsb_set(channels)-1;
 			*data->buffer++ = Cy_SAR2_Channel_GetResult(config->base, ch, NULL);
-			LOG_INF("Read ch%d result: %d", ch, *(data->buffer-1));
 			channels &= ~BIT(ch);
 		}
 		data->buffer--;
         	(config->base)->CH[last_channel].TR_CTL &= ~GROUP_END;
-	} else {
-		LOG_WRN("ISR fired but no GRP_DONE flag!");
 	}
 
-	LOG_INF("Calling adc_context_on_sampling_done");
 	adc_context_on_sampling_done(&data->ctx, dev);
 }
 
@@ -98,22 +90,11 @@ static void adc_context_start_sampling(struct adc_context *ctx)
 	uint8_t last_ch = find_msb_set(ctx->sequence.channels)-1;
 	uint8_t first_ch = find_lsb_set(ctx->sequence.channels)-1;
         
-	LOG_INF("Starting sampling: first_ch=%d, last_ch=%d, channels=0x%x", 
-	        first_ch, last_ch, ctx->sequence.channels);
-	
 	(config->base)->CH[last_ch].TR_CTL |= GROUP_END;
 
 	Cy_SAR2_Channel_ClearInterrupt(config->base, last_ch, CY_SAR2_INT_GRP_DONE);
 	Cy_SAR2_Channel_SetInterruptMask(config->base, last_ch, CY_SAR2_INT_GRP_DONE);
-	
-	LOG_INF("Triggering channel %d...", first_ch);
 	Cy_SAR2_Channel_SoftwareTrigger(config->base, first_ch);
-	
-	uint32_t tr_pend = (config->base)->TR_PEND;
-	uint32_t grp_stat = (config->base)->CH[first_ch].GRP_STAT;
-	uint32_t busy = (grp_stat >> 16) & 1;
-	LOG_INF("After trigger: TR_PEND=0x%08x, GRP_STAT=0x%08x, BUSY=%d", 
-	        tr_pend, grp_stat, busy);
 }
 
 static int ifx_cat1_sar_channel_setup(const struct device *dev,
@@ -126,9 +107,6 @@ static int ifx_cat1_sar_channel_setup(const struct device *dev,
 	int ret = 0;
 	uint16_t sample_time = 0;
 	uint8_t channel_id = channel_cfg->channel_id;
-	
-	LOG_INF("Setting up ADC channel %d: pin=%d, sample_time=%d", 
-	        channel_id, channel_cfg->input_positive, sample_time);
 
 	if (channel_id > CY_SAR2_CHAN_NUM(config->base)) {
                 return -EINVAL;
@@ -197,13 +175,9 @@ static int ifx_cat1_sar_channel_setup(const struct device *dev,
 	
 	status = Cy_SAR2_Channel_Init(config->base, channel_id, &cy_ch_cfg);
         if (status != CY_SAR2_SUCCESS) {
-                LOG_ERR("Channel init failed: status=%d", status);
                 ret = -EIO;
 		goto unlock;
         }
-	
-	LOG_INF("Channel %d initialized, enabling interrupt %d", 
-	        channel_id, config->int_number + channel_id);
 
         enable_sys_int(config->int_number + channel_id, config->priority,
 		    (void (*)(const void *))(void *)ifx_cat1_sar_isr, dev);
@@ -219,8 +193,6 @@ static int ifx_cat1_sar_read_internal(const struct device *dev,
 	struct ifx_cat1_sar_data *data = dev->data;
 	size_t exp_size;
 	uint8_t count = __builtin_popcount(sequence->channels);
-	
-	LOG_INF("ADC read started: channels=0x%x, count=%d", sequence->channels, count);
 
         if (sequence->resolution != SAR_RESOLUTION) {
                 LOG_ERR("Unsupported resolution %u (only %u-bit supported)",
@@ -251,14 +223,8 @@ static int ifx_cat1_sar_read_internal(const struct device *dev,
 
 	data->buffer = sequence->buffer;
 	data->repeat_buffer = data->buffer;
-	
-	LOG_INF("Starting ADC read context...");
 	adc_context_start_read(&data->ctx, sequence);
-	
-	LOG_INF("Waiting for ADC completion...");
-	int result = adc_context_wait_for_completion(&data->ctx);
-	LOG_INF("ADC read completed with result: %d", result);
-	return result;
+	return adc_context_wait_for_completion(&data->ctx);
 }
 
 static int ifx_cat1_sar_read(const struct device *dev,
@@ -306,16 +272,8 @@ static int ifx_cat1_sar_hw_init(const struct device *dev)
 
 	status = Cy_SAR2_Init(config->base, &sar_cfg);
         if (status != CY_SAR2_SUCCESS) {
-                LOG_ERR("SAR2 Init failed: status=%d", status);
                 return -EIO;
         }
-	
-	uint32_t ctl = (config->base)->CTL;
-	uint32_t enabled = (ctl >> 31) & 1;
-	uint32_t adc_en = (ctl >> 28) & 1;
-	uint32_t mux_en = (ctl >> 27) & 1;
-	LOG_INF("SAR CTL register: 0x%08x (ENABLED=%d, ADC_EN=%d, SARMUX_EN=%d)", 
-	        ctl, enabled, adc_en, mux_en);
 
 	return 0;
 }
@@ -392,7 +350,7 @@ static DEVICE_API(adc, ifx_cat1_driver_api) = {
 		ADC_CONTEXT_INIT_TIMER(ifx_cat1_sar_data_##n, ctx),                            \
 		ADC_CONTEXT_INIT_LOCK(ifx_cat1_sar_data_##n, ctx),                             \
 		ADC_CONTEXT_INIT_SYNC(ifx_cat1_sar_data_##n, ctx),                             \
-	};											       \
+	};										       \
 	static const struct ifx_cat1_sar_config ifx_cat1_sar_cfg_##n = {                       \
                 .base = (PASS_SAR_Type *)DT_INST_REG_ADDR(n),                                  \
 		.clock_peri_group = DT_INST_PROP(n, ifx_peri_group),                           \
