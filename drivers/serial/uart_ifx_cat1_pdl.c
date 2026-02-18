@@ -212,7 +212,7 @@ cy_rslt_t ifx_cat1_uart_set_baud(const struct device *dev, uint32_t baudrate)
 
 #if defined(COMPONENT_CAT1A)
 	peri_frequency = Cy_SysClk_ClkPeriGetFrequency();
-#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) ||                                      \
+#elif defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) ||                                      \
 	defined(CONFIG_SOC_FAMILY_INFINEON_EDGE)
 	uint8_t hfclk = ifx_cat1_get_hfclk_for_peri_group(config->clock_peri_group);
 
