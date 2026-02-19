@@ -46,4 +46,24 @@ if(CONFIG_SOC_FAMILY_CYT2B7)
 
 endif()
 
+if(CONFIG_SOC_FAMILY_CYT2BL)
+  zephyr_include_directories(cyt2bl)
+  zephyr_sources(cyt2bl/soc.c)
+
+# target_link_options(app PRIVATE
+#     -Wl,--wrap=Cy_SysInt_Init
+# )
+  # Add sections
+  zephyr_linker_sources(NOINIT common/noinit.ld)
+
+  # Add section for cm0p image ROM
+  zephyr_linker_sources(ROM_START SORT_KEY 0x0cm0p cyt2bl/rom_cm0image.ld)
+
+  # Add section for cm0p image RAM
+  zephyr_linker_sources(RAM_SECTIONS SORT_KEY 0 cyt2bl/ram_cm0image.ld)
+  zephyr_linker_sources(RAMFUNC_SECTION SORT_KEY 0 common/ram_func.ld)
+  zephyr_linker_sources(RODATA SORT_KEY 0 common/rom.ld)
+
+endif()
+
 set(SOC_LINKER_SCRIPT ${ZEPHYR_BASE}/include/zephyr/arch/arm/cortex_m/scripts/linker.ld CACHE INTERNAL "")

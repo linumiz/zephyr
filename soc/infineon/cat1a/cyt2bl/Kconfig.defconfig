@@ -1,0 +1,26 @@
+# Copyright (c) 2026 Infineon Technologies AG,
+# or an affiliate of Infineon Technologies AG.
+# SPDX-License-Identifier: Apache-2.0
+
+
+# Infineon CYT2BL based MCU default configuration
+
+if SOC_DIE_CYT2BL
+
+config NUM_IRQS
+    default 32 if CPU_CORTEX_M0PLUS
+	default 147 if CPU_CORTEX_M4
+
+config SYS_CLOCK_HW_CYCLES_PER_SEC
+	default 100000000
+
+config MAIN_STACK_SIZE
+	default 2048
+
+config IDLE_STACK_SIZE
+	default 1024 if PM
+
+# add additional die specific params
+
+endif # SOC_DIE_CYT2BL
+

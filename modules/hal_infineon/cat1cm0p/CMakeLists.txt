@@ -9,6 +9,8 @@ set(hal_blobs_dir         ${hal_dir}/zephyr/blobs/img/cat1cm0p/COMPONENT_CM0P_SL
 
 if(CONFIG_SOC_DIE_CYT2B7)
     set(blob_gen_inc_file     ${blob_gen_dir}/tviibe1m_cm0p_sleep.bin.inc)
+elseif(CONFIG_SOC_DIE_CYT2BL)
+    set(blob_gen_inc_file     ${blob_gen_dir}/tviibe4m_cm0p_sleep.bin.inc)
 else()
     set(blob_gen_inc_file     ${blob_gen_dir}/psoc6_cm0p_sleep.bin.inc)
 endif()
@@ -33,6 +35,10 @@ endif()
     set(blob_bin_file ${hal_blobs_dir}/tviibe1m_cm0p_sleep.bin)
     endif()
 
+    if(CONFIG_SOC_DIE_CYT2BL)
+    set(blob_bin_file ${hal_blobs_dir}/tviibe4m_cm0p_sleep.bin)
+    endif()
+
 
 if(CONFIG_SOC_SERIES_CYT4DN)
     set(hal_blobs_dir       ${hal_dir}/zephyr/blobs/img/cat1cm0p/COMPONENT_CAT1C/COMPONENT_CM0P_SLEEP)
@@ -55,6 +61,12 @@ if(EXISTS ${blob_bin_file})
         # tviibe1m_cm0p_sleep.c - template c-array file, which include generated
         # blob include file.
         zephyr_library_sources(${hal_cat1cm0p_dir}/COMPONENT_CM0P_SLEEP/tviibe1m_cm0p_sleep.c)
+    endif()
+
+    if(CONFIG_SOC_FAMILY_CYT2BL)
+        # tviibe4m_cm0p_sleep.c - template c-array file, which include generated
+        # blob include file.
+        zephyr_library_sources(${hal_cat1cm0p_dir}/COMPONENT_CM0P_SLEEP/tviibe4m_cm0p_sleep.c)
     endif()
 
     if(CONFIG_SOC_SERIES_CYT4DN)
