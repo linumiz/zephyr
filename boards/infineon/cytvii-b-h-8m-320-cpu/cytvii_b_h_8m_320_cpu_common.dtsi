@@ -1,0 +1,285 @@
+/*
+ * Copyright (c) 2025 Infineon Technologies AG,
+ * or an affiliate of Infineon Technologies AG.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#include <arm/infineon/cat1c/traveo2-8m/system_clocks.dtsi>
+#include <arm/infineon/cat1c/traveo2-8m/cyt4bfcche.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/ {
+	aliases {
+		uart-3 = &uart3;
+		led0 = &cpu_user_led0;
+		led1 = &cpu_user_led1;
+		led2 = &bb_user_led0;
+		led3 = &bb_user_led1;
+		led4 = &bb_user_led2;
+		led5 = &bb_user_led3;
+		led6 = &bb_user_led4;
+		led7 = &bb_user_led5;
+		led8 = &bb_user_led6;
+		led9 = &bb_user_led7;
+		led10 = &bb_user_led8;
+		led11 = &bb_user_led9;
+
+		sw0 = &cpu_user_bt0;
+		sw1 = &bb_user_bt1;
+		sw2 = &bb_user_bt2;
+		sw3 = &bb_user_bt3;
+		sw4 = &bb_user_bt4;
+		sw5 = &bb_user_bt5;
+		watchdog0 = &watchdog0;
+		uart3 = &uart3;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		cpu_user_led0: led0 {
+			label = "LED_0";
+			gpios = <&gpio_prt23 2 GPIO_ACTIVE_HIGH>;
+		};
+
+		cpu_user_led1: led1 {
+			label = "LED_1";
+			gpios = <&gpio_prt0 0 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led0: led2 {
+			label = "LED_2";
+			gpios = <&gpio_prt32 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led1: led3 {
+			label = "LED_3";
+			gpios = <&gpio_prt32 5 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led2: led4 {
+			label = "LED_4";
+			gpios = <&gpio_prt32 2 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led3: led5 {
+			label = "LED_5";
+			gpios = <&gpio_prt31 2 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led4: led6 {
+			label = "LED_6";
+			gpios = <&gpio_prt31 0 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led5: led7 {
+			label = "LED_7";
+			gpios = <&gpio_prt29 7 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led6: led8 {
+			label = "LED_8";
+			gpios = <&gpio_prt29 4 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led7: led9 {
+			label = "LED_9";
+			gpios = <&gpio_prt3 7 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led8: led10 {
+			label = "LED_10";
+			gpios = <&gpio_prt3 5 GPIO_ACTIVE_HIGH>;
+		};
+
+		bb_user_led9: led11 {
+			label = "LED_11";
+			gpios = <&gpio_prt2 7 GPIO_ACTIVE_HIGH>;
+		};
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+
+		cpu_user_bt0: cpu_user_btn0 {
+			label = "SW_0";
+			gpios = <&gpio_prt21 4 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_0>;
+		};
+
+		bb_user_bt1: bb_user_btn1 {
+			label = "SW_1";
+			gpios = <&gpio_prt6 7 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_1>;
+		};
+
+		bb_user_bt2: bb_user_btn2 {
+			label = "SW_2";
+			gpios = <&gpio_prt32 0 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_2>;
+		};
+
+		bb_user_bt3: bb_user_btn3 {
+			label = "SW_3";
+			gpios = <&gpio_prt32 1 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_3>;
+		};
+
+		bb_user_bt4: bb_user_btn4 {
+			label = "SW_4";
+			gpios = <&gpio_prt28 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_4>;
+		};
+
+		bb_user_bt5: bb_user_btn5 {
+			label = "SW_5";
+			gpios = <&gpio_prt28 1 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_5>;
+		};
+	};
+
+		reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		sram_srom: memory@28000000 {
+			reg = <0x28000000 DT_SIZE_K(2)>;
+		};
+		sram_m0plus: memory@28000800 {
+			reg = <0x28000800 DT_SIZE_K(16)>;
+		};
+		sram_m7_0: memory@28004000  {
+			reg = <0x28004000  DT_SIZE_K(816)>;
+		};
+		sram_m7_1: memory@280d0000 {
+			reg = <0x280d0000 DT_SIZE_K(64)>;
+		};
+	};
+};
+
+&code_flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		m0p_partition: partition_m0p@0 {
+			label = "m0p_partition";
+			reg = <0x0 DT_SIZE_K(512)>;
+			status = "disabled";
+		};
+		m7_0_partition: partition@80000 {
+			label = "m7_0_partition";
+			reg = <0x80000 DT_SIZE_K(2048)>;
+		};
+		m7_1_partition: partition@280000 {
+			label = "m7_1_partition";
+			reg = <0x280000 DT_SIZE_K(5824)>;
+		};
+	};
+};
+
+uart3: &scb3 {
+	compatible = "infineon,cat1-uart";
+	current-speed = <115200>;
+
+
+	/* UART pins */
+	pinctrl-0 = <&p13_1_scb3_uart_tx &p13_0_scb3_uart_rx
+		     &p13_2_scb3_uart_rts &p13_3_scb3_uart_cts>;
+	pinctrl-names = "default";
+};
+
+
+
+&gpio_prt0 {
+	status = "okay";
+};
+
+&gpio_prt2 {
+	status = "okay";
+};
+
+&gpio_prt3 {
+	status = "okay";
+};
+
+&gpio_prt6 {
+	status = "okay";
+};
+
+&gpio_prt13 {
+	status = "okay";
+};
+
+&gpio_prt18 {
+	status = "okay";
+};
+
+&gpio_prt21 {
+	status = "okay";
+};
+
+&gpio_prt23 {
+	status = "okay";
+};
+
+&gpio_prt28 {
+	status = "okay";
+};
+
+&gpio_prt29 {
+	status = "okay";
+};
+
+&gpio_prt31 {
+	status = "okay";
+};
+
+&gpio_prt32 {
+	status = "okay";
+};
+
+&clk_eco {
+	status = "okay";
+	clock-frequency = <16000000>;
+};
+
+&pll0 {
+	status = "okay";
+};
+&pll1 {
+	status = "okay";
+};
+&pll2 {
+	status = "okay";
+};
+
+
+&clk_hf0 {
+	status = "okay";
+};
+&clk_hf1 {
+	status = "okay";
+};
+&clk_hf2 {
+	status = "okay";
+};
+&clk_hf3 {
+	status = "okay";
+};
+&clk_hf4 {
+	status = "okay";
+};
+&clk_hf5 {
+	status = "okay";
+};
+&clk_hf6 {
+	status = "okay";
+};
+&clk_hf7 {
+	status = "disabled";
+};
+
+&watchdog0 {
+	status = "okay";
+};

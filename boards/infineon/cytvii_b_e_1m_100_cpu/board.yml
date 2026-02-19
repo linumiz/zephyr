@@ -1,0 +1,11 @@
+# Copyright (c) 2025 Infineon Technologies AG,
+# or an affiliate of Infineon Technologies AG.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+board:
+  name: cytvii_b_e_1m_100_cpu
+  full_name: T2G CYTVII-B-E-1M-100-CPU Evaluation Board
+  vendor: infineon
+  socs:
+  - name: cyt2b75cae

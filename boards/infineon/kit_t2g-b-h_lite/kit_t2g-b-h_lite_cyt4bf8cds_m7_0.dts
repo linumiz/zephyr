@@ -1,0 +1,53 @@
+/*
+ * Copyright (c) 2026 Infineon Technologies AG
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include "kit_t2g-b-h_lite_common.dtsi"
+#include <arm/infineon/cat1c/traveo2-8m/cyt4bf_m7.dtsi>
+
+/ {
+
+	model = "Infineon Traveo II Body High LiteKit M7 Core 0";
+	compatible = "infineon,kit_t2g-b-h_lite", "infineon,cyt4bf8cds";
+
+	chosen {
+		zephyr,sram = &sram_m7_0;
+		zephyr,flash = &code_flash0;
+		zephyr,dtcm = &dtcm;
+		zephyr,itcm = &itcm;
+		zephyr,code-partition = &m7_0_partition;
+		zephyr,console = &uart0;
+		zephyr,shell-uart = &uart0;
+		zephyr,canbus = &can0;
+		zephyr,flash-controller = &flash_controller;
+	};
+};
+
+&m7_0 {
+	status = "okay";
+};
+
+&mbox {
+	status = "okay";
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&can0 {
+	status = "okay";
+};
+
+&eth0_mac {
+	status = "okay";
+	local-mac-address = [ b0 19 21 67 36 00  ];
+};
+
+&eth0_mdio {
+	status = "okay";
+};
+

@@ -1,8 +1,20 @@
-# Copyright (c) 2024 Cypress Semiconductor Corporation (an Infineon company) or
-# an affiliate of Cypress Semiconductor Corporation
+# Copyright (c) 2025 Infineon Technologies AG
 # SPDX-License-Identifier: Apache-2.0
 
 if SOC_FAMILY_INFINEON_CAT1C
+
+choice INFINEON_CAT1C_CORE
+	prompt "TRAVEO T2G Core Selection"
+	help
+	  Choose the core used in your TRAVEO T2G SoC variant. 
+
+config INFINEON_CAT1C_M0PLUS
+	bool "Infineon CAT1C M0+ Core"
+config INFINEON_CAT1C_M7_0
+	bool "Infineon CAT1C M7 Core 0"
+config INFINEON_CAT1C_M7_1
+	bool "Infineon CAT1C M7 Core 1"
+endchoice
 
 rsource "*/Kconfig"
 

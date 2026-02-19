@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Infineon Technologies AG
+# SPDX-License-Identifier: Apache-2.0
+
+# Infineon CAT1C based MCU default configuration
+
+if SOC_SERIES_CYT4BF
+
+# Cortex-M7 has additional 8 software irqs directly connected to IRQ lines
+config NUM_IRQS
+	default 566 if INFINEON_CAT1C_M0PLUS
+	default 574 if INFINEON_CAT1C_M7
+
+choice INFINEON_CAT1C_CORE
+	default INFINEON_CAT1C_M0PLUS if SOC_CYT4BF8CDS_M0PLUS || SOC_CYT4BFCCHE_M0PLUS || SOC_CYT4BFBCHE_M0PLUS
+	default INFINEON_CAT1C_M7_0 if SOC_CYT4BF8CDS_M7_0 || SOC_CYT4BFCCHE_M7_0 || SOC_CYT4BFBCHE_M7_0
+	default INFINEON_CAT1C_M7_1 if SOC_CYT4BF8CDS_M7_1 || SOC_CYT4BFCCHE_M7_1 || SOC_CYT4BFBCHE_M7_1
+endchoice
+
+endif # SOC_SERIES_CYT4BF

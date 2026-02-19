@@ -1,0 +1,2551 @@
+/*
+ * Copyright (c) 2023 Cypress Semiconductor Corporation (an Infineon company) or
+ * an affiliate of Cypress Semiconductor Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <mem.h>
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
+#include <zephyr/dt-bindings/ethernet/xlnx_gem.h>
+#include <zephyr/dt-bindings/memory-attr/memory-attr-arm.h>
+
+/ {
+    flash_controller: flash-controller@40240000 {
+        compatible = "infineon,cat1-flash-controller";
+        reg = <0x40240000 0x10000>;
+        #address-cells = <1>;
+        #size-cells = <1>;
+        status = "okay";
+
+        /* Code flash - Large sector (32KB Sectors) */
+        code_flash0: flash@10000000 {
+            compatible = "soc-nv-flash";
+            reg = <0x10000000 DT_SIZE_K(8128)>;
+            write-block-size = <512>;
+            erase-block-size = <32768>;
+        };
+
+        /* Code flash - Large sector (8KB Sectors) */
+        code_flash1: flash@107F0000 {
+            compatible = "soc-nv-flash";
+            reg = <0x107F0000 DT_SIZE_K(256)>;
+            write-block-size = <512>;
+            erase-block-size = <8192>;
+        };
+
+        /* Work flash - Large sector (2KB Sectors) */
+        work_flash0: flash@14000000 {
+            compatible = "soc-nv-flash";
+            reg = <0x14000000 DT_SIZE_K(192)>;
+            write-block-size = <64>;
+            erase-block-size = <2048>;
+        };
+
+        /* Work flash - Small sector (128B Sectors) */
+        work_flash1: flash@14030000 {
+            compatible = "soc-nv-flash";
+            reg = <0x14030000 DT_SIZE_K(64)>;
+            write-block-size = <64>;
+            erase-block-size = <128>;
+        };
+    };
+
+    sram0: memory@28000000 {
+        compatible = "mmio-sram";
+        reg = <0x28000000 DT_SIZE_K(256)>;
+    };
+    sram1: memory@28040000 {
+        compatible = "mmio-sram";
+        reg = <0x28040000 DT_SIZE_K(256)>;
+    };
+    sram2: memory@28080000 {
+        compatible = "mmio-sram";
+        reg = <0x28080000 DT_SIZE_K(128)>;
+    };
+
+    smif0: smif0@40420000 {
+        compatible = "infineon,serial-memory-qspi";
+        reg = <0x40420000 0x10000>;
+        #address-cells = <1>;
+        #size-cells = <1>;
+        status = "disabled";
+    };
+
+    m7_0_itcm: itcm@a0000000 {
+        compatible = "zephyr,memory-region", "arm,itcm";
+        reg = <0xa0000000 DT_SIZE_K(64)>;
+        zephyr,memory-region = "M7_0_ITCM";
+    };
+    m7_0_dtcm: dtcm@a0010000 {
+        compatible = "zephyr,memory-region", "arm,dtcm";
+        reg = <0xa0010000 DT_SIZE_K(64)>;
+        zephyr,memory-region = "M7_0_DTCM";
+    };
+    m7_1_itcm: itcm@a0100000 {
+        compatible = "zephyr,memory-region", "arm,itcm";
+        reg = <0xA0100000 DT_SIZE_K(64)>;
+        zephyr,memory-region = "M7_1_ITCM";
+    };
+    m7_1_dtcm: dtcm@a0110000 {
+        compatible = "zephyr,memory-region", "arm,dtcm";
+        reg = <0xA0110000 DT_SIZE_K(64)>;
+        zephyr,memory-region = "M7_1_DTCM";
+    };
+
+    soc {
+        clocking: clocking {
+            compatible = "infineon,cat1-clocking";
+        };
+
+        mbox: mbox@40220000 {
+            compatible = "infineon,cat1-mbox-pdl";
+            reg = <0x40220000 0x10000>;
+            system-interrupts = <0 3>;
+            #mbox-cells = <1>;
+            status = "disabled";
+        };
+
+        pinctrl: pinctrl@40300000 {
+            compatible = "infineon,cat1-pinctrl";
+            reg = <0x40300000 0x20000>;
+        };
+        hsiom: hsiom@40300000 {
+            compatible = "infineon,cat1-hsiom";
+            reg = <0x40300000 0x4000>;
+            system-interrupts = <21 6>, <20 6>;
+            status = "disabled";
+        };
+
+        gpio_prt0: gpio@40310000 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310000 0x80>;
+            system-interrupts = <22 2>;
+            gpio-controller;
+            ngpios = <4>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt1: gpio@40310080 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310080 0x80>;
+            system-interrupts = <23 2>;
+            gpio-controller;
+            ngpios = <7>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt2: gpio@40310100 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310100 0x80>;
+            system-interrupts = <24 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt3: gpio@40310180 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310180 0x80>;
+            system-interrupts = <25 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt4: gpio@40310200 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310200 0x80>;
+            system-interrupts = <26 2>;
+            gpio-controller;
+            ngpios = <7>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt5: gpio@40310280 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310280 0x80>;
+            system-interrupts = <27 2>;
+            gpio-controller;
+            ngpios = <6>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt6: gpio@40310300 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310300 0x80>;
+            system-interrupts = <28 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt7: gpio@40310380 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310380 0x80>;
+            system-interrupts = <29 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt8: gpio@40310400 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310400 0x80>;
+            system-interrupts = <30 2>;
+            gpio-controller;
+            ngpios = <5>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt9: gpio@40310480 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310480 0x80>;
+            system-interrupts = <31 2>;
+            gpio-controller;
+            ngpios = <4>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt10: gpio@40310500 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310500 0x80>;
+            system-interrupts = <32 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt11: gpio@40310580 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310580 0x80>;
+            system-interrupts = <33 2>;
+            gpio-controller;
+            ngpios = <3>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt12: gpio@40310600 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310600 0x80>;
+            system-interrupts = <34 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt13: gpio@40310680 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310680 0x80>;
+            system-interrupts = <35 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt14: gpio@40310700 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310700 0x80>;
+            system-interrupts = <36 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt15: gpio@40310780 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310780 0x80>;
+            system-interrupts = <37 2>;
+            gpio-controller;
+            ngpios = <4>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt16: gpio@40310800 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310800 0x80>;
+            system-interrupts = <38 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt17: gpio@40310880 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310880 0x80>;
+            system-interrupts = <39 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt18: gpio@40310900 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310900 0x80>;
+            system-interrupts = <40 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt19: gpio@40310980 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310980 0x80>;
+            system-interrupts = <41 2>;
+            gpio-controller;
+            ngpios = <5>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt20: gpio@40310a00 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310a00 0x80>;
+            system-interrupts = <42 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt21: gpio@40310a80 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310a80 0x80>;
+            system-interrupts = <43 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt22: gpio@40310b00 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310b00 0x80>;
+            system-interrupts = <44 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt23: gpio@40310b80 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310b80 0x80>;
+            system-interrupts = <45 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt24: gpio@40310c00 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310c00 0x80>;
+            system-interrupts = <52 2>;
+            gpio-controller;
+            ngpios = <5>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt25: gpio@40310c80 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310c80 0x80>;
+            system-interrupts = <53 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt26: gpio@40310d00 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310d00 0x80>;
+            system-interrupts = <54 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt27: gpio@40310d80 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310d80 0x80>;
+            system-interrupts = <55 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt28: gpio@40310e00 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310e00 0x80>;
+            system-interrupts = <46 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt29: gpio@40310e80 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310e80 0x80>;
+            system-interrupts = <47 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt30: gpio@40310f00 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310f00 0x80>;
+            system-interrupts = <48 2>;
+            gpio-controller;
+            ngpios = <4>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt31: gpio@40310f80 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40310f80 0x80>;
+            system-interrupts = <49 2>;
+            gpio-controller;
+            ngpios = <3>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt32: gpio@40311000 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40311000 0x80>;
+            system-interrupts = <50 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt33: gpio@40311080 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40311080 0x80>;
+            system-interrupts = <56 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+        gpio_prt34: gpio@40311100 {
+            compatible = "infineon,cat1-gpio";
+            reg = <0x40311100 0x80>;
+            system-interrupts = <57 2>;
+            gpio-controller;
+            ngpios = <8>;
+            status = "disabled";
+            #gpio-cells = <2>;
+        };
+
+        scb0: scb@40600000 {
+            compatible = "infineon,cat1-scb";
+            reg = <0x40600000 0xfd0>;
+            system-interrupts = <18 6>;
+            status = "disabled";
+        };
+        scb1: scb@40610000 {
+            compatible = "infineon,cat1-scb";
+            reg = <0x40610000 0xfd0>;
+            system-interrupts = <113 6>;
+            status = "disabled";
+        };
+        scb2: scb@40620000 {
+            compatible = "infineon,cat1-scb";
+            reg = <0x40620000 0xfd0>;
+            system-interrupts = <114 6>;
+            status = "disabled";
+        };
+        scb3: scb@40630000 {
+            compatible = "infineon,cat1-scb";
+            reg = <0x40630000 0xfd0>;
+            system-interrupts = <115 6>;
+            status = "disabled";
+        };
+        scb4: scb@40640000 {
+            compatible = "infineon,cat1-scb";
+            reg = <0x40640000 0xfd0>;
+            system-interrupts = <116 6>;
+            status = "disabled";
+        };
+        scb5: scb@40650000 {
+            compatible = "infineon,cat1-scb";
+            reg = <0x40650000 0xfd0>;
+            system-interrupts = <117 6>;
+            status = "disabled";
+        };
+        scb6: scb@40660000 {
+            compatible = "infineon,cat1-scb";
+            reg = <0x40660000 0xfd0>;
+            system-interrupts = <118 6>;
+            status = "disabled";
+        };
+        scb7: scb@40670000 {
+            compatible = "infineon,cat1-scb";
+            reg = <0x40670000 0xfd0>;
+            system-interrupts = <119 6>;
+            status = "disabled";
+        };
+        scb8: scb@40680000 {
+            compatible = "infineon,cat1-scb";
+            reg = <0x40680000 0xfd0>;
+            system-interrupts = <120 6>;
+            status = "disabled";
+        };
+        scb9: scb@40690000 {
+            compatible = "infineon,cat1-scb";
+            reg = <0x40690000 0xfd0>;
+            system-interrupts = <121 6>;
+            status = "disabled";
+        };
+        scb10: scb@406a0000 {
+            compatible = "infineon,cat1-scb";
+            reg = <0x406a0000 0xfd0>;
+            system-interrupts = <122 6>;
+            status = "disabled";
+        };
+
+        watchdog0: watchdog@4026c000 {
+            compatible = "infineon,cat1-watchdog";
+            reg = <0x4026c000 0x80>;
+            system-interrupts = <16 6>;
+            status = "disabled";
+        };
+
+        mcwdt0: mcwdt@40268000 {
+            compatible = "infineon,cat1-lp-timer";
+            reg = <0x40268000 0x100>;
+            system-interrupts = <13 6>;
+            status = "disabled";
+        };
+        mcwdt1: mcwdt@40268100 {
+            compatible = "infineon,cat1-lp-timer";
+            reg = <0x40268100 0x100>;
+            system-interrupts = <14 6>;
+            status = "disabled";
+        };
+        mcwdt2: mcwdt@40268200 {
+            compatible = "infineon,cat1-lp-timer";
+            reg = <0x40268200 0x100>;
+            system-interrupts = <15 6>;
+            status = "disabled";
+        };
+
+        tcpwm0_grp0: tcpwm0@40380000 {
+            reg = <0x40380000 0x80>;
+            #address-cells = <1>;
+            #size-cells = <1>;
+
+            tcpwm0_0: tcpwm0_0@40380000 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380000 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_0: counter0_0 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <552 4>;
+                    status = "disabled";
+                };
+
+                pwm0_0: pwm0_0 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <552 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_1: tcpwm0_1@40380080 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380080 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_1: counter0_1 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <553 4>;
+                    status = "disabled";
+                };
+
+                pwm0_1: pwm0_1 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <553 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_2: tcpwm0_2@40380100 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380100 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_2: counter0_2 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <554 4>;
+                    status = "disabled";
+                };
+
+                pwm0_2: pwm0_2 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <554 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_3: tcpwm0_3@40380180 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380180 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_3: counter0_3 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <555 4>;
+                    status = "disabled";
+                };
+
+                pwm0_3: pwm0_3 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <555 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_4: tcpwm0_4@40380200 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380200 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_4: counter0_4 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <556 4>;
+                    status = "disabled";
+                };
+
+                pwm0_4: pwm0_4 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <556 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_5: tcpwm0_5@40380280 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380280 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_5: counter0_5 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <557 4>;
+                    status = "disabled";
+                };
+
+                pwm0_5: pwm0_5 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <557 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_6: tcpwm0_6@40380300 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380300 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_6: counter0_6 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <558 4>;
+                    status = "disabled";
+                };
+
+                pwm0_6: pwm0_6 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <558 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_7: tcpwm0_7@40380380 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380380 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_7: counter0_7 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <559 4>;
+                    status = "disabled";
+                };
+
+                pwm0_7: pwm0_7 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <559 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_8: tcpwm0_8@40380400 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380400 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_8: counter0_8 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <560 4>;
+                    status = "disabled";
+                };
+
+                pwm0_8: pwm0_8 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <560 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_9: tcpwm0_9@40380480 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380480 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_9: counter0_9 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <561 4>;
+                    status = "disabled";
+                };
+
+                pwm0_9: pwm0_9 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <561 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_10: tcpwm0_10@40380500 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380500 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_10: counter0_10 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <562 4>;
+                    status = "disabled";
+                };
+
+                pwm0_10: pwm0_10 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <562 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_11: tcpwm0_11@40380580 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380580 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_11: counter0_11 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <563 4>;
+                    status = "disabled";
+                };
+
+                pwm0_11: pwm0_11 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <563 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_12: tcpwm0_12@40380600 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380600 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_12: counter0_12 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <564 4>;
+                    status = "disabled";
+                };
+
+                pwm0_12: pwm0_12 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <564 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_13: tcpwm0_13@40380680 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380680 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_13: counter0_13 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <565 4>;
+                    status = "disabled";
+                };
+
+                pwm0_13: pwm0_13 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <565 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_14: tcpwm0_14@40380700 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380700 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_14: counter0_14 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <566 4>;
+                    status = "disabled";
+                };
+
+                pwm0_14: pwm0_14 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <566 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_15: tcpwm0_15@40380780 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380780 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_15: counter0_15 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <567 4>;
+                    status = "disabled";
+                };
+
+                pwm0_15: pwm0_15 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <567 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_16: tcpwm0_16@40380800 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380800 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_16: counter0_16 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <568 4>;
+                    status = "disabled";
+                };
+
+                pwm0_16: pwm0_16 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <568 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_17: tcpwm0_17@40380880 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380880 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_17: counter0_17 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <569 4>;
+                    status = "disabled";
+                };
+
+                pwm0_17: pwm0_17 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <569 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_18: tcpwm0_18@40380900 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380900 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_18: counter0_18 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <570 4>;
+                    status = "disabled";
+                };
+
+                pwm0_18: pwm0_18 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <570 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_19: tcpwm0_19@40380980 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380980 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_19: counter0_19 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <571 4>;
+                    status = "disabled";
+                };
+
+                pwm0_19: pwm0_19 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <571 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_20: tcpwm0_20@40380A00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380A00 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_20: counter0_20 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <572 4>;
+                    status = "disabled";
+                };
+
+                pwm0_20: pwm0_20 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <572 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_21: tcpwm0_21@40380A80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380A80 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_21: counter0_21 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <573 4>;
+                    status = "disabled";
+                };
+
+                pwm0_21: pwm0_21 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <573 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_22: tcpwm0_22@40380B00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380B00 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_22: counter0_22 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <574 4>;
+                    status = "disabled";
+                };
+
+                pwm0_22: pwm0_22 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <574 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_23: tcpwm0_23@40380B80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380B80 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_23: counter0_23 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <575 4>;
+                    status = "disabled";
+                };
+
+                pwm0_23: pwm0_23 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <575 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_24: tcpwm0_24@40380C00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380C00 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_24: counter0_24 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <576 4>;
+                    status = "disabled";
+                };
+
+                pwm0_24: pwm0_24 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <576 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_25: tcpwm0_25@40380C80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380C80 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_25: counter0_25 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <577 4>;
+                    status = "disabled";
+                };
+
+                pwm0_25: pwm0_25 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <577 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_26: tcpwm0_26@40380D00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380D00 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_26: counter0_26 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <578 4>;
+                    status = "disabled";
+                };
+
+                pwm0_26: pwm0_26 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <578 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_27: tcpwm0_27@40380D80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380D80 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_27: counter0_27 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <579 4>;
+                    status = "disabled";
+                };
+
+                pwm0_27: pwm0_27 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <579 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_28: tcpwm0_28@40380E00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380E00 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_28: counter0_28 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <580 4>;
+                    status = "disabled";
+                };
+
+                pwm0_28: pwm0_28 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <580 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_29: tcpwm0_29@40380E80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380E80 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_29: counter0_29 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <581 4>;
+                    status = "disabled";
+                };
+
+                pwm0_29: pwm0_29 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <581 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_30: tcpwm0_30@40380F00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380F00 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_30: counter0_30 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <582 4>;
+                    status = "disabled";
+                };
+
+                pwm0_30: pwm0_30 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <582 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_31: tcpwm0_31@40380F80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40380F80 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_31: counter0_31 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <583 4>;
+                    status = "disabled";
+                };
+
+                pwm0_31: pwm0_31 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <583 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_32: tcpwm0_32@40381000 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40381000 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_32: counter0_32 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <584 4>;
+                    status = "disabled";
+                };
+
+                pwm0_32: pwm0_32 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <584 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_33: tcpwm0_33@40381080 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40381080 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_33: counter0_33 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <585 4>;
+                    status = "disabled";
+                };
+
+                pwm0_33: pwm0_33 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <585 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_34: tcpwm0_34@40381100 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40381100 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_34: counter0_34 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <586 4>;
+                    status = "disabled";
+                };
+
+                pwm0_34: pwm0_34 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <586 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_35: tcpwm0_35@40381180 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40381180 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_35: counter0_35 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <587 4>;
+                    status = "disabled";
+                };
+
+                pwm0_35: pwm0_35 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <587 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_36: tcpwm0_36@40381200 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40381200 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_36: counter0_36 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <588 4>;
+                    status = "disabled";
+                };
+
+                pwm0_36: pwm0_36 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <588 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm0_37: tcpwm0_37@40381280 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40381280 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter0_37: counter0_37 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <589 4>;
+                    status = "disabled";
+                };
+
+                pwm0_37: pwm0_37 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <589 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+        };
+
+        tcpwm0_grp1: tcpwm0@40388000 {
+            reg = <0x40388000 0x80>;
+            #address-cells = <1>;
+            #size-cells = <1>;
+
+            tcpwm1_0: tcpwm1_0@40388000 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388000 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_0: counter1_0 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <616 4>;
+                    status = "disabled";
+                };
+
+                pwm1_0: pwm1_0 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <616 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm1_1: tcpwm1_1@40388080 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388080 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_1: counter1_1 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <617 4>;
+                    status = "disabled";
+                };
+
+                pwm1_1: pwm1_1 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <617 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm1_2: tcpwm1_2@40388100 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388100 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_2: counter1_2 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <618 4>;
+                    status = "disabled";
+                };
+
+                pwm1_2: pwm1_2 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <618 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm1_3: tcpwm1_3@40388180 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388180 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_3: counter1_3 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <619 4>;
+                    status = "disabled";
+                };
+
+                pwm1_3: pwm1_3 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <619 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm1_4: tcpwm1_4@40388200 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388200 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_4: counter1_4 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <620 4>;
+                    status = "disabled";
+                };
+
+                pwm1_4: pwm1_4 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <620 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm1_5: tcpwm1_5@40388280 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388280 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_5: counter1_5 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <621 4>;
+                    status = "disabled";
+                };
+
+                pwm1_5: pwm1_5 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <621 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm1_6: tcpwm1_6@40388300 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388300 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_6: counter1_6 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <622 4>;
+                    status = "disabled";
+                };
+
+                pwm1_6: pwm1_6 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <622 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm1_7: tcpwm1_7@40388380 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388380 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_7: counter1_7 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <623 4>;
+                    status = "disabled";
+                };
+
+                pwm1_7: pwm1_7 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <623 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm1_8: tcpwm1_8@40388400 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388400 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_8: counter1_8 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <624 4>;
+                    status = "disabled";
+                };
+
+                pwm1_8: pwm1_8 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <624 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm1_9: tcpwm1_9@40388480 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388480 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_9: counter1_9 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <625 4>;
+                    status = "disabled";
+                };
+
+                pwm1_9: pwm1_9 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <625 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm1_10: tcpwm1_10@40388500 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388500 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_10: counter1_10 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <626 4>;
+                    status = "disabled";
+                };
+
+                pwm1_10: pwm1_10 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <626 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm1_11: tcpwm1_11@40388580 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40388580 0x80>;
+                resolution = <16>;
+                status = "disabled";
+
+                counter1_11: counter1_11 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <627 4>;
+                    status = "disabled";
+                };
+
+                pwm1_11: pwm1_11 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <627 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+        };
+
+        tcpwm0_grp2: tcpwm0@40390000 {
+            reg = <0x40390000 0x80>;
+            #address-cells = <1>;
+            #size-cells = <1>;
+
+            tcpwm2_0: tcpwm2_0@40390000 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390000 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_0: counter2_0 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <680 4>;
+                    status = "disabled";
+                };
+
+                pwm2_0: pwm2_0 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <680 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_1: tcpwm2_1@40390080 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390080 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_1: counter2_1 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <681 4>;
+                    status = "disabled";
+                };
+
+                pwm2_1: pwm2_1 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <681 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_2: tcpwm2_2@40390100 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390100 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_2: counter2_2 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <682 4>;
+                    status = "disabled";
+                };
+
+                pwm2_2: pwm2_2 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <682 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_3: tcpwm2_3@40390180 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390180 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_3: counter2_3 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <683 4>;
+                    status = "disabled";
+                };
+
+                pwm2_3: pwm2_3 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <683 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_4: tcpwm2_4@40390200 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390200 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_4: counter2_4 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <684 4>;
+                    status = "disabled";
+                };
+
+                pwm2_4: pwm2_4 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <684 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_5: tcpwm2_5@40390280 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390280 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_5: counter2_5 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <685 4>;
+                    status = "disabled";
+                };
+
+                pwm2_5: pwm2_5 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <685 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_6: tcpwm2_6@40390300 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390300 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_6: counter2_6 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <686 4>;
+                    status = "disabled";
+                };
+
+                pwm2_6: pwm2_6 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <686 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_7: tcpwm2_7@40390380 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390380 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_7: counter2_7 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <687 4>;
+                    status = "disabled";
+                };
+
+                pwm2_7: pwm2_7 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <687 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_8: tcpwm2_8@40390400 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390400 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_8: counter2_8 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <688 4>;
+                    status = "disabled";
+                };
+
+                pwm2_8: pwm2_8 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <688 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_9: tcpwm2_9@40390480 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390480 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_9: counter2_9 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <689 4>;
+                    status = "disabled";
+                };
+
+                pwm2_9: pwm2_9 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <689 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_10: tcpwm2_10@40390500 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390500 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_10: counter2_10 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <690 4>;
+                    status = "disabled";
+                };
+
+                pwm2_10: pwm2_10 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <690 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_11: tcpwm2_11@40390580 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390580 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_11: counter2_11 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <691 4>;
+                    status = "disabled";
+                };
+
+                pwm2_11: pwm2_11 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <691 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_12: tcpwm2_12@40390600 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390600 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_12: counter2_12 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <692 4>;
+                    status = "disabled";
+                };
+
+                pwm2_12: pwm2_12 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <692 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_13: tcpwm2_13@40390680 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390680 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_13: counter2_13 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <693 4>;
+                    status = "disabled";
+                };
+
+                pwm2_13: pwm2_13 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <693 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_14: tcpwm2_14@40390700 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390700 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_14: counter2_14 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <694 4>;
+                    status = "disabled";
+                };
+
+                pwm2_14: pwm2_14 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <694 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_15: tcpwm2_15@40390780 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390780 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_15: counter2_15 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <695 4>;
+                    status = "disabled";
+                };
+
+                pwm2_15: pwm2_15 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <695 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_16: tcpwm2_16@40390800 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390800 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_16: counter2_16 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <696 4>;
+                    status = "disabled";
+                };
+
+                pwm2_16: pwm2_16 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <696 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_17: tcpwm2_17@40390880 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390880 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_17: counter2_17 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <697 4>;
+                    status = "disabled";
+                };
+
+                pwm2_17: pwm2_17 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <697 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_18: tcpwm2_18@40390900 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390900 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_18: counter2_18 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <698 4>;
+                    status = "disabled";
+                };
+
+                pwm2_18: pwm2_18 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <698 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_19: tcpwm2_19@40390980 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390980 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_19: counter2_19 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <699 4>;
+                    status = "disabled";
+                };
+
+                pwm2_19: pwm2_19 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <699 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_20: tcpwm2_20@40390A00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390A00 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_20: counter2_20 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <700 4>;
+                    status = "disabled";
+                };
+
+                pwm2_20: pwm2_20 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <700 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_21: tcpwm2_21@40390A80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390A80 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_21: counter2_21 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <701 4>;
+                    status = "disabled";
+                };
+
+                pwm2_21: pwm2_21 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <701 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_22: tcpwm2_22@40390B00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390B00 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_22: counter2_22 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <702 4>;
+                    status = "disabled";
+                };
+
+                pwm2_22: pwm2_22 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <702 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_23: tcpwm2_23@40390B80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390B80 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_23: counter2_23 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <703 4>;
+                    status = "disabled";
+                };
+
+                pwm2_23: pwm2_23 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <703 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_24: tcpwm2_24@40390C00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390C00 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_24: counter2_24 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <704 4>;
+                    status = "disabled";
+                };
+
+                pwm2_24: pwm2_24 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <704 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_25: tcpwm2_25@40390C80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390C80 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_25: counter2_25 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <705 4>;
+                    status = "disabled";
+                };
+
+                pwm2_25: pwm2_25 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <705 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_26: tcpwm2_26@40390D00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390D00 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_26: counter2_26 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <706 4>;
+                    status = "disabled";
+                };
+
+                pwm2_26: pwm2_26 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <706 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_27: tcpwm2_27@40390D80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390D80 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_27: counter2_27 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <707 4>;
+                    status = "disabled";
+                };
+
+                pwm2_27: pwm2_27 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <707 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_28: tcpwm2_28@40390E00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390E00 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_28: counter2_28 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <708 4>;
+                    status = "disabled";
+                };
+
+                pwm2_28: pwm2_28 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <708 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_29: tcpwm2_29@40390E80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390E80 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_29: counter2_29 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <709 4>;
+                    status = "disabled";
+                };
+
+                pwm2_29: pwm2_29 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <709 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_30: tcpwm2_30@40390F00 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390F00 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_30: counter2_30 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <710 4>;
+                    status = "disabled";
+                };
+
+                pwm2_30: pwm2_30 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <710 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+
+            tcpwm2_31: tcpwm2_31@40390F80 {
+                compatible = "infineon,tcpwm";
+                reg = <0x40390F80 0x80>;
+                resolution = <32>;
+                status = "disabled";
+
+                counter2_31: counter2_31 {
+                    compatible = "infineon,tcpwm-counter";
+                    system-interrupts = <711 4>;
+                    status = "disabled";
+                };
+
+                pwm2_31: pwm2_31 {
+                    compatible = "infineon,cat1-pwm";
+                    system-interrupts = <711 4>;
+                    #pwm-cells = <3>;
+                    status = "disabled";
+                };
+            };
+        };
+
+        dma0: dw@40280000 {
+            #dma-cells = <1>;
+            compatible = "infineon,cat1-dma";
+            reg = <0x40280000 0x10000>;
+            dma-channels = <143>;
+            system-interrupts = <227 6>, /* CH0 */
+                                <228 6>, /* CH1 */
+                                <229 6>, /* CH2 */
+                                <230 6>, /* CH3 */
+                                <231 6>, /* CH4 */
+                                <232 6>, /* CH5 */
+                                <233 6>, /* CH6 */
+                                <234 6>, /* CH7 */
+                                <235 6>, /* CH8 */
+                                <236 6>, /* CH9 */
+                                <237 6>, /* CH10 */
+                                <238 6>, /* CH11 */
+                                <239 6>, /* CH12 */
+                                <240 6>, /* CH13 */
+                                <241 6>, /* CH14 */
+                                <242 6>, /* CH15 */
+                                <243 6>, /* CH16 */
+                                <244 6>, /* CH17 */
+                                <245 6>, /* CH18 */
+                                <246 6>, /* CH19 */
+                                <247 6>, /* CH20 */
+                                <248 6>, /* CH21 */
+                                <249 6>, /* CH22 */
+                                <250 6>, /* CH23 */
+                                <251 6>, /* CH24 */
+                                <252 6>, /* CH25 */
+                                <253 6>, /* CH26 */
+                                <254 6>, /* CH27 */
+                                <255 6>, /* CH28 */
+                                <256 6>, /* CH29 */
+                                <257 6>, /* CH30 */
+                                <258 6>, /* CH31 */
+                                <259 6>, /* CH32 */
+                                <260 6>, /* CH33 */
+                                <261 6>, /* CH34 */
+                                <262 6>, /* CH35 */
+                                <263 6>, /* CH36 */
+                                <264 6>, /* CH37 */
+                                <265 6>, /* CH38 */
+                                <266 6>, /* CH39 */
+                                <267 6>, /* CH40 */
+                                <268 6>, /* CH41 */
+                                <269 6>, /* CH42 */
+                                <270 6>, /* CH43 */
+                                <271 6>, /* CH44 */
+                                <272 6>, /* CH45 */
+                                <273 6>, /* CH46 */
+                                <274 6>, /* CH47 */
+                                <275 6>, /* CH48 */
+                                <276 6>, /* CH49 */
+                                <277 6>, /* CH50 */
+                                <278 6>, /* CH51 */
+                                <279 6>, /* CH52 */
+                                <280 6>, /* CH53 */
+                                <281 6>, /* CH54 */
+                                <282 6>, /* CH55 */
+                                <283 6>, /* CH56 */
+                                <284 6>, /* CH57 */
+                                <285 6>, /* CH58 */
+                                <286 6>, /* CH59 */
+                                <287 6>, /* CH60 */
+                                <288 6>, /* CH61 */
+                                <289 6>, /* CH62 */
+                                <290 6>, /* CH63 */
+                                <291 6>, /* CH64 */
+                                <292 6>, /* CH65 */
+                                <293 6>, /* CH66 */
+                                <294 6>, /* CH67 */
+                                <295 6>, /* CH68 */
+                                <296 6>, /* CH69 */
+                                <297 6>, /* CH70 */
+                                <298 6>, /* CH71 */
+                                <299 6>, /* CH72 */
+                                <300 6>, /* CH73 */
+                                <301 6>, /* CH74 */
+                                <302 6>, /* CH75 */
+                                <303 6>, /* CH76 */
+                                <304 6>, /* CH77 */
+                                <305 6>, /* CH78 */
+                                <306 6>, /* CH79 */
+                                <307 6>, /* CH80 */
+                                <308 6>, /* CH81 */
+                                <309 6>, /* CH82 */
+                                <310 6>, /* CH83 */
+                                <311 6>, /* CH84 */
+                                <312 6>, /* CH85 */
+                                <313 6>, /* CH86 */
+                                <314 6>, /* CH87 */
+                                <315 6>, /* CH88 */
+                                <316 6>, /* CH89 */
+                                <317 6>, /* CH90 */
+                                <318 6>, /* CH91 */
+                                <319 6>, /* CH92 */
+                                <320 6>, /* CH93 */
+                                <321 6>, /* CH94 */
+                                <322 6>, /* CH95 */
+                                <323 6>, /* CH96 */
+                                <324 6>, /* CH97 */
+                                <325 6>, /* CH98 */
+                                <326 6>, /* CH99 */
+                                <327 6>, /* CH100 */
+                                <328 6>, /* CH101 */
+                                <329 6>, /* CH102 */
+                                <330 6>, /* CH103 */
+                                <331 6>, /* CH104 */
+                                <332 6>, /* CH105 */
+                                <333 6>, /* CH106 */
+                                <334 6>, /* CH107 */
+                                <335 6>, /* CH108 */
+                                <336 6>, /* CH109 */
+                                <337 6>, /* CH110 */
+                                <338 6>, /* CH111 */
+                                <339 6>, /* CH112 */
+                                <340 6>, /* CH113 */
+                                <341 6>, /* CH114 */
+                                <342 6>, /* CH115 */
+                                <343 6>, /* CH116 */
+                                <344 6>, /* CH117 */
+                                <345 6>, /* CH118 */
+                                <346 6>, /* CH119 */
+                                <347 6>, /* CH120 */
+                                <348 6>, /* CH121 */
+                                <349 6>, /* CH122 */
+                                <350 6>, /* CH123 */
+                                <351 6>, /* CH124 */
+                                <352 6>, /* CH125 */
+                                <353 6>, /* CH126 */
+                                <354 6>, /* CH127 */
+                                <355 6>, /* CH128 */
+                                <356 6>, /* CH129 */
+                                <357 6>, /* CH130 */
+                                <358 6>, /* CH131 */
+                                <359 6>, /* CH132 */
+                                <360 6>, /* CH133 */
+                                <361 6>, /* CH134 */
+                                <362 6>, /* CH135 */
+                                <363 6>, /* CH136 */
+                                <364 6>, /* CH137 */
+                                <365 6>, /* CH138 */
+                                <366 6>, /* CH139 */
+                                <367 6>, /* CH140 */
+                                <368 6>, /* CH141 */
+                                <369 6>; /* CH142 */
+            status = "disabled";
+        };
+        dma1: dw@40290000 {
+            #dma-cells = <1>;
+            compatible = "infineon,cat1-dma";
+            reg = <0x40290000 0x10000>;
+            dma-channels = <65>;
+            system-interrupts = <370 6>, /* CH0 */
+                                <371 6>, /* CH1 */
+                                <372 6>, /* CH2 */
+                                <373 6>, /* CH3 */
+                                <374 6>, /* CH4 */
+                                <375 6>, /* CH5 */
+                                <376 6>, /* CH6 */
+                                <377 6>, /* CH7 */
+                                <378 6>, /* CH8 */
+                                <379 6>, /* CH9 */
+                                <380 6>, /* CH10 */
+                                <381 6>, /* CH11 */
+                                <382 6>, /* CH12 */
+                                <383 6>, /* CH13 */
+                                <384 6>, /* CH14 */
+                                <385 6>, /* CH15 */
+                                <386 6>, /* CH16 */
+                                <387 6>, /* CH17 */
+                                <388 6>, /* CH18 */
+                                <389 6>, /* CH19 */
+                                <390 6>, /* CH20 */
+                                <391 6>, /* CH21 */
+                                <392 6>, /* CH22 */
+                                <393 6>, /* CH23 */
+                                <394 6>, /* CH24 */
+                                <395 6>, /* CH25 */
+                                <396 6>, /* CH26 */
+                                <397 6>, /* CH27 */
+                                <398 6>, /* CH28 */
+                                <399 6>, /* CH29 */
+                                <400 6>, /* CH30 */
+                                <401 6>, /* CH31 */
+                                <402 6>, /* CH32 */
+                                <403 6>, /* CH33 */
+                                <404 6>, /* CH34 */
+                                <405 6>, /* CH35 */
+                                <406 6>, /* CH36 */
+                                <407 6>, /* CH37 */
+                                <408 6>, /* CH38 */
+                                <409 6>, /* CH39 */
+                                <410 6>, /* CH40 */
+                                <411 6>, /* CH41 */
+                                <412 6>, /* CH42 */
+                                <413 6>, /* CH43 */
+                                <414 6>, /* CH44 */
+                                <415 6>, /* CH45 */
+                                <416 6>, /* CH46 */
+                                <417 6>, /* CH47 */
+                                <418 6>, /* CH48 */
+                                <419 6>, /* CH49 */
+                                <420 6>, /* CH50 */
+                                <421 6>, /* CH51 */
+                                <422 6>, /* CH52 */
+                                <423 6>, /* CH53 */
+                                <424 6>, /* CH54 */
+                                <425 6>, /* CH55 */
+                                <426 6>, /* CH56 */
+                                <427 6>, /* CH57 */
+                                <428 6>, /* CH58 */
+                                <429 6>, /* CH59 */
+                                <430 6>, /* CH60 */
+                                <431 6>, /* CH61 */
+                                <432 6>, /* CH62 */
+                                <433 6>, /* CH63 */
+                                <434 6>; /* CH64 */
+            status = "disabled";
+        };
+
+        sdhc0: sdhc@40460000 {
+            compatible = "infineon,cat1-sdhc-sdio";
+            reg = <0x40460000 0x2000>;
+            system-interrupts = <563 6>, /* SDIO wakeup interrupt for mxsdhc */
+                                <562 6>; /* Consolidated interrupt for mxsdhc */
+            status = "disabled";
+        };
+
+        adc0: adc@40900000 {
+            compatible = "infineon,ifx-sar";
+            reg = <0x40900000 0x100000>;
+            #io-channel-cells = <1>;
+            system-interrupts = <123 3>;
+            clock-frequency = <26670000>;
+            ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+            ifx,peri-clk = <0x0114>;
+            ifx,peri-div = <0>; /* 8-bit divider */
+            ifx,peri-div-inst = <2>;
+        };
+
+        can0_0: can@40520000 {
+            compatible = "infineon,cat1-can";
+            reg = <0x40520000 0x200>, <0x40530000 0xA000>;
+            reg-names = "m_can", "message_ram";
+            system-interrupts = <73 2>, <78 2>;
+            clocks = <&clk_hf2>;
+            bosch,mram-cfg = <0x0 28 8 3 3 1 3 3>;
+            status = "disabled";
+        };
+        can0_1: can@40520200 {
+            compatible = "infineon,cat1-can";
+            reg = <0x40520200 0x200>, <0x40530000 0xA000>;
+            reg-names = "m_can", "message_ram";
+            system-interrupts = <74 2>, <79 2>;
+            clocks = <&clk_hf2>;
+            bosch,mram-cfg = <0x2000 28 8 3 3 1 3 3>;
+            status = "disabled";
+        };
+        can0_2: can@40520400 {
+            compatible = "infineon,cat1-can";
+            reg = <0x40520400 0x200>, <0x40530000 0xA000>;
+            reg-names = "m_can", "message_ram";
+            system-interrupts = <75 2>, <80 2>;
+            clocks = <&clk_hf2>;
+            bosch,mram-cfg = <0x4000 28 8 3 3 1 3 3>;
+            status = "disabled";
+        };
+        can0_3: can@40520600 {
+            compatible = "infineon,cat1-can";
+            reg = <0x40520600 0x200>, <0x40530000 0xA000>;
+            reg-names = "m_can", "message_ram";
+            system-interrupts = <76 2>, <81 2>;
+            clocks = <&clk_hf2>;
+            bosch,mram-cfg = <0x6000 28 8 3 3 1 3 3>;
+            status = "disabled";
+        };
+        can0_4: can@40520800 {
+            compatible = "infineon,cat1-can";
+            reg = <0x40520800 0x200>, <0x40530000 0xA000>;
+            reg-names = "m_can", "message_ram";
+            system-interrupts = <77 2>, <82 2>;
+            clocks = <&clk_hf2>;
+            bosch,mram-cfg = <0x8000 28 8 3 3 1 3 3>;
+            status = "disabled";
+        };
+
+        can1_0: can@40540000 {
+            compatible = "infineon,cat1-can";
+            reg = <0x40540000 0x200>, <0x40550000 0xA000>;
+            reg-names = "m_can", "message_ram";
+            system-interrupts = <83 3>, <88 3>;
+            clocks = <&clk_hf2>;
+            bosch,mram-cfg = <0x0 28 8 3 3 1 3 3>;
+            status = "disabled";
+        };
+        can1_1: can@40540200 {
+            compatible = "infineon,cat1-can";
+            reg = <0x40540200 0x200>, <0x40550000 0xA000>;
+            reg-names = "m_can", "message_ram";
+            system-interrupts = <84 3>, <89 3>;
+            clocks = <&clk_hf2>;
+            bosch,mram-cfg = <0x2000 28 8 3 3 1 3 3>;
+            status = "disabled";
+        };
+        can1_2: can@40540400 {
+            compatible = "infineon,cat1-can";
+            reg = <0x40540400 0x200>, <0x40550000 0xA000>;
+            reg-names = "m_can", "message_ram";
+            system-interrupts = <85 3>, <90 3>;
+            clocks = <&clk_hf2>;
+            bosch,mram-cfg = <0x4000 28 8 3 3 1 3 3>;
+            status = "disabled";
+        };
+        can1_3: can@40540600 {
+            compatible = "infineon,cat1-can";
+            reg = <0x40540600 0x200>, <0x40550000 0xA000>;
+            reg-names = "m_can", "message_ram";
+            system-interrupts = <86 3>, <91 3>;
+            clocks = <&clk_hf2>;
+            bosch,mram-cfg = <0x6000 28 8 3 3 1 3 3>;
+            status = "disabled";
+        };
+        can1_4: can@40540800 {
+            compatible = "infineon,cat1-can";
+            reg = <0x40540800 0x200>, <0x40550000 0xA000>;
+            reg-names = "m_can", "message_ram";
+            system-interrupts = <87 3>, <92 3>;
+            clocks = <&clk_hf2>;
+            bosch,mram-cfg = <0x8000 28 8 3 3 1 3 3>;
+            status = "disabled";
+        };
+
+        eth0: ethernet@40480000 {
+            compatible = "xlnx,gem-controller";
+            reg = <0x40481000 0x1000>, <0x40480000 0x1000>;
+
+            eth0_mac: ethernet {
+                compatible = "xlnx,gem";
+                status = "disabled";
+                system-interrupts = <556 4>, <557 4>;
+                amba-ahb-burst-length = <XLNX_GEM_AMBA_AHB_BURST_INCR4>;
+                hw-rx-buffer-size = <XLNX_GEM_HW_RX_BUFFER_SIZE_8KB>;
+                hw-rx-buffer-offset = <0>;
+                hw-tx-buffer-size-full;
+                rx-buffer-descriptors = <16>;
+                tx-buffer-descriptors = <16>;
+                rx-buffer-size = <1536>;
+                tx-buffer-size = <1536>;
+                discard-rx-fcs;
+                unicast-hash;
+            };
+
+            eth0_mdio: mdio {
+                compatible = "xlnx,gem-mdio";
+                status = "disabled";
+                #address-cells = <1>;
+                #size-cells = <0>;
+            };
+        };
+    };
+};

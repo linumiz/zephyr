@@ -28,7 +28,7 @@ description: |
 
 compatible: "infineon,ifx-sar"
 
-include: [adc-controller.yaml, "infineon,system-interrupts.yaml"]
+include: [adc-controller.yaml, "infineon,system-interrupts.yaml", pinctrl-device.yaml]
 
 properties:
   reg:
@@ -42,10 +42,10 @@ properties:
 
   ifx,peri-clk:
     type: int
-  
+
   ifx,peri-group:
     type: int
-  
+
   ifx,peri-div:
     type: int
     required: true
@@ -54,10 +54,10 @@ properties:
       - 1
       - 2
       - 3
-  
+
   ifx,peri-div-inst:
     type: int
     required: true
 
 io-channel-cells:
-  - input 
+  - input

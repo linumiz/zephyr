@@ -1,0 +1,7 @@
+# Copyright (c) 2025 Infineon Technologies AG,
+# or an affiliate of Infineon Technologies AG.
+
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_KIT_T2G_B_E_LITE
+		select SOC_CYT2BL5CAE

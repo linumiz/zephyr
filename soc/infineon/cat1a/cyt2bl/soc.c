@@ -6,18 +6,29 @@
  */
 
 /**
- * @brief Infineon CAT1C SOC.
+ * @brief Infineon PSOC 6 SOC.
  */
 
 #include <zephyr/device.h>
 #include <zephyr/init.h>
 #include <zephyr/kernel.h>
-
 #include <cy_sysint.h>
-#include <cy_wdt.h>
+#include <zephyr/cache.h>
 #include <cy_sysclk.h>
 
-struct _isr_table_entry sys_int_table[CPUSS_SYSTEM_INT_NR];
+#define SYS_INT_IDX_Msk 0X1FF
+
+
+
+// /* Dummy symbols, requres for cy_sysint.c module.
+//  * NOTE: in this PSOC 6 integration, PSOC 6 Zephyr drivers (uart, spi, gpio)
+//  * do not use cy_sysint.c implementation to handle interrupt routine.
+//  * Instead this they use IRQ_CONNECT to define ISR.
+//  */
+ cy_israddress __ramVectors[];
+ const cy_israddress __Vectors[];
+
+ struct _isr_table_entry sys_int_table[CPUSS_SYSTEM_INT_NR];
 
 void enable_sys_int(uint32_t int_num, uint32_t priority, void (*isr)(const void *), const void *arg)
 {
@@ -34,23 +45,16 @@ void enable_sys_int(uint32_t int_num, uint32_t priority, void (*isr)(const void 
 	} else {
 		k_fatal_halt(K_ERR_CPU_EXCEPTION);
 	}
-
-	NVIC_ClearPendingIRQ(int_num);
-	NVIC_EnableIRQ(priority);
 }
 
 void sys_int_handler(uint32_t intrNum)
 {
 	uint32_t system_int_idx;
-	if (_FLD2VAL(CPUSS_CM0_INT0_STATUS_SYSTEM_INT_VALID, CPUSS_CM0_INT_STATUS_BASE[intrNum]))
-	{
-		system_int_idx = _FLD2VAL(CPUSS_CM0_INT0_STATUS_SYSTEM_INT_IDX, CPUSS_CM0_INT_STATUS_BASE[intrNum]);
+
+	if ((_FLD2VAL(CPUSS_V2_CM4_SYSTEM_INT_CTL_CPU_INT_VALID, CPUSS_CM4_INT_STATUS[intrNum]))) {
+		system_int_idx =  CPUSS_CM4_INT_STATUS[intrNum] & SYS_INT_IDX_Msk;
 		struct _isr_table_entry *entry = &sys_int_table[system_int_idx];
 		(entry->isr)(entry->arg);
-	}
-	else
-	{
-		// Triggered by software or because of software cleared a peripheral interrupt flag but did not clear the pending flag at NVIC
 	}
 	NVIC_ClearPendingIRQ((IRQn_Type)intrNum);
 }
@@ -66,12 +70,12 @@ void system_irq_init(void)
 	/* Connect System Interrupts (IRQ0-IRQ7) to handler */
 	/*          irq  priority  handler          arg  flags */
 	IRQ_CONNECT(0, 0, sys_int_handler, 0, 0);
-	IRQ_CONNECT(1, 0, sys_int_handler, 1, 0);
-	IRQ_CONNECT(2, 1, sys_int_handler, 2, 0);
-	IRQ_CONNECT(3, 1, sys_int_handler, 3, 0);
-	IRQ_CONNECT(4, 2, sys_int_handler, 4, 0);
-	IRQ_CONNECT(5, 2, sys_int_handler, 5, 0);
-	IRQ_CONNECT(6, 3, sys_int_handler, 6, 0);
+	IRQ_CONNECT(1, 1, sys_int_handler, 1, 0);
+	IRQ_CONNECT(2, 2, sys_int_handler, 2, 0);
+	IRQ_CONNECT(3, 3, sys_int_handler, 3, 0);
+	IRQ_CONNECT(4, 4, sys_int_handler, 4, 0);
+	IRQ_CONNECT(5, 5, sys_int_handler, 5, 0);
+	IRQ_CONNECT(6, 6, sys_int_handler, 6, 0);
 	/* Priority 0 is reserved for processor faults.  So, the priority number here
 	 * is incremented by 1 in the code associated with IRQ_CONNECT.  Which means that
 	 * can not select priority 7, because that gets converted to 8, and doesn't fit
@@ -93,17 +97,21 @@ void system_irq_init(void)
 	irq_enable(7);
 }
 
-void soc_prep_hook(void)
+void soc_early_init_hook(void)
 {
-#define CM7_0_FLASH_BASE_ADDRESS	0x10080000
-#define CM7_1_FLASH_BASE_ADDRESS	0x10358000
-
-	Cy_WDT_Unlock();
-	Cy_WDT_Disable();
-	SystemCoreClockUpdate();
+	sys_cache_instr_enable();
+	sys_cache_data_enable();
 
 	system_irq_init();
-
-	Cy_SysEnableCM7(CORE_CM7_0, CM7_0_FLASH_BASE_ADDRESS);
-	Cy_SysEnableCM7(CORE_CM7_1, CM7_1_FLASH_BASE_ADDRESS);
 }
+
+static int init_cycfg_platform_wraper(void)
+{
+
+   /*Initializes the system */
+	SystemInit();
+	return 0;
+}
+
+
+SYS_INIT(init_cycfg_platform_wraper, PRE_KERNEL_1, 0);

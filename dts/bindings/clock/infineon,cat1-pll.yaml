@@ -1,4 +1,5 @@
 # Copyright (c) 2025 Linumiz GmbH 
+# Copyright (c) 2026 Infineon Technologies AG
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -9,15 +10,13 @@ compatible: "infineon,cat1-pll"
 include: [base.yaml, clock-controller.yaml]
 
 properties:
+  reg:
+    required: true
+
   clocks:
     required: true
     description: |
       Clock reference source
-
-  ifx,pll-instance:
-    type: int
-    description: PLL instance of pll node 
-    required: true
 
   p-div:
     type: int
@@ -30,6 +29,12 @@ properties:
     required: true
     description: |
       qdiv functions as a refernce-divider value.
+  
+  frac-div:
+    type: int
+    description: |
+      Fractional divider value. The final fraction divider value is 1/2^24 of 
+      this setting. Set to 0 if fractional division is not used.
 
   output-div:
     type: int

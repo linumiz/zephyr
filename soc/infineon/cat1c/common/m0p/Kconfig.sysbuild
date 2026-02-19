@@ -1,0 +1,11 @@
+# Copyright (c) 2025 Infineon Technologies AG
+# SPDX-License-Identifier: Apache-2.0
+
+config M0P_LAUNCHER
+	bool "M0P launcher"
+	default y
+	depends on HAS_INFINEON_M0P_LAUNCHER_IMAGE
+	help
+	  Include M0P launcher in build.
+	  M0P launcher is a minimal sample built for an ARM core that starts given core.
+	  It is based on samples/basic/minimal with an appropriate snippet.

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2025 Linumiz GmbH
+ * Copyright (c) 2025 Infineon Technologies AG
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -7,33 +8,51 @@
 #include <mem.h>
 #include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
 #include <zephyr/dt-bindings/ethernet/xlnx_gem.h>
+#include <zephyr/dt-bindings/memory-attr/memory-attr-arm.h>
 
 / {
-	flash_controller: flash_controller@40240000 {
-		compatible = "infineon,cat1-flash-controller-pdl";
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		m0: cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-m0+";
+			reg = <0>;
+			clock-frequency = <100000000>;
+		};
+		m7_0: cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-m7";
+			reg = <1>;
+			clock-frequency = <320000000>;
+			status = "disabled";
+		};
+		m7_1: cpu@2 {
+			device_type = "cpu";
+			compatible = "arm,cortex-m7";
+			reg = <2>;
+			clock-frequency = <320000000>;
+			status = "disabled";
+		};
+	};
+
+	flash_controller: flash-controller@40240000 {
+		compatible = "infineon,cat1-flash-controller";
 		reg = < 0x40240000 0x10000 >;
 		#address-cells = <1>;
 		#size-cells = <1>;
 		status = "okay";
 
-		/* Code flash - Large sector (32KB Sectors) */
-		flash0: flash@10000000 {
+		code_flash: flash@10000000 {
 			compatible = "soc-nv-flash";
-			reg = <0x10000000 0x5F0000>;
+			reg = <0x10000000 DT_SIZE_K(6336)>;
 			write-block-size = <512>;
 			erase-block-size = <32768>;
 		};
 
-		/* Code flash - Small sector (8KB Sectors) */
-		flash1: flash@105F0000 {
-			compatible = "soc-nv-flash";
-			reg = <0x105F0000 0x40000>;
-			write-block-size = <512>;
-			erase-block-size = <8192>;
-		};
-
 		/* Work flash - Large sector (2KB Sectors) */
-		flash2: flash@14000000 {
+		work_flash0: flash@14000000 {
 			compatible = "soc-nv-flash";
 			reg = <0x14000000 0x18000>;
 			write-block-size = <64>;
@@ -41,7 +60,7 @@
 		};
 
 		/* Work flash - Small sector (128B Sectors) */
-		flash3: flash@14018000 {
+		work_flash1: flash@14018000 {
 			compatible = "soc-nv-flash";
 			reg = <0x14018000 0x8000>;
 			write-block-size = <64>;
@@ -49,13 +68,17 @@
 		};
 	};
 
-	/* 0x0000000028000800  _base_SRAM_CM0P =
-	 * ((sram_base_address + sram_start_reserve) + sram_private_for_srom)
-	 * TODO: Where better to keep srom private
-	 */
 	sram0: memory@28000000 {
 		compatible = "mmio-sram";
-		reg = <0x28000000 0x3800>;
+		reg = <0x28000000 DT_SIZE_K(256)>;
+	};
+	sram1: memory@28040000 {
+		compatible = "mmio-sram";
+		reg = <0x28040000 DT_SIZE_K(256)>;
+	};
+	sram2: memory@28080000 {
+		compatible = "mmio-sram";
+		reg = <0x28080000 DT_SIZE_K(128)>;
 	};
 
 	smif_0: smif0@40420000 {
@@ -127,6 +150,27 @@
 				compatible = "fixed-partitions";
 			};
 		};
+	};
+	
+	m7_0_itcm: itcm@a0000000 {
+		compatible = "zephyr,memory-region", "arm,itcm";
+		reg = <0xa0000000 DT_SIZE_K(64)>;
+		zephyr,memory-region = "M7_0_ITCM";
+	};
+	m7_0_dtcm: dtcm@a0010000 {
+		compatible = "zephyr,memory-region", "arm,dtcm";
+		reg = <0xa0010000 DT_SIZE_K(64)>;
+		zephyr,memory-region = "M7_0_DTCM";
+	};
+	m7_1_itcm: itcm@a0100000 {
+		compatible = "zephyr,memory-region", "arm,itcm";
+		reg = <0xA0100000 DT_SIZE_K(64)>;
+		zephyr,memory-region = "M7_1_ITCM";
+	};
+	m7_1_dtcm: dtcm@a0110000 {
+		compatible = "zephyr,memory-region", "arm,dtcm";
+		reg = <0xA0110000 DT_SIZE_K(64)>;
+		zephyr,memory-region = "M7_1_DTCM";
 	};
 
 	soc {
@@ -2923,13 +2967,16 @@
 			reg = <0x40900000 0x100000>;
 			#io-channel-cells = <1>;
 			system-interrupts = <160 3>;
-			status = "okay";
+			clock-frequency = <26670000>;
+			ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+			ifx,peri-clk = <0x0114>;
+			ifx,peri-div = <0>; /* 8-bit divider */
+			ifx,peri-div-inst = <2>;
 		};
 
 		eth0: ethernet@40480000 {
-                       compatible = "xlnx,gem-controller";
-		       reg = <0x40481000 0x1000>,
-			     <0x40480000 0x1000>;
+			compatible = "xlnx,gem-controller";
+			reg = <0x40481000 0x1000>, <0x40480000 0x1000>;
 
 			eth0_mac: ethernet {
 				compatible = "xlnx,gem";

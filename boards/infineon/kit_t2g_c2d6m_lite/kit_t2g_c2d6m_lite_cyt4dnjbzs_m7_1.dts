@@ -4,72 +4,31 @@
  */
 
 /dts-v1/;
-#include <arm/infineon/cat1c/cyt4dn/cyt4dn.dtsi>
-#include <arm/infineon/cat1c/cyt4dn/system_clocks.dtsi>
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn_m7.dtsi>
-#include <arm/infineon/cat1c/cyt4dn/memory_partition.dtsi>
-#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
 #include "kit_t2g_c2d6m_lite_common.dtsi"
 
 / {
 
-	model = "Infineon Evaluation board for CYT4DNJBZS M7";
-	compatible = "infineon,kit_t2g_c2d6m_lite", "infineon,CYT4DN";
-
-	aliases {
-		uart-9 = &uart9;
-		led0 = &user_led0;
-		sw0 = &user_bt0;
-	};
+	model = "Infineon Evaluation board for CYT4DNJBZS M7 Core 1";
+	compatible = "infineon,kit_t2g_c2d6m_lite", "infineon,cyt4dn";
 
 	chosen {
-		zephyr,sram = &cm7_1_code;
-		zephyr,flash = &cm7_1_data;
+		zephyr,sram = &sram_m7_1;
+		zephyr,flash = &code_flash;
 		zephyr,dtcm = &dtcm;
 		zephyr,itcm = &itcm;
-		zephyr,console = &uart9;
-		zephyr,shell-uart = &uart9;
+		zephyr,code-partition = &m7_1_partition;
+		zephyr,console = &uart7;
+		zephyr,shell-uart = &uart7;
+		zephyr,canbus = &can0;
 	};
-
-	leds {
-		compatible = "gpio-leds";
-		user_led0: led_0 {
-			label = "LED_0";
-			gpios = <&gpio_prt7 7 GPIO_ACTIVE_HIGH>;
-		};
-	};
-
-	gpio_keys {
-		compatible = "gpio-keys";
-
-		user_bt0: user_btn0 {
-			label = "SW_0";
-			gpios = <&gpio_prt0 3 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-			zephyr,code = <INPUT_KEY_0>;
-		};
-	};
-
 };
 
-uart9: &scb9 {
-	compatible = "infineon,cat1-uart-pdl";
-	status = "okay";
-	current-speed = <115200>;
-	clocks = <&clk_hf2>;
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x0111>;
-	ifx,peri-div = <0>; /* 8-bit divider */
-	ifx,peri-div-inst = <1>;
-
-	/* UART pins */
-	pinctrl-0 = <&p29_0_scb9_uart_rx &p29_1_scb9_uart_tx>;
-	pinctrl-names = "default";
-};
-
-&gpio_prt29 {
+&m7_1 {
 	status = "okay";
 };
 
-&gpio_prt7 {
+&uart7 {
 	status = "okay";
 };
+

@@ -58,6 +58,12 @@ struct net_udp_context {
 	struct net_linkaddr ll_addr;
 };
 
+/* In a file like soc/arm/infineon/cat1a/irq.c or similar */
+int z_soc_irq_is_enabled(unsigned int irq)
+{
+    return arch_irq_is_enabled(irq);  /* fallback to arch API if possible */
+}
+
 int net_udp_dev_init(const struct device *dev)
 {
 	struct net_udp_context *net_udp_context = dev->data;
@@ -187,6 +193,7 @@ static void *test_setup(void)
 
 	return NULL;
 }
+
 
 ZTEST(net_shell_test_suite, test_net_shell)
 {

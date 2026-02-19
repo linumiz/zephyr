@@ -60,14 +60,43 @@ zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_PSOC6_04_68_QFN
 zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_PSOC6_04_80_TQFP
   ${hal_cat1a_dir}/source/pin_packages/cyhal_psoc6_04_80_tqfp.c)
 
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2B7_64_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe1m_64_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2B7_80_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe1m_80_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2B7_100_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe1m_100_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2B7_144_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe1m_144_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2B7_176_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe1m_176_lqfp.c)
+
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2BL_64_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe4m_64_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2BL_80_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe4m_80_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2BL_100_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe4m_100_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2BL_144_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe4m_144_lqfp.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYT2BL_176_LQFP
+  ${hal_cat1a_dir}/source/pin_packages/cyhal_tviibe4m_176_lqfp.c)
+
 zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_CYW20829_56_QFN
   ${hal_cat1b_dir}/source/pin_packages/cyhal_cyw20829_56_qfn.c)
 
 zephyr_library_sources_ifdef(CONFIG_SOC_PACKAGE_XMC7200_272_BGA
   ${hal_cat1c_dir}/source/pin_packages/cyhal_xmc7200_272_bga.c)
 
+ # zephyr_library_sources_ifdef(CONFIG_SOC_CYT4BFCCHE_M0PLUS OR CONFIG_SOC_CYT4BFCCHE_M7_0 OR CONFIG_SOC_CYT4BFCCHE_M7_0
+# zephyr_library_sources(${hal_cat1c_dir}/source/pin_packages/cyhal_xmc7200_320_bga.c)
+
+
 zephyr_library_sources_ifdef(CONFIG_SOC_DIE_CYW20829
   ${hal_cat1b_dir}/source/triggers/cyhal_triggers_cyw20829.c)
+
+zephyr_library_sources_ifdef(CONFIG_SOC_SERIES_CYT4BF
+  ${hal_cat1c_dir}/source/triggers/cyhal_triggers_xmc7200.c)  
 
 zephyr_library_sources_ifdef(CONFIG_SOC_DIE_PSOC6_01
   ${hal_cat1a_dir}/source/triggers/cyhal_triggers_psoc6_01.c)
@@ -77,6 +106,14 @@ zephyr_library_sources_ifdef(CONFIG_SOC_DIE_PSOC6_03
   ${hal_cat1a_dir}/source/triggers/cyhal_triggers_psoc6_03.c)
 zephyr_library_sources_ifdef(CONFIG_SOC_DIE_PSOC6_04
   ${hal_cat1a_dir}/source/triggers/cyhal_triggers_psoc6_04.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_DIE_CYT2B7
+  ${hal_cat1a_dir}/source/triggers/cyhal_triggers_tviibe1m.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_DIE_CYT2BL
+  ${hal_cat1a_dir}/source/triggers/cyhal_triggers_tviibe4m.c)
+
+zephyr_library_sources_ifdef(CONFIG_SOC_SERIES_CYT4BF
+  ${hal_cat1c_dir}/source/triggers/cyhal_triggers_xmc7200.c)
+
 
 # High level interface for interacting with CAT1 hardware
 zephyr_library_sources_ifdef(CONFIG_USE_INFINEON_FLASH   ${hal_dir}/source/cyhal_nvm.c)

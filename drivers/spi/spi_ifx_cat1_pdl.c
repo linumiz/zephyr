@@ -109,7 +109,7 @@ struct ifx_cat1_spi_data {
 #endif
 #endif
 
-#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE)
+#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE) || defined(CONFIG_SOC_FAMILY_CYT2B7)
 	uint32_t clock_peri_group;
 	uint32_t clock_id;
 	uint8_t peri_div_type;
@@ -581,7 +581,7 @@ static int ifx_cat1_spi_init(const struct device *dev)
 #define SPI_DMA_TRIGGERS(index)
 #endif
 
-#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE)
+#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE) || defined(CONFIG_SOC_FAMILY_CYT2B7)
 #define PERI_INFO(n) .clock_peri_group = DT_PROP_BY_IDX(DT_INST_PHANDLE(n, clocks), peri_group, 1),
 #else
 #define PERI_INFO(n)
@@ -605,7 +605,7 @@ static int ifx_cat1_spi_init(const struct device *dev)
 			.channel = DT_INST_PROP_BY_PHANDLE(n, clocks, channel),                    \
 	},                                                                                         \
 	PERI_INFO(n)
-#elif defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#elif defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) || defined(CONFIG_SOC_FAMILY_CYT2B7)
 #define SPI_PERI_CLOCK_INIT(n)                                                                     \
 		.clock_peri_group = DT_INST_PROP(n, ifx_peri_group),                               \
 		.clock_id = DT_INST_PROP(n, ifx_peri_clk),                                         \
@@ -623,7 +623,7 @@ static int ifx_cat1_spi_init(const struct device *dev)
 	PERI_INFO(n)
 #endif
 
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7)
 #define SPI_CAT1_INT_FUNC(n)                                                                       \
 	static void ifx_cat1_spi_irq_config_func_##n(const struct device *dev)                     \
 	{                                                                                          \
@@ -979,7 +979,7 @@ static cy_rslt_t ifx_cat1_spi_int_frequency(const struct device *dev, uint32_t h
 		CY_UNUSED_PARAMETER(last_ovrsmpl_val);
 	}
 
-#if !defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if !defined(CONFIG_SOC_FAMILY_CYT2B7)
 	en_clk_dst_t clk_idx = ifx_cat1_scb_get_clock_index(data->resource.block_num);
 
 	if ((data->clock.block & 0x02) == 0) {

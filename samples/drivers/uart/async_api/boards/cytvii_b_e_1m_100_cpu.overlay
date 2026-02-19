@@ -1,0 +1,26 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2025 Cypress Semiconductor Corporation (an Infineon company) or
+ * an affiliate of Cypress Semiconductor Corporation
+ */
+
+&dma0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "infineon,cat1-dma";
+	status = "okay";
+};
+
+dut: &scb3 {
+	compatible = "infineon,cat1-uart";
+	status = "okay";
+	current-speed = <115200>;
+	clocks = <&clk_hf0>;
+	/* UART pins */
+	pinctrl-0 = <&p13_1_scb3_uart_tx &p13_0_scb3_uart_rx>;
+	pinctrl-names = "default";
+
+	dmas = <&dma0 22>, <&dma0 23>;
+	dma-names = "tx", "rx";
+};

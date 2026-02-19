@@ -352,7 +352,7 @@ static int ifx_cat1_dma_config(const struct device *dev, uint32_t channel,
 	/* Enable DMA interrupt source. */
 	Cy_DMA_Channel_SetInterruptMask(cfg->regs, channel, CY_DMA_INTR_MASK);
 
-#if !(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if !(CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7)
 	/* Enable the interrupt  */
 	irq_enable(data->channels[channel].irq);
 #endif
@@ -614,7 +614,7 @@ static const struct dma_driver_api ifx_cat1_dma_api = {
 	static const struct ifx_cat1_dma_channel_dt_info ifx_cat1_dma_channel_dt_info_##inst[] = { \
 		DT_INST_FOREACH_CHILD(inst, CHANNELS_CONFIG)};
 
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7)
 #define IRQ_CONFIGURE(n, inst)                                                                     \
 	static const struct ifx_cat1_dma_irq_context irq_context##inst##n = {                      \
 		.dev = DEVICE_DT_INST_GET(inst),                                                   \

@@ -4,47 +4,19 @@
  */
 
 /dts-v1/;
-#include <arm/infineon/cat1c/cyt4dn/cyt4dn.dtsi>
-#include <arm/infineon/cat1c/cyt4dn/system_clocks.dtsi>
 #include <arm/infineon/cat1c/cyt4dn/cyt4dn_m0p.dtsi>
-#include <arm/infineon/cat1c/cyt4dn/memory_partition.dtsi>
 #include "kit_t2g_c2d6m_lite_common.dtsi"
 
 / {
-	model = "Infineon Evaluation board for CYT4DNJBZS M0";
+	model = "Infineon Evaluation board for CYT4DNJBZS M0+";
 	compatible = "infineon,kit_t2g_c2d6m_lite", "infineon,T2G_C2D";
 
-	aliases {
-		uart-9 = &uart9;
-	};
-
 	chosen {
-		zephyr,sram = &m0p_code;
-		zephyr,flash = &m0p_data;
-		zephyr,console = &uart9;
-		zephyr,shell-uart = &uart9;
+		zephyr,sram = &sram_m0plus;
+		zephyr,flash = &code_flash;
+		zephyr,code-partition = &m0p_partition;
+		/* Modify the following properties to enable uart */
+		/* zephyr,console = &uart7; */
+		/* zephyr,shell-uart = &uart7; */
 	};
-
-	aliases {
-		uart-9 = &uart9;
-	};
-};
-
-uart9: &scb9 {
-	compatible = "infineon,cat1-uart-pdl";
-	status = "okay";
-	current-speed = <115200>;
-	clocks = <&clk_hf2>;
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x0111>;
-	ifx,peri-div = <0>; /* 8-bit divider */
-	ifx,peri-div-inst = <1>;
-
-	/* UART pins */
-	pinctrl-0 = <&p29_0_scb9_uart_rx &p29_1_scb9_uart_tx>;
-	pinctrl-names = "default";
-};
-
-&gpio_prt29 {
-	status = "okay";
 };
