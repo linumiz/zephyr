@@ -145,3 +145,25 @@ family:
     - name: cyt2b78bae
     - name: cyt2b78cas
     - name: cyt2b78cae
+  - name: cyt2bl
+    socs:
+    - name: cyt2bl3bas
+    - name: cyt2bl3bae
+    - name: cyt2bl3cas
+    - name: cyt2bl3cae
+    - name: cyt2bl4bas
+    - name: cyt2bl4bae
+    - name: cyt2bl4cas
+    - name: cyt2bl4cae
+    - name: cyt2bl5bas
+    - name: cyt2bl5bae
+    - name: cyt2bl5cas
+    - name: cyt2bl5cae
+    - name: cyt2bl7bas
+    - name: cyt2bl7bae
+    - name: cyt2bl7cas
+    - name: cyt2bl7cae
+    - name: cyt2bl8bas
+    - name: cyt2bl8bae
+    - name: cyt2bl8cas
+    - name: cyt2bl8cae

@@ -1,0 +1,216 @@
+/dts-v1/;
+
+#include <arm/infineon/cat1a/cyt2bl/system_clocks.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <infineon/cat1a/cyt2bl/cyt2bl.100-lqfp.dtsi>
+
+
+
+/ {
+    model = "Infineon Traveo II Body Entry LiteKit" ;
+    compatible = "infineon,tvii4m" ;
+
+        chosen {
+                zephyr,sram = &sram0;
+                zephyr,flash = &code_flash0;
+                zephyr,console = &uart0;
+                zephyr,shell-uart = &uart0;
+                zephyr,canbus = &can0;
+                
+        };
+
+    aliases {
+            led0 = &user_led0;
+            led1 = &user_led1;
+            led2 = &user_led2;
+            sw0 = &user_bt0;
+            sw1 = &user_bt1;
+            watchdog0 = &watchdog0;
+            dma0 = &dma0;
+            i2c0 = &scb4;
+    };
+    
+    leds{
+        compatible = "gpio-leds";
+
+        user_led0: led0 {
+            label = "LED_1";
+            gpios = <&gpio_prt5 0 GPIO_ACTIVE_HIGH>;
+        };
+
+        user_led1: led1 {
+            label = "LED_2";
+            gpios = <&gpio_prt5 1 GPIO_ACTIVE_HIGH>;
+        };
+
+        user_led2: led2 {
+            label = "LED_3";
+            gpios = <&gpio_prt5 2 GPIO_ACTIVE_HIGH>;
+        };
+       
+    };
+
+    gpio_keys {
+                compatible = "gpio-keys";
+
+                user_bt0: user_btn0 {
+                    label = "SW_0";
+                    gpios = <&gpio_prt5 3(GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+                    zephyr,code = <INPUT_KEY_0>;
+                };
+
+                user_bt1: user_btn1 {
+                    label = "SW_1";
+                    gpios = <&gpio_prt17 0(GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+                    zephyr,code = <INPUT_KEY_1>;
+                };
+    };
+
+
+
+};
+
+&p0_0_scb0_uart_rx {
+	input-enable;
+};
+
+&p0_1_scb0_uart_tx {
+	drive-push-pull;
+};
+
+&p6_1_scb4_i2c_sda{
+    drive-open-drain;
+    input-enable;
+};
+
+&p6_2_scb4_i2c_scl{
+    drive-open-drain;
+    input-enable;    
+};
+
+
+
+&watchdog0 {
+    status = "okay";
+};
+
+&dma0 {
+	status = "okay";
+};
+
+uart0: &scb0 {
+	compatible = "infineon,cat1-uart-pdl";
+	status = "okay";
+	current-speed = <115200>;
+    clocks = <&clk_hf0>;
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+    ifx,peri-clk = <0x001E>;
+    ifx,peri-div = <1>; /* 16-bit divider */
+    ifx,peri-div-inst = <3>;
+
+	/* UART pins */
+	pinctrl-0  = <&p0_1_scb0_uart_tx &p0_0_scb0_uart_rx>;
+	pinctrl-names = "default";
+};
+
+spi1: &scb3 {
+    compatible = "infineon,cat1-spi-pdl";
+    status = "okay";
+
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    /* SPI pins */
+    pinctrl-0 = <&p13_0_scb3_spi_m_miso &p13_1_scb3_spi_m_mosi &p13_2_scb3_spi_m_clk>;
+    pinctrl-names = "default";
+    cs-gpios = <&gpio_prt13 3 GPIO_ACTIVE_LOW>;
+
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+    ifx,peri-clk = <0x0108>;
+    ifx,peri-div = <1>; /* 16-bit divider */
+    ifx,peri-div-inst = <3>;
+
+	w25q128jvsq2449_spi: spi-nor-flash@0 {
+		compatible = "jedec,spi-nor";
+		status = "okay";
+		reg = <0>;
+        spi-max-frequency = <8000000>;
+		size = <DT_SIZE_M(128)>; /* 64 Mbits */
+		jedec-id = [ef 40 18];
+	};
+};
+
+i2c0: &scb4 {
+    compatible = "infineon,cat1-i2c-pdl";
+    status = "okay";
+
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    /* I2C pins */
+    pinctrl-0 = <&p6_1_scb4_i2c_sda &p6_2_scb4_i2c_scl>;
+    pinctrl-names = "default";
+
+    clocks = <&clk_hf0>;
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+    ifx,peri-clk = <0x0022>;
+    ifx,peri-div = <0>; /* 8-bit divider */
+    ifx,peri-div-inst = <1>;
+};
+
+
+can0: &can0_0 {
+    status = "okay";
+    compatible = "infineon,cat1-can";
+    clocks = <&clk_hf0>;
+    clock-frequency = <40000000>;
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+    ifx,peri-clk = <0x0006>;
+    ifx,peri-div = <3>; /* 24-bit divider */
+    ifx,peri-div-inst = <0>;
+
+    pinctrl-0 = <&p2_0_can0_0_tx &p2_1_can0_0_rx>;
+    pinctrl-names = "default";
+};
+
+adc0: &adc0 {
+       status = "okay";
+	    clocks = <&clk_hf0>;
+       clock-frequency = <10670000>;
+       ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+       ifx,peri-clk = <0x001C>;
+       ifx,peri-div = <1>; /* 8-bit divider */
+       ifx,peri-div-inst = <2>;
+	   #io-channel-cells = <1>;
+		#address-cells = <1>;
+   		#size-cells = <0>;
+};
+
+&gpio_prt0 {
+	status = "okay";
+};
+
+&gpio_prt5 {
+	status = "okay";
+};
+
+&gpio_prt17 {
+	status = "okay";
+};
+
+&gpio_prt18 {
+	status = "okay";
+};
+
+&clk_eco {
+status = "okay";
+clock-frequency = <16000000>;
+};
+
+&clk_hf2
+{
+    status = "okay";
+    
+};
+
+
