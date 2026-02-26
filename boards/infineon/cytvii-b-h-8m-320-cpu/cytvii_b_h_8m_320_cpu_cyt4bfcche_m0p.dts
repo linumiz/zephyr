@@ -22,6 +22,7 @@
 		zephyr,code-partition = &m0p_partition;
 		zephyr,console = &uart3;
 		zephyr,shell-uart = &uart3;
+		zephyr,flash-controller = &flash_controller;
 	};
 };
 

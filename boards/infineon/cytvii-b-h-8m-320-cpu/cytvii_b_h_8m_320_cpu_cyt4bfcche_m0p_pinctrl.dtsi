@@ -5,6 +5,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/* Configure pin control bias mode for spi pins */
+&p4_0_scb5_spi_m_miso {
+	input-enable;
+};
+
+&p4_1_scb5_spi_m_mosi {
+	drive-push-pull;
+};
+
+&p4_2_scb5_spi_m_clk {
+	drive-push-pull;
+};
+
 /* Configure pin control bias mode for uart pins */
 &p13_1_scb3_uart_tx {
 	drive-push-pull;
@@ -22,7 +35,7 @@
 	input-enable;
 };
 
- &p18_2_scb1_i2c_scl {
+&p18_2_scb1_i2c_scl {
     drive-open-drain;
     input-enable;
 };
@@ -30,4 +43,12 @@
 &p18_1_scb1_i2c_sda {
     drive-open-drain;
     input-enable;
- };
+};
+
+&p0_2_can0_0_tx {
+    drive-push-pull;
+};
+
+&p0_3_can0_0_rx {
+    input-enable;
+};
