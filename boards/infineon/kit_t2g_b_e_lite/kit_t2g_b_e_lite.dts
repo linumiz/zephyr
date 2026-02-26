@@ -88,6 +88,21 @@
     input-enable;    
 };
 
+&p13_0_scb3_spi_m_miso
+{
+    input-enable;  
+};
+
+&p13_1_scb3_spi_m_mosi
+{
+    drive-push-pull;
+};
+
+ &p13_2_scb3_spi_m_clk
+ {
+    drive-push-pull;
+ };
+
 
 
 &watchdog0 {
@@ -98,6 +113,8 @@
 	status = "okay";
 };
 
+
+
 uart0: &scb0 {
 	compatible = "infineon,cat1-uart-pdl";
 	status = "okay";
@@ -105,8 +122,8 @@ uart0: &scb0 {
     clocks = <&clk_hf0>;
     ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
     ifx,peri-clk = <0x001E>;
-    ifx,peri-div = <1>; /* 16-bit divider */
-    ifx,peri-div-inst = <3>;
+    ifx,peri-div = <0>; /* 16-bit divider */
+    ifx,peri-div-inst = <0>;
 
 	/* UART pins */
 	pinctrl-0  = <&p0_1_scb0_uart_tx &p0_0_scb0_uart_rx>;
@@ -126,7 +143,7 @@ spi1: &scb3 {
     cs-gpios = <&gpio_prt13 3 GPIO_ACTIVE_LOW>;
 
     ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-    ifx,peri-clk = <0x0108>;
+    ifx,peri-clk = <0x0021>;
     ifx,peri-div = <1>; /* 16-bit divider */
     ifx,peri-div-inst = <3>;
 
@@ -164,7 +181,7 @@ can0: &can0_0 {
     compatible = "infineon,cat1-can";
     clocks = <&clk_hf0>;
     clock-frequency = <40000000>;
-    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
     ifx,peri-clk = <0x0006>;
     ifx,peri-div = <3>; /* 24-bit divider */
     ifx,peri-div-inst = <0>;
@@ -178,7 +195,7 @@ adc0: &adc0 {
 	    clocks = <&clk_hf0>;
        clock-frequency = <10670000>;
        ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
-       ifx,peri-clk = <0x001C>;
+       ifx,peri-clk = <0x0026>;
        ifx,peri-div = <1>; /* 8-bit divider */
        ifx,peri-div-inst = <2>;
 	   #io-channel-cells = <1>;
@@ -187,6 +204,10 @@ adc0: &adc0 {
 };
 
 &gpio_prt0 {
+	status = "okay";
+};
+
+&gpio_prt13{
 	status = "okay";
 };
 
@@ -205,6 +226,10 @@ adc0: &adc0 {
 &clk_eco {
 status = "okay";
 clock-frequency = <16000000>;
+};
+
+&pll0{
+    status = "okay";
 };
 
 &clk_hf2
