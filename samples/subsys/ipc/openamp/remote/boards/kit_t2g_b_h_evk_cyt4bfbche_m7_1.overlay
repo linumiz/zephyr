@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2026 Infineon Technologies AG
  * SPDX-License-Identifier: Apache-2.0
- *
- * OpenAMP IPC overlay for kit_t2g_b_h_evk (CYT4BFBCHE) - Remote (CM7_1)
  */
 
 / {
@@ -23,14 +21,12 @@
 		#size-cells = <1>;
 
 		/*
-		 * Shared memory region for IPC between CM7_0 and M7_1
-		 * Must match the host overlay exactly
-		 * Address: 0x28080000 (in sram2)
+		 * Address: 0x2807C000
 		 * Size: 16KB (0x4000)
 		 */
-		ipc_shm0: memory@28080000 {
+		ipc_shm0: memory@2807c000 {
 			compatible = "mmio-sram";
-			reg = <0x28080000 0x4000>;
+			reg = <0x2807c000 0x4000>;
 		};
 	};
 };
@@ -38,3 +34,4 @@
 &mbox {
 	status = "okay";
 };
+

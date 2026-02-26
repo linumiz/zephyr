@@ -2,7 +2,14 @@
  * Copyright (c) 2026 Infineon Technologies AG
  * SPDX-License-Identifier: Apache-2.0
  *
- * OpenAMP IPC overlay for kit_t2g_b_h_evk (CYT4BFBCHE) - Host (CM7_0)
+ * OpenAMP IPC overlay for kit_t2g_b_h_evk (CYT4BFBCHE) - Host (CM0P) with CM7_0 remote
+ *
+ * CURRENTLY CONFIGURED FOR: M0P ↔ M7_0
+ *
+ * To switch to M7_1 remote:
+ * 1. In Kconfig.sysbuild, change:
+ *    default "kit_t2g_b_h_evk/cyt4bfbche/m7_1" if $(BOARD) = "kit_t2g_b_h_evk/cyt4bfbche/m0p"
+ * 2. Copy content from kit_t2g_b_h_evk_cyt4bfbche_m0p_for_m7_1.overlay to this file
  */
 
 / {
@@ -23,9 +30,9 @@
 		#size-cells = <1>;
 
 		/*
-		 * Shared memory region for IPC between CM7_0 and CM7_1
-		 * Located at the end of sram_m7_1 region to avoid overlap
-		 * Address: 0x2807C000 (M7_1 end - 16KB)
+		 * Shared memory region for IPC between CM0P and CM7_1
+		 * Located at the end of sram_m7_0 region
+		 * Address: 0x2803C000 (M7_0 end - 16KB)
 		 * Size: 16KB (0x4000)
 		 */
 		ipc_shm0: memory@2807c000 {
@@ -39,6 +46,4 @@
 	status = "okay";
 };
 
-&m7_1 {
-	status = "okay";
-};
+
