@@ -23,14 +23,14 @@
 		#size-cells = <1>;
 
 		/*
-		 * Shared memory region for IPC between CM7_0 and M0+/M7_1
-		 * Located in sram2 to avoid conflicts
-		 * Address: 0x28080000 (start of sram2)
+		 * Shared memory region for IPC between CM7_0 and CM7_1
+		 * Located at the end of sram_m7_1 region to avoid overlap
+		 * Address: 0x2807C000 (M7_1 end - 16KB)
 		 * Size: 16KB (0x4000)
 		 */
-		ipc_shm0: memory@28080000 {
+		ipc_shm0: memory@2807c000 {
 			compatible = "mmio-sram";
-			reg = <0x28080000 0x4000>;
+			reg = <0x2807c000 0x4000>;
 		};
 	};
 };

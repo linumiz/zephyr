@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2026 Infineon Technologies AG
  * SPDX-License-Identifier: Apache-2.0
+ *
  */
 
 / {
@@ -11,7 +12,7 @@
 
 	ipm0: ipm@0 {
 		compatible = "zephyr,mbox-ipm";
-		mboxes = <&mbox 1>, <&mbox 0>;
+		mboxes = <&mbox 0>, <&mbox 1>;
 		mbox-names = "tx", "rx";
 		status = "okay";
 	};
@@ -21,12 +22,14 @@
 		#size-cells = <1>;
 
 		/*
-		 * Address: 0x2807C000
+		 * Shared memory region for IPC between CM0P and CM7_1
+		 * Located at the end of sram_m7_0 region
+		 * Address: 0x2803C000 (M7_0 end - 16KB)
 		 * Size: 16KB (0x4000)
 		 */
 		ipc_shm0: memory@2807c000 {
-			compatible = "mmio-sram";
-			reg = <0x2807c000 0x4000>;
+    		compatible = "mmio-sram";
+   			reg = <0x2807c000 0x4000>;
 		};
 	};
 };
