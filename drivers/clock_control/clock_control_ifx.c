@@ -46,7 +46,7 @@ static int ifx_clock_init(const struct device *dev)
 {
 	int ret;
 
-#if ( (CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_CPU_CORTEX_M7) || (CONFIG_SOC_FAMILY_CYT2B7) )
+#if ((CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_CPU_CORTEX_M7))
 	/* The ECO was configured by the CORTEX_M0P, and the frequency is stored in a variable.
 	 * For the M7, we need to update that variable with this function.  The frequency
 	 * is needed by the UART driver to calculate the BAUD.
@@ -118,7 +118,7 @@ static int ifx_clock_init(const struct device *dev)
 			LOG_ERR("HF Clock %d source set failed %d\n", i, ret);
 			return ret;
 		}
-#if !defined(CONFIG_SOC_FAMILY_CYT2B7)
+#if !defined(CONFIG_SOC_FAMILY_CYT2B7) && !defined(CONFIG_SOC_FAMILY_CYT2BL)
 		ret = Cy_SysClk_ClkHfDirectSel(i, false);
 		if (ret) {
 			LOG_ERR("HF Clock %d direct select failed %d\n", i, ret);
@@ -131,7 +131,7 @@ static int ifx_clock_init(const struct device *dev)
 			return ret;
 		}
 	}
-
+	LOG_INF("Clocks initialized successfully");
 	return 0;
 }
 

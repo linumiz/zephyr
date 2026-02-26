@@ -61,7 +61,8 @@ struct ifx_cat1_i2c_data {
 	bool error;
 	uint32_t async_pending;
 	struct ifx_cat1_clock clock;
-#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(COMPONENT_CAT1D) || defined(CONFIG_SOC_FAMILY_CYT2B7)
+#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(COMPONENT_CAT1D) \
+	|| defined(CONFIG_SOC_FAMILY_CYT2B7) || defined(CONFIG_SOC_FAMILY_CYT2BL)
 	uint32_t clock_peri_group;
 	uint32_t clock_id;
 	uint8_t peri_div_type;
@@ -291,8 +292,14 @@ uint32_t _i2c_set_peri_divider(const struct device *dev, uint32_t freq, bool is_
 		return 0;
 	}
 
+#if defined(CONFIG_SOC_FAMILY_CYT2B7) || defined(CONFIG_SOC_FAMILY_CYT2BL)
+	ret = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf0)),
+								  NULL, &hf_clock_frequency);
+#else
 	ret = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf2)),
 	                              NULL, &hf_clock_frequency);
+#endif
+
 	if (ret < 0) {
 		LOG_ERR("Failed to get HF clock frequency");
 		return 0;
@@ -699,7 +706,7 @@ static const struct i2c_driver_api i2c_cat1_driver_api = {
 	.target_register = ifx_cat1_i2c_target_register,
 	.target_unregister = ifx_cat1_i2c_target_unregister};
 
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7)
+#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7 || CONFIG_SOC_FAMILY_CYT2BL)
 #define I2C_CAT1_INIT_FUNC(n)                                                                      \
 	static void ifx_cat1_i2c_irq_config_func_##n(const struct device *dev)                     \
 	{                                                                                          \

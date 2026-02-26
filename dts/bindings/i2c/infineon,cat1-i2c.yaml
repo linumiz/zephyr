@@ -42,7 +42,7 @@ description: |
 
 compatible: "infineon,cat1-i2c"
 
-include: [i2c-controller.yaml, pinctrl-device.yaml, "infineon,cat1-scb.yaml"]
+include: [i2c-controller.yaml, pinctrl-device.yaml, "infineon,cat1-scb.yaml", "infineon,system-interrupts.yaml"]
 
 properties:
   reg:
@@ -50,8 +50,10 @@ properties:
     required: true
 
   interrupts:
-    type: array
-    required: true
+    description: Required for non-cat1c devices
+
+  system-interrupts:
+    description: Required for cat1c devices
 
   pinctrl-0:
     description: |
