@@ -1,0 +1,18 @@
+# Copyright (c) 2026 Infineon Technolgies AG
+# SPDX-License-Identifier: Apache-2.0
+
+config INFINEON_CAT1A_M0PLUS
+	bool
+	select ARM
+	select CPU_CORTEX_M0PLUS
+	select CPU_CORTEX_M_HAS_SYSTICK
+	select CPU_CORTEX_M_HAS_VTOR
+	select CPU_HAS_ARM_MPU
+	select ARM_CUSTOM_INTERRUPT_CONTROLLER
+	select SOC_PREP_HOOK
+
+config INFINEON_CAT1A_START_M4
+	bool "Infineon M4 during M0+ startup"
+	default y
+	help
+	  Enable starting M4 core 0 from M0+ core.
