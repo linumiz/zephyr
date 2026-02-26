@@ -57,18 +57,6 @@ if(EXISTS ${blob_bin_file})
         zephyr_library_sources(${hal_cat1cm0p_dir}/COMPONENT_CM0P_SLEEP/psoc6_cm0p_sleep.c)
     endif()
 
-    if(CONFIG_SOC_FAMILY_CYT2B7)
-        # tviibe1m_cm0p_sleep.c - template c-array file, which include generated
-        # blob include file.
-        zephyr_library_sources(${hal_cat1cm0p_dir}/COMPONENT_CM0P_SLEEP/tviibe1m_cm0p_sleep.c)
-    endif()
-
-    if(CONFIG_SOC_FAMILY_CYT2BL)
-        # tviibe4m_cm0p_sleep.c - template c-array file, which include generated
-        # blob include file.
-        zephyr_library_sources(${hal_cat1cm0p_dir}/COMPONENT_CM0P_SLEEP/tviibe4m_cm0p_sleep.c)
-    endif()
-
     if(CONFIG_SOC_SERIES_CYT4DN)
         zephyr_library_sources(${hal_cat1cm0p_dir}/COMPONENT_CAT1C/COMPONENT_CM0P_SLEEP/tviic2d6m_cm0p_sleep.c)
     endif()

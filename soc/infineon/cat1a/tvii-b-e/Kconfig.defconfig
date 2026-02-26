@@ -1,0 +1,42 @@
+# Copyright (c) 2026 Infineon Technologies AG,
+# or an affiliate of Infineon Technologies AG.
+# SPDX-License-Identifier: Apache-2.0
+
+
+# Infineon T2G Body Entry based MCU default configuration
+
+if SOC_SERIES_TVII_B_E
+
+if INFINEON_CAT1A_M0PLUS
+config SYS_CLOCK_HW_CYCLES_PER_SEC
+	default $(dt_node_int_prop_int,/cpus/cpu@0,clock-frequency)
+endif
+
+if INFINEON_CAT1A_M4
+config SYS_CLOCK_HW_CYCLES_PER_SEC
+	default $(dt_node_int_prop_int,/cpus/cpu@1,clock-frequency)
+endif
+
+config MAIN_STACK_SIZE
+	default 2048
+
+config IDLE_STACK_SIZE
+	default 1024 if PM
+
+endif # SOC_SERIES_TVII_B_E
+
+if SOC_DIE_CYT2B7
+
+# IRQ numer are system IRQs (352) plus software IRQs (8)
+config NUM_IRQS
+	default 360
+
+endif # SOC_DIE_CYT2B7
+
+if SOC_DIE_CYT2BL
+
+# IRQ numer are system IRQs (382) plus software IRQs (8)
+config NUM_IRQS
+	default 390
+
+endif  # SOC_DIE_CYT2B7

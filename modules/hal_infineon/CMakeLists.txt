@@ -19,7 +19,7 @@ if (CONFIG_SOC_FAMILY_INFINEON_CAT1 OR CONFIG_SOC_FAMILY_PSOC6_LEGACY)
   #add_subdirectory(mtb-hal-cat1)
   ## Add mtb-pdl-cat1 sources for CAT1 devices
   add_subdirectory(mtb-pdl-cat1)
-  if(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+  if(CONFIG_SOC_FAMILY_INFINEON_CAT1C OR CONFIG_SOC_SERIES_TVII_B_E)
     add_custom_command(TARGET modules_hal_infineon POST_BUILD
         COMMAND ${CMAKE_OBJCOPY}
           -W Cy_Srom_SetResponseHandler

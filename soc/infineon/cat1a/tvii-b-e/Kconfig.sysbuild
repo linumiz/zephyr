@@ -1,0 +1,8 @@
+if SOC_SERIES_TVII_B_E
+
+config HAS_INFINEON_M0P_LAUNCHER_IMAGE
+    default y
+
+endif
+
+orsource "*/Kconfig.sysbuild"

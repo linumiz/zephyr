@@ -8,3 +8,8 @@ if SOC_FAMILY_INFINEON_CAT1A
 rsource "*/Kconfig.defconfig"
 
 endif # SOC_FAMILY_INFINEON_CAT1A
+
+if SOC_SERIES_TVII_B_E
+config GEN_IRQ_VECTOR_TABLE
+	default n
+endif
