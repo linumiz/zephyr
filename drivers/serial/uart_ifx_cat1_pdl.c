@@ -56,7 +56,7 @@ struct ifx_cat1_uart_config {
 	struct uart_config dt_cfg;
 	uint16_t irq_num;
 	uint8_t irq_priority;
-#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE) || defined(CONFIG_SOC_FAMILY_CYT2B7) || defined(CONFIG_SOC_FAMILY_CYT2BL) 
+#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE) || defined(CONFIG_SOC_FAMILY_CYT2B7) || defined(CONFIG_SOC_FAMILY_CYT2BL)
 	uint32_t clock_peri_group;
 	uint32_t clock_id;
 	uint8_t peri_div_type;
@@ -359,7 +359,11 @@ static int ifx_cat1_uart_configure(const struct device *dev, const struct uart_c
 	data->scb_config.parity = convert_uart_parity_z_to_cy(cfg->parity);
 	data->scb_config.enableCts = data->cts_enabled;
 
+	#if defined(CONFIG_SOC_FAMILY_CYT2B7) || defined(CONFIG_SOC_FAMILY_CYT2BL)
+	result = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf0)), NULL, &clock_frequency);
+	#else
 	result = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf2)), NULL, &clock_frequency);
+	#endif
 	if (result < 0) {
 		return result;
 	}
@@ -864,7 +868,7 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 //#define IRQ_INFO(n) .irq_num = DT_INST_IRQN(n), .irq_priority = DT_INST_IRQ(n, priority)
 #endif
 
-#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE) || defined(CONFIG_SOC_FAMILY_CYT2B7) || defined(CONFIG_SOC_FAMILY_CYT2BL) 
+#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE) || defined(CONFIG_SOC_FAMILY_CYT2B7) || defined(CONFIG_SOC_FAMILY_CYT2BL)
 #define PERI_INFO(n) .clock_peri_group = DT_PROP_BY_IDX(DT_INST_PHANDLE(n, clocks), peri_group, 1),
 #else
 #define PERI_INFO(n)

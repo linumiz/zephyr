@@ -61,6 +61,9 @@ struct ifx_cat1_i2c_config {
 	uint32_t master_frequency;
 	CySCB_Type *reg_addr;
 	const struct pinctrl_dev_config *pcfg;
+#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7)
+	uint16_t irq_num;
+#endif
 	uint8_t irq_priority;
 };
 
@@ -288,9 +291,15 @@ static int ifx_cat1_i2c_transfer(const struct device *dev, struct i2c_msg *msg, 
 	data->async_pending = CAT1_I2C_PENDING_NONE;
 
 	/* Enable I2C Interrupt */
+
+#if ( (CONFIG_SOC_FAMILY_INFINEON_CAT1C) || (CONFIG_SOC_FAMILY_CYT2B7) )
+	/* Enable the I2C interrupt */
+	enable_sys_int(config->irq_num, config->irq_priority,
+		       (void (*)(const void *))(void *)ifx_master_event_handler, dev);
+#else
 	cyhal_i2c_enable_event(&data->obj, (cyhal_i2c_event_t)I2C_CAT1_EVENTS_MASK,
 			       config->irq_priority, true);
-
+#endif
 	for (uint32_t i = 0u; i < num_msgs; i++) {
 		tx_msg = NULL;
 		rx_msg = NULL;
@@ -483,6 +492,13 @@ static DEVICE_API(i2c, i2c_cat1_driver_api) = {
 #endif
 };
 
+#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7)
+#define IRQ_INFO(n)                                                                                \
+	.irq_num = DT_INST_PROP_BY_IDX(n, system_interrupts, SYS_INT_NUM),                         \
+	.irq_priority = DT_INST_PROP_BY_IDX(n, system_interrupts, SYS_INT_PRI)
+#else
+#define IRQ_INFO(n) .irq_priority = DT_INST_IRQ(n, priority)};
+#endif
 /* Macros for I2C instance declaration */
 #define INFINEON_CAT1_I2C_INIT(n)                                                                  \
 	PINCTRL_DT_INST_DEFINE(n);                                                                 \
@@ -493,7 +509,7 @@ static DEVICE_API(i2c, i2c_cat1_driver_api) = {
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),                                         \
 		.master_frequency = DT_INST_PROP_OR(n, clock_frequency, 100000),                   \
 		.reg_addr = (CySCB_Type *)DT_INST_REG_ADDR(n),                                     \
-		.irq_priority = DT_INST_IRQ(n, priority),                                          \
+		 IRQ_INFO(n)                                        \
 	};                                                                                         \
                                                                                                    \
 	I2C_DEVICE_DT_INST_DEFINE(n, ifx_cat1_i2c_init, NULL, &ifx_cat1_i2c_data##n,               \
