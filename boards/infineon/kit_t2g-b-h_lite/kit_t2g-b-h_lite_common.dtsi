@@ -23,6 +23,7 @@
 		sw1 = &user_bt2;
 		watchdog0= &watchdog0;
 		dma0=&dma0;
+		dma1=&dma1;
 		adc0=&adc0;
 		i2c0=&i2c0;
 		pwm-led0 = &pwm_led0;
@@ -285,6 +286,10 @@ i2c0: &scb4 {
 };
 
 &dma0 {
+	status = "okay";
+};
+
+&dma1 {
 	status = "okay";
 };
 
