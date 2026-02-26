@@ -106,7 +106,7 @@ soc {
            gpio_prt0: gpio@40310000 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310000 0x80>;
-			interrupts = <21 6>;
+			system-interrupts = <21 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -116,7 +116,7 @@ soc {
         gpio_prt1: gpio@40310080 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310080 0x80>;
-			interrupts = <22 6>;
+			system-interrupts = <22 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -126,7 +126,7 @@ soc {
         gpio_prt2: gpio@40310100 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310100 0x80>;
-			interrupts = <23 6>;
+			system-interrupts = <23 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -136,7 +136,7 @@ soc {
         gpio_prt3: gpio@40310180 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310180 0x80>;
-			interrupts = <24 6>;
+			system-interrupts = <24 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -146,7 +146,7 @@ soc {
         gpio_prt4: gpio@40310200 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310200 0x80>;
-			interrupts = <25 6>;
+			system-interrupts = <25 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -156,7 +156,7 @@ soc {
         gpio_prt5: gpio@40310280 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310280 0x80>;
-			interrupts = <26 6>;
+			system-interrupts = <26 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -166,7 +166,7 @@ soc {
         gpio_prt6: gpio@40310300 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310300 0x80>;
-			interrupts = <27 6>;
+			system-interrupts = <27 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -176,7 +176,7 @@ soc {
         gpio_prt7: gpio@40310380 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310380 0x80>;
-			interrupts = <28 6>;
+			system-interrupts = <28 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -186,7 +186,7 @@ soc {
         gpio_prt8: gpio@40310400 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310400 0x80>;
-			interrupts = <29 6>;
+			system-interrupts = <29 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -196,7 +196,7 @@ soc {
         gpio_prt9: gpio@40310480 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310480 0x80>;
-			interrupts = <30 6>;
+			system-interrupts = <30 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -206,7 +206,7 @@ soc {
         gpio_prt10: gpio@40310500 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310500 0x80>;
-			interrupts = <31 6>;
+			system-interrupts = <31 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -216,7 +216,7 @@ soc {
         gpio_prt11: gpio@40310580 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310580 0x80>;
-			interrupts = <32 6>;
+			system-interrupts = <32 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -227,7 +227,7 @@ soc {
         gpio_prt12: gpio@40310600 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310600 0x80>;
-			interrupts = <33 6>;
+			system-interrupts = <33 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -237,7 +237,7 @@ soc {
         gpio_prt13: gpio@40310680 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310680 0x80>;
-			interrupts = <34 6>;
+			system-interrupts = <34 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -247,7 +247,7 @@ soc {
         gpio_prt14: gpio@40310700 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310700 0x80>;
-			interrupts = <35 6>;
+			system-interrupts = <35 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -257,7 +257,7 @@ soc {
         gpio_prt15: gpio@40310780 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310780 0x80>;
-			interrupts = <36 6>;
+			system-interrupts = <36 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -267,7 +267,7 @@ soc {
         gpio_prt16: gpio@40310800 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310800 0x80>;
-			interrupts = <37 6>;
+			system-interrupts = <37 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -277,7 +277,7 @@ soc {
         gpio_prt17: gpio@40310880 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310880 0x80>;
-			interrupts = <38 6>;
+			system-interrupts = <38 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -287,7 +287,7 @@ soc {
         gpio_prt18: gpio@40310900 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310900 0x80>;
-			interrupts = <39 6>;
+			system-interrupts = <39 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -297,7 +297,7 @@ soc {
         gpio_prt19: gpio@40310980 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310980 0x80>;
-			interrupts = <40 6>;
+			system-interrupts = <40 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -307,7 +307,7 @@ soc {
         gpio_prt20: gpio@40310A00 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310A00 0x80>;
-			interrupts = <41 6>;
+			system-interrupts = <41 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -317,7 +317,7 @@ soc {
         gpio_prt21: gpio@40310A80 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310A80 0x80>;
-			interrupts = <42 6>;
+			system-interrupts = <42 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -327,7 +327,7 @@ soc {
         gpio_prt22: gpio@40310B00 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310B00 0x80>;
-			interrupts = <43 6>;
+			system-interrupts = <43 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -337,7 +337,7 @@ soc {
         gpio_prt23: gpio@40310B80 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310B80 0x80>;
-			interrupts = <44 6>;
+			system-interrupts = <44 6>;
 			gpio-controller;
 			ngpios = <8>;
 			status = "disabled";
@@ -419,7 +419,7 @@ soc {
 
 
         adc0: adc@40900000 {
-	        compatible = "infineon,adc";
+	        compatible = "infineon,ifx-sar";
             reg = <0x40900000 0x1000>;
         	system-interrupts = <96 6>;          
             status = "disabled";
@@ -427,7 +427,7 @@ soc {
         };
 
         adc1: adc@40901000 {
-	        compatible = "infineon,adc";
+	        compatible = "infineon,ifx-sar";
 	        reg = <0x40901000 0x1000>;
 	        system-interrupts = <120 6>;         
 	        status = "disabled";
@@ -435,7 +435,7 @@ soc {
 		};
 
         adc2: adc@40902000 {
-	        compatible = "infineon,adc";
+	        compatible = "infineon,ifx-sar";
 	        reg = <0x40902000 0x1000>;
 	        system-interrupts = <152 6>;         
 	        status = "disabled";
