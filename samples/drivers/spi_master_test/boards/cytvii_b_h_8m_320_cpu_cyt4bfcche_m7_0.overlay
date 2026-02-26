@@ -1,0 +1,36 @@
+/*
+ * Copyright (c) 2025 Linumiz
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/* Configure SCB0 as SPI Master */
+&scb5 {
+    compatible = "infineon,cat1-spi-pdl";
+    status = "okay";
+
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    /* SPI pins */
+    pinctrl-0 = <&p4_0_scb5_spi_m_miso &p4_1_scb5_spi_m_mosi &p4_2_scb5_spi_m_clk>;
+    pinctrl-names = "default";
+    cs-gpios = <&gpio_prt4 3 GPIO_ACTIVE_LOW>;
+
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+    ifx,peri-clk = <0x0123>;
+    ifx,peri-div = <1>; /* 16-bit divider */
+    ifx,peri-div-inst = <3>;
+
+	slave_test: test-spi-slave@0 {
+		compatible = "vnd,spi-device";
+		reg = <0>;
+		spi-max-frequency = <1000000>;
+	};
+
+    dmas = <&dma1 26>, <&dma1 27>;
+    dma-names = "tx", "rx";
+};
+
+&gpio_prt4 {
+	status = "okay";
+};
