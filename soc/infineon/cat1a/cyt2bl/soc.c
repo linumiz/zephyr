@@ -6,7 +6,7 @@
  */
 
 /**
- * @brief Infineon PSOC 6 SOC.
+ * @brief Infineon CYT2BL SOC.
  */
 
 #include <zephyr/device.h>
@@ -44,7 +44,10 @@ void enable_sys_int(uint32_t int_num, uint32_t priority, void (*isr)(const void 
 		sys_int_table[int_num].isr = isr;
 	} else {
 		k_fatal_halt(K_ERR_CPU_EXCEPTION);
+
 	}
+	 NVIC_ClearPendingIRQ(int_num);
+     NVIC_EnableIRQ(priority);
 }
 
 void sys_int_handler(uint32_t intrNum)
