@@ -1,0 +1,40 @@
+/*
+ * Copyright (c) 2026 Infineon Technologies AG
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * OpenAMP IPC overlay for kit_t2g-b-h_lite (CYT4BF) - Host (CM7_0)
+ */
+
+/ {
+	chosen {
+		zephyr,ipc_shm = &ipc_shm0;
+		zephyr,ipc = &ipm0;
+	};
+
+	ipm0: ipm@0 {
+		compatible = "zephyr,mbox-ipm";
+		mboxes = <&mbox 0>, <&mbox 1>;
+		mbox-names = "tx", "rx";
+		status = "okay";
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/*
+		 * Shared memory region for IPC between CM7_0 and CM7_1
+		 * Located at the end of sram_m7_1 region to avoid overlap
+		 * Address: 0x2807C000 (M7_1 end - 16KB)
+		 * Size: 16KB (0x4000)
+		 */
+		ipc_shm0: memory@2807c000 {
+			compatible = "mmio-sram";
+			reg = <0x2807c000 0x4000>;
+		};
+	};
+};
+
+&mbox {
+	status = "okay";
+};
