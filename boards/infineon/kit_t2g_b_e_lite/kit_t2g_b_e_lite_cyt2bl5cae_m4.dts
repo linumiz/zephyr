@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2026 Infineon Technologies AG
+ * SPDX-License-Identifier: Apache-2.0
+ */ 
+/dts-v1/;
+ 
+#include "kit_t2g_b_e_lite.dtsi"
+#include <infineon/cat1a/cyt2bl/cyt2bl_m4.dtsi>
+
+/ {
+	model = "Infineon Traveo II Body Entry LiteKit (M4)";
+	compatible = "infineon,tvii4m";
+
+	chosen {
+		zephyr,sram = &sram_m4;
+		zephyr,flash = &code_flash0;
+		zephyr,code-partition = &m4_partition;
+		zephyr,console = &uart0;
+		zephyr,shell-uart = &uart0;
+		zephyr,canbus = &can0;
+	};
+};
