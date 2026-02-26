@@ -9,12 +9,12 @@
 	drive-push-pull;
 };
 
-&p0_0_scb7_i2c_sda {
+&p22_1_scb6_i2c_sda {
 	drive-open-drain;
     input-enable;
 };
 
-&p0_1_scb7_i2c_scl {
+&p22_2_scb6_i2c_scl {
     drive-open-drain;
     input-enable;
 };
