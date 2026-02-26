@@ -10,7 +10,6 @@
 #include "cyt2bl.dtsi"
 
 / {
-
 	soc {
 		/delete-node/ gpio@40310080; // gpio_prt1
 		/delete-node/ gpio@40310180; // gpio_prt3

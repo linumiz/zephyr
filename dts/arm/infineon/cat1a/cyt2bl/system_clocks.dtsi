@@ -10,9 +10,10 @@
 #define DIV_24_5_BIT    03
 
 #include <dt-bindings/clock/ifx_clock_source_def.h>
+
 / {
 	clocks {
-		clk_wco: clk_wco{
+		clk_wco: clk_wco {
 			#clock-cells = <0>;
 			compatible = "fixed-clock";
 			status = "disabled";
@@ -70,6 +71,7 @@
 		direct {
 			#address-cells = <1>;
 			#size-cells = <0>;
+
 			clk_direct0: clk_direct@5 {
 				#clock-cells = <0>;
 				compatible = "fixed-clock";
@@ -78,7 +80,6 @@
 				status = "disabled";
 			};
 		};
-
 
 		fll {
 			#address-cells = <1>;
@@ -102,12 +103,12 @@
 				#clock-cells = <0>;
 				compatible = "infineon,cat1-pll";
 				reg = <1>;
-				clocks = <&clk_eco>;
-				p-div = <40>;
+				clocks = <&clk_imo>;
+				p-div = <25>;
 				q-div = <2>;
 				frac-div = <0x00000>;
 				output-div = <2>;
-				status = "disabled";
+				status = "okay";
 			};
 		};
 
@@ -120,7 +121,7 @@
 				compatible = "infineon,cat1-hf-clock";
 				reg = <0>;
 				clocks = <&pll0>;
-				divider = <0>;
+				divider = <2>;
 				status = "okay";
 			};
 
