@@ -24,6 +24,8 @@
 		zephyr,code-partition = &m7_1_partition;
 		zephyr,console = &uart3;
 		zephyr,shell-uart = &uart3;
+		zephyr,flash-controller = &flash_controller;
+		zephyr,canbus = &can0;
 	};
 };
 
@@ -32,5 +34,9 @@
 };
 
 &uart3 {
+	status = "okay";
+};
+
+&can0{
 	status = "okay";
 };

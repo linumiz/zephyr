@@ -17,6 +17,10 @@
 	model = "Infineon Evaluation Evk board for CYT4BFCCHE M7_0";
 	compatible = "infineon,cytvii-b-h-8m-320-cpu", "infineon,CYTVIIBH8M";
 
+	aliases {
+		adc0 = &adc0;
+	};
+
 	chosen {
 		zephyr,sram = &sram_m7_0;
 		zephyr,flash = &code_flash0;
@@ -26,33 +30,26 @@
 		zephyr,console = &uart3;
 		zephyr,shell-uart = &uart3;
 		zephyr,flash-controller = &flash_controller;
+		zephyr,canbus = &can0;
 	};
 };
-
-i2c1: &scb1 {
-    compatible = "infineon,cat1-i2c-pdl";
-    status = "okay";
-
-    #address-cells = <1>;
-    #size-cells = <0>;
-
-    /* I2C pins */
-    pinctrl-0 = <&p18_1_scb1_i2c_sda &p18_2_scb1_i2c_scl>;
-    pinctrl-names = "default";
-
-    clocks = <&clk_hf2>;
-    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-    ifx,peri-clk = <0x0113>;
-    ifx,peri-div = <0>; /* 8-bit divider */
-    ifx,peri-div-inst = <1>;
-};
-
-
 
 &m7_0 {
 	status = "okay";
 };
 
 &uart3 {
+	status = "okay";
+};
+
+&can0 {
+	status = "okay";
+};
+
+&dma0 {
+	status = "okay";
+};
+
+&spi0 {
 	status = "okay";
 };

@@ -7,6 +7,9 @@
 #include <arm/infineon/cat1c/traveo2-8m/system_clocks.dtsi>
 #include <arm/infineon/cat1c/traveo2-8m/cyt4bfcche.dtsi>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
+#include <dt-bindings/adc/adc.h>
+#include <common/freq.h>
 
 / {
 	aliases {
@@ -31,7 +34,9 @@
 		sw4 = &bb_user_bt4;
 		sw5 = &bb_user_bt5;
 		watchdog0 = &watchdog0;
+		dma0 = &dma0;
 		uart3 = &uart3;
+		eeprom-0 = &eeprom0;
 	};
 
 	leds {
@@ -147,7 +152,7 @@
 		sram_m0plus: memory@28000800 {
 			reg = <0x28000800 DT_SIZE_K(16)>;
 		};
-		sram_m7_0: memory@28004000  {
+		sram_m7_0: memory@28004000	{
 			reg = <0x28004000  DT_SIZE_K(816)>;
 		};
 		sram_m7_1: memory@280d0000 {
@@ -165,7 +170,7 @@
 		m0p_partition: partition_m0p@0 {
 			label = "m0p_partition";
 			reg = <0x0 DT_SIZE_K(512)>;
-			status = "disabled";
+			status = "okay";
 		};
 		m7_0_partition: partition@80000 {
 			label = "m7_0_partition";
@@ -178,18 +183,81 @@
 	};
 };
 
-uart3: &scb3 {
-	compatible = "infineon,cat1-uart";
-	current-speed = <115200>;
+spi0: &scb5 {
+	compatible = "infineon,cat1-spi-pdl";
+	status = "okay";
 
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	/* SPI pins */
+	pinctrl-0 = <&p4_0_scb5_spi_m_miso &p4_1_scb5_spi_m_mosi &p4_2_scb5_spi_m_clk>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpio_prt4 3 GPIO_ACTIVE_LOW>;
+
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0123>;
+	ifx,peri-div = <1>; /* 16-bit divider */
+	ifx,peri-div-inst = <3>;
+	/*
+	w25q128jvsq2449_spi: spi-nor-flash@0 {
+		compatible = "jedec,spi-nor";
+		status = "okay";
+		reg = <0>;
+		spi-max-frequency = <DT_FREQ_M(8)>;
+		size = <DT_SIZE_M(128)>;
+		jedec-id = [ef 40 18];
+	};
+	*/
+	eeprom0: eeprom_m95040@0 {
+		compatible = "atmel,at25";
+		status = "okay";
+		reg = <0>;
+		size = <4096>;
+		pagesize = <32>;
+		address-width = <16>;
+		spi-max-frequency = <DT_FREQ_M(8)>;
+		timeout = <5>;
+	};
+
+};
+
+uart3: &scb3 {
+	compatible = "infineon,cat1-uart-pdl";
+	status = "okay";
+	current-speed = <115200>;
+	clocks = <&clk_hf2>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0121>; /* PCLK_SCB3_CLOCK */
+	ifx,peri-div = <0>; /* 8-bit divider */
+	ifx,peri-div-inst = <0>;
 
 	/* UART pins */
 	pinctrl-0 = <&p13_1_scb3_uart_tx &p13_0_scb3_uart_rx
-		     &p13_2_scb3_uart_rts &p13_3_scb3_uart_cts>;
+			 &p13_2_scb3_uart_rts &p13_3_scb3_uart_cts>;
 	pinctrl-names = "default";
 };
 
+&adc0 {
+	status = "okay";
+	clocks = <&clk_hf2>;
 
+	#address-cells = <1>;
+	#size-cells = <0>;
+};
+
+can0: &can0_0 {
+	compatible = "infineon,cat1-can";
+	clocks = <&clk_hf2>;
+	clock-frequency = <40000000>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0100>;
+	ifx,peri-div = <3>; /* 24-bit divider */
+	ifx,peri-div-inst = <0>;
+
+	pinctrl-0 = <&p0_2_can0_0_tx &p0_3_can0_0_rx>;
+	pinctrl-names = "default";
+};
 
 &gpio_prt0 {
 	status = "okay";
@@ -200,6 +268,10 @@ uart3: &scb3 {
 };
 
 &gpio_prt3 {
+	status = "okay";
+};
+
+&gpio_prt4 {
 	status = "okay";
 };
 
@@ -223,6 +295,14 @@ uart3: &scb3 {
 	status = "okay";
 };
 
+&gpio_prt26 {
+	status = "okay";
+};
+
+&gpio_prt27 {
+	status = "okay";
+};
+
 &gpio_prt28 {
 	status = "okay";
 };
@@ -237,6 +317,10 @@ uart3: &scb3 {
 
 &gpio_prt32 {
 	status = "okay";
+};
+
+&can0{
+	status="okay";
 };
 
 &clk_eco {
@@ -281,5 +365,17 @@ uart3: &scb3 {
 };
 
 &watchdog0 {
+	status = "okay";
+};
+
+&dma0 {
+	status = "okay";
+};
+
+&adc0 {
+	status = "okay";
+};
+
+&dma1 {
 	status = "okay";
 };
