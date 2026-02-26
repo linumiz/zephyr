@@ -6,25 +6,19 @@
  */
 
 /**
- * @brief Infineon PSOC 6 SOC.
+ * @brief Infineon TVIIBE1M SOC.
  */
 
 #include <zephyr/cache.h>
 #include <zephyr/device.h>
 #include <zephyr/init.h>
 #include <zephyr/kernel.h>
-#include <cy_sysclk.h>
 #include <zephyr/cache.h>
 #include <cy_sysint.h>
-#define SYS_INT_IDX_Msk 0X1FF
+#include <cy_sysclk.h>
+#include <cy_wdt.h>
+#define SYS_INT_IDX_Msk 0X3FF
 
-// /* Dummy symbols, requres for cy_sysint.c module.
-//  * NOTE: in this PSOC 6 integration, PSOC 6 Zephyr drivers (uart, spi, gpio)
-//  * do not use cy_sysint.c implementation to handle interrupt routine.
-//  * Instead this they use IRQ_CONNECT to define ISR.
-//  */
-cy_israddress __ramVectors[];
-const cy_israddress __Vectors[];
 struct _isr_table_entry sys_int_table[CPUSS_SYSTEM_INT_NR];
 void enable_sys_int(uint32_t int_num, uint32_t priority, void (*isr)(const void *), const void *arg)
 {
@@ -41,6 +35,9 @@ void enable_sys_int(uint32_t int_num, uint32_t priority, void (*isr)(const void 
 	} else {
 		k_fatal_halt(K_ERR_CPU_EXCEPTION);
 	}
+
+	NVIC_ClearPendingIRQ(int_num);
+	NVIC_EnableIRQ(priority);
 }
 
 void sys_int_handler(uint32_t intrNum)
@@ -92,11 +89,19 @@ void system_irq_init(void)
 	irq_enable(6);
 	irq_enable(7);
 }
+int soc_irq_is_enabled(unsigned int irq)
+{
+	if (irq > CPUSS_SYSTEM_INT_NR) {
+		return 0;
+	}
+	return (CPUSS_CM4_SYSTEM_INT_CTL[irq] & CPUSS_CM4_SYSTEM_INT_CTL_CPU_INT_VALID_Msk) !=
+	       0;
 
+}
 void soc_early_init_hook(void)
 {
-//	sys_cache_instr_enable();
-//	sys_cache_data_enable();
+	sys_cache_instr_enable();
+	sys_cache_data_enable();
 
 	system_irq_init();
 }
