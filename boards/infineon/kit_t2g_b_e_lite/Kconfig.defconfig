@@ -1,0 +1,11 @@
+# Copyright 2026 Infineon Technologies AG
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_KIT_T2G_B_E_LITE_CYT2BL5CAE_M0P
+
+config HAS_INFINEON_M0P_LAUNCHER_IMAGE
+    bool
+    default y
+
+endif
+
