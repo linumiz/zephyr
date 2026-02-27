@@ -103,9 +103,9 @@
                 compatible = "infineon,cat1-pll";
                 reg = <1>;
                 clocks = <&clk_eco>;
-                p-div = <25>;
+                p-div = <40>;
                 q-div = <2>;
-                frac-div = <0x00000>;
+		frac-div = <0x00000>;
                 output-div = <2>;
                 status = "disabled";
             };
@@ -120,7 +120,7 @@
                 compatible = "infineon,cat1-hf-clock";
                 reg = <0>;
                 clocks = <&pll0>;
-                divider = <1>;
+                divider = <0>;
                 status = "okay";
             };
 
