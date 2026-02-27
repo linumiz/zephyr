@@ -188,7 +188,7 @@ manifest:
         - hal
     - name: hal_infineon
       remote: linumiz
-      revision: ifx-serial-mem-ms
+      revision: dev/ifx/release_4.0_patch
       path: modules/hal/infineon
       groups:
         - hal
