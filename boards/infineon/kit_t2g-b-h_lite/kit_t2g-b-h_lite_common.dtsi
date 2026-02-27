@@ -188,58 +188,6 @@ uart0: &scb0 {
 		drive-push-pull;
 		input-enable;
 	};
-	/omit-if-no-ref/ p6_3_smif0_clk: p6_3_smif0_clk {
-		pinmux = <DT_CAT1_PINMUX(6, 3, HSIOM_SEL_ACT_11)>;
-		drive-push-pull;
-	};
-	/omit-if-no-ref/ p6_5_smif0_sel0: p6_5_smif0_sel0 {
-		pinmux = <DT_CAT1_PINMUX(6, 5, HSIOM_SEL_ACT_11)>;
-		drive-push-pull;
-	};
-	/omit-if-no-ref/ p7_0_smif0_sel1: p7_0_smif0_sel1 {
-		pinmux = <DT_CAT1_PINMUX(7, 0, HSIOM_SEL_ACT_11)>;
-		drive-push-pull;
-	};
-	/omit-if-no-ref/ p7_1_smif0_data0: p7_1_smif0_data0 {
-		pinmux = <DT_CAT1_PINMUX(7, 1, HSIOM_SEL_ACT_11)>;
-		drive-push-pull;
-		input-enable;
-	};
-	/omit-if-no-ref/ p7_2_smif0_data1: p7_2_smif0_data1 {
-		pinmux = <DT_CAT1_PINMUX(7, 2, HSIOM_SEL_ACT_11)>;
-		drive-push-pull;
-		input-enable;
-	};
-	/omit-if-no-ref/ p7_3_smif0_data2: p7_3_smif0_data2 {
-		pinmux = <DT_CAT1_PINMUX(7, 3, HSIOM_SEL_ACT_11)>;
-		drive-push-pull;
-		input-enable;
-	};
-	/omit-if-no-ref/ p7_4_smif0_data3: p7_4_smif0_data3 {
-		pinmux = <DT_CAT1_PINMUX(7, 4, HSIOM_SEL_ACT_11)>;
-		drive-push-pull;
-		input-enable;
-	};
-	/omit-if-no-ref/ p7_5_smif0_data4: p7_5_smif0_data4 {
-		pinmux = <DT_CAT1_PINMUX(7, 5, HSIOM_SEL_ACT_11)>;
-		drive-push-pull;
-		input-enable;
-	};
-	/omit-if-no-ref/ p8_0_smif0_data5: p8_0_smif0_data5 {
-		pinmux = <DT_CAT1_PINMUX(8, 0, HSIOM_SEL_ACT_11)>;
-		drive-push-pull;
-		input-enable;
-	};
-	/omit-if-no-ref/ p8_1_smif0_data6: p8_1_smif0_data6 {
-		pinmux = <DT_CAT1_PINMUX(8, 1, HSIOM_SEL_ACT_11)>;
-		drive-push-pull;
-		input-enable;
-	};
-	/omit-if-no-ref/ p8_2_smif0_data7: p8_2_smif0_data7 {
-		pinmux = <DT_CAT1_PINMUX(8, 2, HSIOM_SEL_ACT_11)>;
-		drive-push-pull;
-		input-enable;
-	};
 };
 
 can0: &can0_0 {
@@ -256,22 +204,22 @@ can0: &can0_0 {
 };
 
 spi1: &scb3 {
-    compatible = "infineon,cat1-spi-pdl";
-    status = "okay";
+	compatible = "infineon,cat1-spi-pdl";
+	status = "okay";
 
-    #address-cells = <1>;
-    #size-cells = <0>;
+	#address-cells = <1>;
+	#size-cells = <0>;
 
-    /* SPI pins */
-    pinctrl-0 = <&p13_0_scb3_spi_m_miso &p13_1_scb3_spi_m_mosi &p13_2_scb3_spi_m_clk>;
-    pinctrl-names = "default";
-    cs-gpios = <&gpio_prt13 3 GPIO_ACTIVE_LOW>;
+	/* SPI pins */
+	pinctrl-0 = <&p13_0_scb3_spi_m_miso &p13_1_scb3_spi_m_mosi &p13_2_scb3_spi_m_clk>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpio_prt13 3 GPIO_ACTIVE_LOW>;
 
-    clocks = <&clk_hf2>;
-    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-    ifx,peri-clk = <0x0121>;
-    ifx,peri-div = <1>; /* 16-bit divider */
-    ifx,peri-div-inst = <3>;
+	clocks = <&clk_hf2>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x0121>;
+	ifx,peri-div = <1>; /* 16-bit divider */
+	ifx,peri-div-inst = <3>;
 
 	w25q128jvsq2449_spi: spi-nor-flash@0 {
 		compatible = "jedec,spi-nor";
@@ -284,12 +232,12 @@ spi1: &scb3 {
 };
 
 &adc0 {
-       status = "okay";
-       clock-frequency = <26670000>;
-       ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-       ifx,peri-clk = <0x012A>;
-       ifx,peri-div = <0>; /* 8-bit divider */
-       ifx,peri-div-inst = <2>;
+	status = "okay";
+	clock-frequency = <26670000>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	ifx,peri-clk = <0x012A>;
+	ifx,peri-div = <0>; /* 8-bit divider */
+	ifx,peri-div-inst = <2>;
 };
 
 &eth0_mac {
@@ -311,43 +259,6 @@ spi1: &scb3 {
 		compatible = "ethernet-phy";
 		reg = <0x0>;
 		status = "okay";
-	};
-};
-
-&smif0 {
-	status = "okay";
-	pinctrl-0 = <
-	&p6_3_smif0_clk &p6_5_smif0_sel0 &p7_1_smif0_data0
-	&p7_2_smif0_data1 &p7_3_smif0_data2 &p7_4_smif0_data3
-	&p7_5_smif0_data4 &p8_0_smif0_data5 &p8_1_smif0_data6
-	&p8_2_smif0_data7 &p7_0_smif0_sel1
-	>;
-	pinctrl-names = "default";
-
-	/* S25HL512T Quad SPI NOR Flash - Slot 0 (512 Mbit = 64 MB) */
-	flash0: flash0@60000000 {
-		compatible = "soc-nv-flash";
-		status = "okay";
-		reg = <0x60000000 DT_SIZE_M(64)>;
-
-		partitions {
-			#address-cells = <1>;
-			#size-cells = <1>;
-			compatible = "fixed-partitions";
-		};
-	};
-
-	/* S25HL512T Quad SPI NOR Flash - Slot 1 (512 Mbit = 64 MB) */
-	flash1: flash1@64000000 {
-		compatible = "soc-nv-flash";
-		status = "okay";
-		reg = <0x64000000 DT_SIZE_M(64)>;
-
-		partitions {
-			#address-cells = <1>;
-			#size-cells = <1>;
-			compatible = "fixed-partitions";
-		};
 	};
 };
 
@@ -374,10 +285,6 @@ i2c0: &scb4 {
 };
 
 &dma0 {
-	status = "okay";
-};
-
-&dma1 {
 	status = "okay";
 };
 
