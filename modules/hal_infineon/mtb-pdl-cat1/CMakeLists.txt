@@ -135,3 +135,4 @@ zephyr_library_sources_ifdef(CONFIG_SOC_FAMILY_INFINEON_CAT1A ${pdl_drv_dir}/sou
 # add IPC_BT driver for CYW208XX devices
 zephyr_library_sources_ifdef(CONFIG_BT_CYW208XX  ${pdl_drv_dir}/source/cy_ipc_bt.c)
 zephyr_library_sources_ifdef(CONFIG_BT_CYW208XX  ${pdl_drv_dir}/source/cy_syspm_pdcm.c)
+zephyr_library_sources_ifdef(CONFIG_SOC_FAMILY_INFINEON_CAT1C ${pdl_drv_dir}/source/cy_rtc.c)
