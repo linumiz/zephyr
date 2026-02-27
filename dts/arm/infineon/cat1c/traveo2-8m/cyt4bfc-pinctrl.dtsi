@@ -1418,6 +1418,18 @@
 			/omit-if-no-ref/ p24_2_sdhc0_clk_card: p24_2_sdhc0_clk_card {
 				pinmux = <DT_CAT1_PINMUX(24, 2, HSIOM_SEL_ACT_13)>;
 			};
+
+			/* can_tx */
+			/omit-if-no-ref/ p0_2_can0_0_tx: p0_2_can0_0_tx {
+				pinmux = <DT_CAT1_PINMUX(0, 2, HSIOM_SEL_ACT_13)>;
+				drive-push-pull;
+			};
+
+			/* can_rx */
+			/omit-if-no-ref/ p0_3_can0_0_rx: p0_3_can0_0_rx {
+				pinmux = <DT_CAT1_PINMUX(0, 3, HSIOM_SEL_ACT_13)>;
+				input-enable;
+			};
 		};
 	};
 };
