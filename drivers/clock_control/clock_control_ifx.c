@@ -46,7 +46,8 @@ static int ifx_clock_init(const struct device *dev)
 {
 	int ret;
 
-#if ( (CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_CPU_CORTEX_M7) || (CONFIG_SOC_SERIES_TVII_B_E) )
+#if ((CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_CPU_CORTEX_M7) ||                                 \
+     (CONFIG_SOC_FAMILY_INFINEON_CAT1A && CONFIG_CPU_CORTEX_M4))
 	/* The ECO was configured by the CORTEX_M0P, and the frequency is stored in a variable.
 	 * For the M7, we need to update that variable with this function.  The frequency
 	 * is needed by the UART driver to calculate the BAUD.
@@ -155,9 +156,11 @@ static DEVICE_API(clock_control, clock_control_ifx_cat1_api) = {
 
 #define IFX_CLOCK_PLL_CONFIG(node_id)                                                              \
 	{                                                                                          \
-		.feedbackDiv = DT_PROP(node_id, p_div), .referenceDiv = DT_PROP(node_id, q_div),   \
+		.feedbackDiv = DT_PROP(node_id, p_div),                                            \
+		.referenceDiv = DT_PROP(node_id, q_div),                                           \
 		.outputDiv = DT_PROP_OR(node_id, output_div, 0),                                   \
-		.outputMode = CY_SYSCLK_FLLPLL_OUTPUT_AUTO, .lfMode = 0,                           \
+		.outputMode = CY_SYSCLK_FLLPLL_OUTPUT_AUTO,                                        \
+		.lfMode = 0,                                                                       \
 		.fracDiv = DT_PROP_OR(node_id, frac_div, 0),                                       \
 		.fracEn = DT_PROP_OR(node_id, frac_div, 0) != 0,                                   \
 	}
