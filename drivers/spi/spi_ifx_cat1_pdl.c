@@ -979,7 +979,7 @@ static cy_rslt_t ifx_cat1_spi_int_frequency(const struct device *dev, uint32_t h
 		CY_UNUSED_PARAMETER(last_ovrsmpl_val);
 	}
 
-#if !defined(CONFIG_SOC_FAMILY_CYT2B7) && !defined(CONFIG_SOC_FAMILY_CYT2BL) && !defined(CONFIG_SOC_FAMILY_CAT1C)
+#if 0
 	en_clk_dst_t clk_idx = ifx_cat1_scb_get_clock_index(data->resource.block_num);
 
 	if ((data->clock.block & 0x02) == 0) {
@@ -989,7 +989,7 @@ static cy_rslt_t ifx_cat1_spi_int_frequency(const struct device *dev, uint32_t h
 		result = ifx_cat1_utils_peri_pclk_set_frac_divider(clk_idx, &(data->clock),
 								   last_dvdr_val - 1, 0);
 	}
-#else
+#endif
 	Cy_SysClk_PeriPclkDisableDivider(data->clock_peri_group,
 	                                 data->peri_div_type,
 	                                 data->peri_div_type_inst);
@@ -1006,7 +1006,6 @@ static cy_rslt_t ifx_cat1_spi_int_frequency(const struct device *dev, uint32_t h
 	Cy_SysClk_PeriPclkAssignDivider(data->clock_id,
 	                                data->peri_div_type,
 	                                data->peri_div_type_inst);
-#endif
 
 	return result;
 }
