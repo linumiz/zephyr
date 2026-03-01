@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2026 Infineon Technologies AG
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/dts-v1/;
+
+#include "cytvii_b_e_1m_100_cpu.dtsi"
+#include <infineon/cat1a/cyt2b7/cyt2b7_m4.dtsi>
+
+/ {
+    model = "Infineon CYTVII-B-E-1M-100-CPU";
+	compatible = "infineon,tvii1m";
+
+	chosen {
+		zephyr,sram = &sram_m4;
+		zephyr,flash = &code_flash0;
+		zephyr,code-partition = &m4_partition;
+		zephyr,console = &uart3;
+		zephyr,shell-uart = &uart3;
+		zephyr,canbus = &can0;
+	};
+};

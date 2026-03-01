@@ -16,16 +16,6 @@
 #include "cytvii_b_e_1m_100_cpu_pinctrl.dtsi"
 
 / {
-    model = "Infineon CYTVII-B-E-1M-100-CPU";
-    compatible = "infineon,tviibe1m";
-
-	chosen {
-		zephyr,sram = &sram0;
-		zephyr,flash = &flash0;
-		zephyr,console = &uart3;
-		zephyr,shell-uart = &uart3;
-		zephyr,canbus = &can0;
-	};
 
     aliases {
 		led0 = &cpu_user_led0;
@@ -150,6 +140,41 @@
 			zephyr,code = <INPUT_KEY_5>;
 		};
 
+	};
+};
+
+reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		sram_srom: memory@08000000 {
+			reg = <0x08000000 DT_SIZE_K(2)>;
+		};
+
+		sram_m0p: memory@08000800 {
+			reg = <0x08000800 DT_SIZE_K(32)>;
+		};
+
+		sram_m4: memory@08008000 {
+			reg = <0x08008000 DT_SIZE_K(224)>;
+		};
+};
+
+&code_flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		m0p_partition: partition_m0p@0 {
+			label = "m0p_partition";
+			reg = <0x0 DT_SIZE_K(512)>;
+		};
+
+		m4_partition: partition@20000 {
+			label = "m4_partition";
+			reg = <0x20000 DT_SIZE_K(960)>;
+		};
 	};
 };
 
