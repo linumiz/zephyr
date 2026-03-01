@@ -8,26 +8,6 @@
 #include <mem.h>
 
 / {
-		#address-cells = <1>;
-		#size-cells = <1>;
-	cpus {
-		#address-cells = <1>;
-		#size-cells = <0>;
-
-		cpu@0 {
-			device_type = "cpu";
-			compatible = "arm,cortex-m0+";
-			reg = <0>;
-			clock-frequency = <100000000>;
-		};
-
-		cpu@1 {
-			device_type = "cpu";
-			compatible = "arm,cortex-m4f";
-			reg = <1>;
-			clock-frequency = <160000000>;
-		};
-	};
 
 	flash-controller@0x40240000 {
 		compatible = "infineon,flash-controller";
@@ -35,25 +15,50 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
-		flash0: flash@10000000 {
+
+		/* Code flash - Large sector (32KB Sectors) */
+		code_flash0: flash@10000000 {
 			compatible = "soc-nv-flash";
-			reg = <0x10000000 0x100000>;
+			reg = <0x10000000 DT_SIZE_K(960)>;
 			write-block-size = <512>;
-			erase-block-size = <512>;
+			erase-block-size = <32768>;
 		};
 
-		flash1: flash@14000000 {
+		/* Code flash - Small sector (8KB Sectors) */
+		code_flash1: flash@100F0000 {
 			compatible = "soc-nv-flash";
-			reg = <0x14000000 0x8000>;
+			reg = <0x100F0000 DT_SIZE_K(128)>;
 			write-block-size = <512>;
-			erase-block-size = <512>;
+			erase-block-size = <8192>;
 		};
+		/* Work flash - Large sector (2KB Sectors) */
+		work_flash0: flash@14000000 {
+			compatible = "soc-nv-flash";
+			reg = <0x14000000 DT_SIZE_K(72)>;
+			write-block-size = <512>;
+			erase-block-size = <2048>;
+		};
+
+		/* Work flash - Small sector (128B Sectors) */
+		work_flash1: flash@0x14012000 {
+			compatible = "soc-nv-flash";
+			reg = <0x14012000 DT_SIZE_K(24)>;
+			write-block-size = <64>;
+			erase-block-size = <128>;
+		};
+
 	};
 
 	sram0: memory@8000000 {
 		compatible = "mmio-sram";
-		reg = <0x8000000 0x1F400>;
+		reg = <0x8000000 0xF800>;
 	};
+
+	sram1: memory@8008000 {
+		compatible = "mmio-sram";
+		reg = <0x8008000 0x10000>;
+	};
+
 
 	soc {
 
