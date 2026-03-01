@@ -1,0 +1,23 @@
+/*
+ * Copyright (c) 2026 Infineon Technologies AG
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#include <arm/armv7-m.dtsi>
+
+/ {
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@1 {
+			compatible = "arm,cortex-m4f";
+			reg = <1>;
+			clock-frequency = <1600000000>;
+		};
+	};
+};
+
+&nvic {
+	arm,num-irq-priority-bits = <3>;
+};
