@@ -8,7 +8,6 @@
  */
 
 #include "cy_device.h"
-#include "tviibe4m_config.h"
 #include <zephyr/devicetree.h>
 #include <zephyr/linker/linker-defs.h>
 #include <zephyr/device.h>
@@ -18,6 +17,12 @@
 #include <cy_sysint.h>
 #include <cy_wdt.h>
 #include <cy_sysclk.h>
+
+#if (CONFIG_SOC_DIE_CYT2B7)
+     #include "tviibe1m_config.h"
+#elif (CONFIG_SOC_DIE_CYT2BL)
+	 #include "tviibe4m_config.h"
+#endif
 
 void cat1a_srom_syscall_isr(void *arg)
 {
