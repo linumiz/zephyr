@@ -3,5 +3,12 @@
 
 # SPDX-License-Identifier: Apache-2.0
 
-config BOARD_CYTVII_B_E_1M_100_CPU
-		select SOC_CYT2B75CAE
+config BOARD_KIT_T2G_B_E_LITE_CYT2B75CAE_M0P
+	bool
+	select SOC_CYT2B75CAE
+	select INFINEON_CAT1A_M0PLUS
+
+config BOARD_KIT_T2G_B_E_LITE_CYT2B75CAE_M4
+	bool
+	select SOC_CYT2B75CAE
+	select INFINEON_CAT1A_M4
