@@ -116,7 +116,7 @@
 				compatible = "infineon,cat1-pll";
 				reg = <3>;
 				clocks = <&clk_eco>;
-				p-div = <25>;
+				p-div = <50>;
 				q-div = <2>;
 				output-div = <2>;
 				status = "disabled";
