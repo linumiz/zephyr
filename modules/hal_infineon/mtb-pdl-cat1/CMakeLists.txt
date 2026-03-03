@@ -39,6 +39,7 @@ zephyr_library_sources_ifdef(CONFIG_SOC_FAMILY_PSOC6_LEGACY      ${pdl_drv_dir}/
 zephyr_library_sources_ifdef(CONFIG_SOC_FAMILY_CYT2B7      ${pdl_drv_dir}/source/cy_sysint.c)
 zephyr_library_sources_ifdef(CONFIG_SOC_FAMILY_CYT2BL      ${pdl_drv_dir}/source/cy_sysint.c)
 if(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+  zephyr_compile_definitions(CY_DISABLE_XMC7000_DATA_CACHE)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_syslib.c)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_sysint.c)
   zephyr_library_sources_ifdef(CONFIG_USE_INFINEON_HWINFO   ${pdl_drv_dir}/source/cy_flash_srom.c)
