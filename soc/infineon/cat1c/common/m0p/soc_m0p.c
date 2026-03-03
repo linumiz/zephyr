@@ -17,6 +17,8 @@
 #include <cy_wdt.h>
 #include <cy_sysclk.h>
 
+#define IFX_FAST_CLOCK_DOMAIN_FREQ	320 /* 320 MHz */
+
 void cat1c_srom_syscall_isr(void *arg)
 {
 	/* Trigger IRQ0 in Software by writing to ISPR register */
@@ -74,6 +76,7 @@ void soc_prep_hook(void)
 	SystemCoreClockUpdate();
 
 	cat1c_m0p_srom_init();
+	Cy_SysLib_SetWaitStates(false, IFX_FAST_CLOCK_DOMAIN_FREQ);
 }
 
 static int soc_start_cm7()
