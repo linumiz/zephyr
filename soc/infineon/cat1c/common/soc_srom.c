@@ -12,12 +12,6 @@
 
 static void (*gp_srom_resp_handler)(void) = NULL;
 
-/* Cy_Srom_SetResponseHandler wrapper for Zephyr IRQ integration */
-void Cy_Srom_SetResponseHandler(cy_srom_handler handler)
-{
-	gp_srom_resp_handler = handler;
-}
-
 static void cat1c_srom_responseip_isr(void *arg)
 {
 	uint32_t masked = 0;

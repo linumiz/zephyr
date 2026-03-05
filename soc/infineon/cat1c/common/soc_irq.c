@@ -23,34 +23,6 @@ void enable_sys_int(uint32_t int_num, uint32_t priority, void (*isr)(const void 
 	irq_enable(int_num);
 }
 
-/* Cy_SysInt_Init wrapper for Zephyr IRQ integration */
-cy_en_sysint_status_t Cy_SysInt_Init(const cy_stc_sysint_t *config, cy_israddress userIsr)
-{
-#if CONFIG_DYNAMIC_INTERRUPTS
-	irq_connect_dynamic(config->intrSrc, config->intrPriority, (void (*)(const void *))userIsr,
-			    NULL, 0);
-	return CY_SYSINT_SUCCESS;
-#else
-	/* Interrupts are not supported on cm0p */
-	k_fatal_halt(K_ERR_CPU_EXCEPTION);
-	return CY_SYSINT_BAD_PARAM;
-#endif
-}
-
-void Cy_SysInt_SetSystemIrqVector(cy_en_intr_t sysIntSrc, cy_israddress userIsr)
-{
-#if CONFIG_SRAM_VECTOR_TABLE
-	_sw_isr_table[sysIntSrc].isr = userIsr;
-#else
-	k_fatal_halt(K_ERR_CPU_EXCEPTION);
-#endif
-}
-
-cy_israddress Cy_SysInt_GetSystemIrqVector(cy_en_intr_t sysIntSrc)
-{
-	return (cy_israddress)_sw_isr_table[sysIntSrc].isr;
-}
-
 /* Custom interrupt controller */
 void z_soc_irq_init()
 {
