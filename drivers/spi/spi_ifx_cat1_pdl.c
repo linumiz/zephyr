@@ -623,19 +623,6 @@ static int ifx_cat1_spi_init(const struct device *dev)
 	PERI_INFO(n)
 #endif
 
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7 || CONFIG_SOC_FAMILY_CYT2BL)
-#define SPI_CAT1_INT_FUNC(n)                                                                       \
-	static void ifx_cat1_spi_irq_config_func_##n(const struct device *dev)                     \
-	{                                                                                          \
-		enable_sys_int(DT_INST_PROP_BY_IDX(n, system_interrupts, 0),                       \
-			       DT_INST_PROP_BY_IDX(n, system_interrupts, 1),                       \
-			       (void (*)(const void *))(void *)spi_irq_handler, dev);              \
-	}
-
-#define IRQ_INFO(n)                                                                                \
-	.irq_num = DT_INST_PROP_BY_IDX(n, system_interrupts, 0),
-
-#else
 #define SPI_CAT1_INT_FUNC(n)                                                                       \
 	static void ifx_cat1_spi_irq_config_func_##n(const struct device *dev)                     \
 	{                                                                                          \
@@ -646,7 +633,6 @@ static int ifx_cat1_spi_init(const struct device *dev)
 
 #define IRQ_INFO(n)                                                                                \
 	.irq_num = DT_INST_IRQN(n),
-#endif
 
 #define IFX_CAT1_SPI_INIT(n)                                                                       \
                                                                                                    \
