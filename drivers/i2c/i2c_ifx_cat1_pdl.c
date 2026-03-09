@@ -705,20 +705,6 @@ static const struct i2c_driver_api i2c_cat1_driver_api = {
 	.target_register = ifx_cat1_i2c_target_register,
 	.target_unregister = ifx_cat1_i2c_target_unregister};
 
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7 || CONFIG_SOC_FAMILY_CYT2BL)
-#define I2C_CAT1_INIT_FUNC(n)                                                                      \
-	static void ifx_cat1_i2c_irq_config_func_##n(const struct device *dev)                     \
-	{                                                                                          \
-		enable_sys_int(DT_INST_PROP_BY_IDX(n, system_interrupts, 0),                       \
-			       DT_INST_PROP_BY_IDX(n, system_interrupts, 1),                       \
-			       (void (*)(const void *))(void *)i2c_isr_handler, dev);              \
-	}
-
-#define IRQ_INFO(n)                                                                                \
-	.irq_num = DT_INST_PROP_BY_IDX(n, system_interrupts, 0),                                   \
-	.irq_priority = DT_INST_PROP_BY_IDX(n, system_interrupts, 1)
-
-#else
 #define I2C_CAT1_INIT_FUNC(n)                                                                      \
 	static void ifx_cat1_i2c_irq_config_func_##n(const struct device *dev)                     \
 	{                                                                                          \
@@ -730,7 +716,6 @@ static const struct i2c_driver_api i2c_cat1_driver_api = {
 #define IRQ_INFO(n)                                                                                \
 	.irq_priority = DT_INST_IRQ(n, priority),                                                  \
 	.irq_num = DT_INST_IRQN(n)
-#endif
 
 #define INFINEON_CAT1_I2C_INIT(n)                                                                  \
 	PINCTRL_DT_INST_DEFINE(n);                                                                 \
