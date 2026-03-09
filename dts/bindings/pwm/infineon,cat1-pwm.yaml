@@ -7,7 +7,7 @@ description: Infineon CAT1 PWM
 
 compatible: "infineon,cat1-pwm"
 
-include: [pwm-controller.yaml, pinctrl-device.yaml, "infineon,system-interrupts.yaml"]
+include: [pwm-controller.yaml, pinctrl-device.yaml]
 
 properties:
   pinctrl-0:
@@ -23,6 +23,10 @@ properties:
     required: true
 
   pinctrl-names:
+    required: true
+
+  interrupts:
+    type: array
     required: true
 
   "#pwm-cells":

@@ -34,6 +34,9 @@ properties:
   reg:
     required: true
 
+  interrupts:
+    type: array
+
   "#io-channel-cells":
     const: 1
 
@@ -56,6 +59,10 @@ properties:
       - 3
 
   ifx,peri-div-inst:
+    type: int
+    required: true
+
+  adc-channels:
     type: int
     required: true
 

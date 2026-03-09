@@ -49,9 +49,11 @@ properties:
     type: array
     required: true
 
+  interrupts:
+    type: array
+
   system-interrupts:
     type: array
-    required: true
 
   pinctrl-0:
     description: |
