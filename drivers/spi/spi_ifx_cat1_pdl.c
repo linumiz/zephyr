@@ -567,8 +567,15 @@ static int ifx_cat1_spi_init(const struct device *dev)
 		(NULL))},
 
 #if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
-#define SPI_DMA_TRIGGERS(index)                                                                    \
+
+#if defined(CONFIG_SOC_SERIES_CYT4DN)  
+#define SPI_DMA_TRIGGERS(index)                                                                  \
 	.spi_rx_trigger	= TRIG_OUT_1TO1_1_SCB_RX_TO_PDMA10,
+#else
+#define SPI_DMA_TRIGGERS(index)                                                                  \
+	.spi_rx_trigger	= TRIG_OUT_1TO1_2_SCB_RX_TO_PDMA10,
+#endif
+
 #else
 #define SPI_DMA_TRIGGERS(index)                                                                    \
 	.spi_rx_trigger = (en_peri0_trig_input_pdma0_tr_t)(PERI_0_TRIG_IN_MUX_0_SCB_RX_TR_OUT0),   \
