@@ -320,7 +320,7 @@
 			reg = <0x40310b00 0x80>;
 			system-interrupts = <44 2>;
 			gpio-controller;
-			ngpios = <8>;
+			ngpios = <7>;
 			status = "disabled";
 			#gpio-cells = <2>;
 		};
