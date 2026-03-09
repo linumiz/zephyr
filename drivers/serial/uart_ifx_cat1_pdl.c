@@ -819,12 +819,6 @@ static int ifx_cat1_uart_init(const struct device *dev)
 	}
 #endif
 
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_UART_INTERRUPT_DRIVEN) || (CONFIG_SOC_FAMILY_CYT2B7 && CONFIG_UART_INTERRUPT_DRIVEN) || (CONFIG_SOC_FAMILY_CYT2BL && CONFIG_UART_INTERRUPT_DRIVEN)
-	/* Enable the UART interrupt */
-	enable_sys_int(config->irq_num, config->irq_priority,
-		       (void (*)(const void *))(void *)ifx_cat1_uart_irq_handler, dev);
-#endif
-
 	/* Perform initial Uart configuration */
 	ret = ifx_cat1_uart_configure(dev, &config->dt_cfg);
 
@@ -860,13 +854,7 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 
 };
 
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7 ||CONFIG_SOC_FAMILY_CYT2BL )
-#define IRQ_INFO(n)                                                                                \
-	.irq_num = DT_INST_PROP_BY_IDX(n, system_interrupts, SYS_INT_NUM),                         \
-	.irq_priority = DT_INST_PROP_BY_IDX(n, system_interrupts, SYS_INT_PRI)
-#else
-//#define IRQ_INFO(n) .irq_num = DT_INST_IRQN(n), .irq_priority = DT_INST_IRQ(n, priority)
-#endif
+#define IRQ_INFO(n) .irq_num = DT_INST_IRQN(n), .irq_priority = DT_INST_IRQ(n, priority)
 
 #if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE) || defined(CONFIG_SOC_FAMILY_CYT2B7) || defined(CONFIG_SOC_FAMILY_CYT2BL)
 #define PERI_INFO(n) .clock_peri_group = DT_PROP_BY_IDX(DT_INST_PHANDLE(n, clocks), peri_group, 1),
@@ -880,6 +868,11 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 	{                                                                                          \
 		ifx_cat1_uart_irq_handler(DEVICE_DT_INST_GET(n));                                  \
 	}                                                                                          \
+	static void ifx_cat1_uart_irq_config_func_##n(void)                                        \
+	{                                                                                          \
+		IRQ_CONNECT(DT_INST_IRQN(n), DT_INST_IRQ(n, priority),                             \
+			    uart_handle_events_func_##n, DEVICE_DT_INST_GET(n), 0);                \
+	}
 
 #define CALL_UART_IRQ_CONFIG(n) ifx_cat1_uart_irq_config_func_##n();
 #else
@@ -917,6 +910,7 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
                                                                                                    \
 	static int ifx_cat1_uart_init##n(const struct device *dev)                                 \
 	{                                                                                          \
+		CALL_UART_IRQ_CONFIG(n);							   \
 		return ifx_cat1_uart_init(dev);                                                    \
 	}                                                                                          \
                                                                                                    \
