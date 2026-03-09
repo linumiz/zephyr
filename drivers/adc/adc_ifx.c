@@ -36,6 +36,7 @@ struct ifx_cat1_sar_config {
 	uint32_t frequency;
 	uint32_t clock_peri_group;
         uint32_t clock_id;
+	void (*irq_configure)(void);
         uint8_t peri_div_type;
         uint8_t peri_div_type_inst;
 };
@@ -56,7 +57,7 @@ static void ifx_cat1_sar_isr(const struct device *dev)
 	uint32_t ch = 0;
 	uint32_t status = Cy_SAR2_Channel_GetInterruptStatus(config->base, last_channel);
 	Cy_SAR2_Channel_ClearInterrupt(config->base, last_channel, CY_SAR2_INT_GRP_DONE);
-	
+
 	if (status & CY_SAR2_INT_GRP_DONE) {
 		while (channels != 0)
 		{
@@ -89,7 +90,7 @@ static void adc_context_start_sampling(struct adc_context *ctx)
 	const struct ifx_cat1_sar_config *config = dev->config;
 	uint8_t last_ch = find_msb_set(ctx->sequence.channels)-1;
 	uint8_t first_ch = find_lsb_set(ctx->sequence.channels)-1;
-        
+
 	(config->base)->CH[last_ch].TR_CTL |= GROUP_END;
 
 	Cy_SAR2_Channel_ClearInterrupt(config->base, last_ch, CY_SAR2_INT_GRP_DONE);
@@ -137,7 +138,7 @@ static int ifx_cat1_sar_channel_setup(const struct device *dev,
         cy_ch_cfg.extMuxEnable = false;
         cy_ch_cfg.preconditionMode = CY_SAR2_PRECONDITION_MODE_OFF;
         cy_ch_cfg.overlapDiagMode = CY_SAR2_OVERLAP_DIAG_MODE_OFF;
-	
+
   	if (channel_cfg->acquisition_time != ADC_ACQ_TIME_DEFAULT) {
 		switch (ADC_ACQ_TIME_UNIT(channel_cfg->acquisition_time)) {
 		case ADC_ACQ_TIME_TICKS:
@@ -172,15 +173,12 @@ static int ifx_cat1_sar_channel_setup(const struct device *dev,
         cy_ch_cfg.interruptMask = 0U;
 
 	adc_context_lock(&data->ctx, false, NULL);
-	
+
 	status = Cy_SAR2_Channel_Init(config->base, channel_id, &cy_ch_cfg);
         if (status != CY_SAR2_SUCCESS) {
                 ret = -EIO;
 		goto unlock;
         }
-
-        enable_sys_int(config->int_number + channel_id, config->priority,
-		    (void (*)(const void *))(void *)ifx_cat1_sar_isr, dev);
 
 unlock:
 	adc_context_release(&data->ctx, 0);
@@ -204,7 +202,7 @@ static int ifx_cat1_sar_read_internal(const struct device *dev,
                 LOG_ERR("Oversampling not supported");
                 return -ENOTSUP;
         }
-	
+
 	if (count == 0) {
                 LOG_ERR("No channels selected");
                 return -EINVAL;
@@ -251,7 +249,7 @@ static int ifx_cat1_sar_read_async(const struct device *dev,
 	adc_context_lock(&data->ctx, true, async);
 	ret = ifx_cat1_sar_read_internal(dev, sequence);
 	adc_context_release(&data->ctx, ret);
-	
+
 	return ret;
 }
 #endif
@@ -283,7 +281,7 @@ static int ifx_clock_config(const struct device *dev, uint32_t target_freq)
     const struct ifx_cat1_sar_config *config = dev->config;
     uint32_t divider;
     uint32_t hf_clock_frequency;
-    
+
     if (target_freq < SAR_MIN_FREQ_HZ || target_freq > SAR_MAX_FREQ_HZ) {
         LOG_ERR("Invalid SAR frequency: %u", target_freq);
         return -EINVAL;
@@ -291,10 +289,10 @@ static int ifx_clock_config(const struct device *dev, uint32_t target_freq)
 
     clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf2)),
                                  NULL, &hf_clock_frequency);
-    
+
 
     divider = (hf_clock_frequency + (target_freq / 2)) / target_freq;
-    
+
     Cy_SysClk_PeriPclkDisableDivider(config->clock_peri_group,
                                      config->peri_div_type,
                                      config->peri_div_type_inst);
@@ -313,13 +311,13 @@ static int ifx_clock_config(const struct device *dev, uint32_t target_freq)
 }
 
 static int ifx_cat1_sar_init(const struct device *dev) {
-	
+
 	const struct ifx_cat1_sar_config *config = dev->config;
 	struct ifx_cat1_sar_data *data = dev->data;
 	int ret = 0;
 
 	LOG_INF("Initilizing infineon CAT1 SAR2 ADC");
-	
+
 	data->dev = dev;
 
 	ret = ifx_clock_config(dev, config->frequency);
@@ -332,7 +330,9 @@ static int ifx_cat1_sar_init(const struct device *dev) {
 		return ret;
 	}
 
-	LOG_INF("ADC Intilized successfully");	
+	config->irq_configure();
+
+	LOG_INF("ADC Intilized successfully");
 	adc_context_unlock_unconditionally(&data->ctx);
 	return ret;
 }
@@ -345,7 +345,14 @@ static DEVICE_API(adc, ifx_cat1_driver_api) = {
 #endif
 };
 
-#define IFX_SAR_ADC_INIT(n)								       \
+#define IRQ_CONFIGURE(n, inst) \
+	IRQ_CONNECT(DT_INST_IRQ_BY_IDX(inst, n, irq), DT_INST_IRQ_BY_IDX(inst, n, priority),       \
+		    ifx_cat1_sar_isr, DEVICE_DT_INST_GET(inst), 0);
+
+#define IFX_SAR_ADC_INIT(n)								       	   \
+												   \
+	static void ifx_cat1_adc_irq_configure##n(void);                                           \
+												   \
 	static struct ifx_cat1_sar_data ifx_cat1_sar_data_##n = {                              \
 		ADC_CONTEXT_INIT_TIMER(ifx_cat1_sar_data_##n, ctx),                            \
 		ADC_CONTEXT_INIT_LOCK(ifx_cat1_sar_data_##n, ctx),                             \
@@ -353,14 +360,19 @@ static DEVICE_API(adc, ifx_cat1_driver_api) = {
 	};										       \
 	static const struct ifx_cat1_sar_config ifx_cat1_sar_cfg_##n = {                       \
                 .base = (PASS_SAR_Type *)DT_INST_REG_ADDR(n),                                  \
+		.irq_configure = ifx_cat1_adc_irq_configure##n,                                    \
 		.clock_peri_group = DT_INST_PROP(n, ifx_peri_group),                           \
-		.int_number = DT_INST_PROP_BY_IDX(n, system_interrupts, 0),                    \
-		.priority = DT_INST_PROP_BY_IDX(n, system_interrupts, 1),                      \
 		.frequency = DT_INST_PROP_OR(n, clock_frequency, SAR_MAX_FREQ_HZ),	       \
                 .clock_id = DT_INST_PROP(n, ifx_peri_clk),                                     \
                 .peri_div_type = DT_INST_PROP(n, ifx_peri_div),                                \
                 .peri_div_type_inst = DT_INST_PROP(n, ifx_peri_div_inst),                      \
         };                                                                                     \
+											       \
+	static void ifx_cat1_adc_irq_configure##n(void)                                        \
+	{                                                                                      \
+		LISTIFY(DT_NUM_IRQS(DT_DRV_INST(n)), IRQ_CONFIGURE, (), n)		       \
+	}  										       \
+											       \
 	DEVICE_DT_INST_DEFINE(n, &ifx_cat1_sar_init, NULL, &ifx_cat1_sar_data_##n,             \
 			      &ifx_cat1_sar_cfg_##n, POST_KERNEL, CONFIG_ADC_INIT_PRIORITY,    \
 			      &ifx_cat1_driver_api);                                           \
