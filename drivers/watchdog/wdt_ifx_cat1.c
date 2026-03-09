@@ -431,16 +431,9 @@ static int ifx_cat1_wdt_feed(const struct device *dev, int channel_id)
 static int ifx_cat1_wdt_init(const struct device *dev)
 {
 #ifdef IFX_CAT1_WDT_IS_IRQ_EN
-#if defined(CY_IP_MXS40SRSS) && (CY_IP_MXS40SRSS_VERSION >= 2)
-	enable_sys_int(DT_INST_PROP_BY_IDX(0, system_interrupts, 0),
-		       DT_INST_PROP_BY_IDX(0, system_interrupts, 1),
-		       (void (*)(const void *))(void *)ifx_cat1_wdt_isr_handler,
-		       dev);
-#else
 	/* Connect WDT interrupt to ISR */
 	IRQ_CONNECT(DT_INST_IRQN(0), DT_INST_IRQ(0, priority), ifx_cat1_wdt_isr_handler,
 		    DEVICE_DT_INST_GET(0), 0);
-#endif
 #endif /* IFX_CAT1_WDT_IS_IRQ_EN */
 
 	return 0;
