@@ -133,3 +133,23 @@
 &dac0 {
 	status = "okay";
 };
+
+&spi0 {
+	status = "okay";
+	pinctrl-0 = <&spi0_sclk_pa11 &spi0_pico_pb17 &spi0_poci_pb19 &spi0_cs0_pa8>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+	clocks = <&ckm MSPM0_CLOCK_MCLK>;
+};
+
+&spi1 {
+	status = "okay";
+	pinctrl-0 = <&spi1_sclk_pb9 &spi1_pico_pb15 &spi1_poci_pb7 &spi1_cs0_pb6>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+	clocks = <&ckm MSPM0_CLOCK_MCLK>;
+};
