@@ -9,7 +9,7 @@ config GEN_IRQ_VECTOR_TABLE
 	default n
 
 config DYNAMIC_INTERRUPTS
-    default y
+    default n
 
 config BUILD_OUTPUT_HEX
 	default y
