@@ -523,9 +523,9 @@ static DEVICE_API(counter, counter_api) = {
                                                                                                    \
 	static void ifx_counter_irq_enable_func_##n(const struct device *dev)                      \
 	{                                                                                          \
-		enable_sys_int(DT_INST_PROP_BY_IDX(n, system_interrupts, 0),                       \
-			       DT_INST_PROP_BY_IDX(n, system_interrupts, 1),                       \
-			       (void (*)(const void *))(void *)counter_isr_handler, dev);          \
+		IRQ_CONNECT(DT_INST_IRQN(n), DT_INST_IRQ(n, priority), counter_isr_handler,        \
+			    DEVICE_DT_INST_GET(n), 0);                                             \
+		irq_enable(DT_INST_IRQN(n));                                                       \
 	}                                                                                          \
 												   \
 	static struct ifx_tcpwm_counter_data ifx_tcpwm_counter##n##_data;                          \
@@ -539,7 +539,7 @@ static DEVICE_API(counter, counter_api) = {
 		.index = (DT_REG_ADDR(DT_INST_PARENT(n)) -                                         \
 			  DT_REG_ADDR(DT_PARENT(DT_INST_PARENT(n)))) /                             \
 			 DT_REG_SIZE(DT_INST_PARENT(n)),                                           \
-		.irq_num = DT_INST_PROP_BY_IDX(n, system_interrupts, 0),                           \
+		.irq_num = DT_INST_IRQN(n),							   \
 		.resolution_32_bits =                                                              \
 			(DT_PROP(DT_INST_PARENT(n), resolution) == 32) ? true : false,             \
 		.irq_enable_func = ifx_counter_irq_enable_func_##n,                                \
