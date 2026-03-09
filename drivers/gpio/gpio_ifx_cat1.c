@@ -30,9 +30,7 @@ struct gpio_cat1_config {
 	struct gpio_driver_config common;
 	GPIO_PRT_Type *regs;
 	uint8_t ngpios;
-#if !(CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7 || CONFIG_SOC_FAMILY_CYT2BL)
 	uint8_t intr_priority;
-#endif
 };
 
 /* Data structure */
@@ -234,18 +232,11 @@ static DEVICE_API(gpio, gpio_cat1_api) = {
 };
 
 /* Interrupts are not currently supported on the Cat1C CM0+ */
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7 || CONFIG_SOC_FAMILY_CYT2BL)
-#define INTR_PRIORITY(n)
+#define INTR_PRIORITY(n) .intr_priority = DT_INST_IRQ_BY_IDX(n, 0, priority),
 
 #if (CONFIG_CPU_CORTEX_M0PLUS)
 #define ENABLE_INT(n)
 #else
-#define ENABLE_INT(n) ENABLE_SYS_INT(n, gpio_isr_handler);
-#endif
-
-#else
-#define INTR_PRIORITY(n) .intr_priority = DT_INST_IRQ_BY_IDX(n, 0, priority),
-
 #define ENABLE_INT(n)                                                                              \
 	IRQ_CONNECT(DT_INST_IRQN(n), DT_INST_IRQ(n, priority), gpio_isr_handler,                   \
 		    DEVICE_DT_INST_GET(n), 0);                                                     \
