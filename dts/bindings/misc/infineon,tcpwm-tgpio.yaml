@@ -1,9 +1,46 @@
-# Copyright (c) 2026 Linumiz.
-#
+# Copyright (c) 2026 Linumiz
 # SPDX-License-Identifier: Apache-2.0
 
 description: Infineon tgpio
 
 compatible: "infineon,tcpwm-tgpio"
 
-include: [base.yaml, pinctrl-device.yaml, "infineon,system-interrupts.yaml"]
+include: base.yaml
+
+properties:
+  ifx,peri-group:
+    type: int
+    description: Peripheral clock group index (CAT1C only).
+
+  divider-type:
+    type: int
+    required: true
+
+  divider-sel:
+    type: int
+    required: true
+
+  divider-val:
+    type: int
+    required: true
+
+child-binding:
+  description: TGPIO channel configuration.
+
+  include: pinctrl-device.yaml 
+  properties:
+    reg:
+      type: array
+      required: true
+      description: Channel index within the TCPWM group.
+
+    system-interrupts:
+      type: array
+      required: true
+      description: System interrupt number and priority
+
+    pinctrl-0:
+      required: true
+
+    pinctrl-names:
+      required: true
