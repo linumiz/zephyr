@@ -3,6 +3,7 @@
 #include <arm/infineon/cat1a/cyt2bl/system_clocks.dtsi>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 #include <infineon/cat1a/cyt2bl/cyt2bl.100-lqfp.dtsi>
+#include <zephyr/dt-bindings/pwm/pwm.h>
 
 / {
 	model = "Infineon Traveo II Body Entry LiteKit" ;
@@ -26,6 +27,9 @@
 		watchdog0 = &watchdog0;
 		dma0 = &dma0;
 		i2c0 = &scb4;
+		pwm-led0 = &pwm_led0;
+		pwm-led1 = &pwm_led1;
+		pwm-led2 = &pwm_led2;
 	};
 
 	leds{
@@ -64,8 +68,20 @@
 		};
 	};
 
+	 pwmleds {
+                compatible = "pwm-leds";
 
+                pwm_led0: pwm_led_0 {
+                        pwms = <&tcpwm0_grp0_pwm 0x9 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+                };
+                pwm_led1: pwm_led_1 {
+                        pwms = <&tcpwm0_grp0_pwm 0xa PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+                };
+                pwm_led2: pwm_led_2 {
+                        pwms = <&tcpwm0_grp0_pwm 0xb PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+                };
 
+        };
 };
 
 &p0_0_scb0_uart_rx {
