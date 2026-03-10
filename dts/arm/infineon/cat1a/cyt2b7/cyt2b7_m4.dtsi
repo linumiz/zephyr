@@ -13,7 +13,7 @@
 		cpu@1 {
 			compatible = "arm,cortex-m4f";
 			reg = <1>;
-			clock-frequency = <1600000000>;
+			clock-frequency = <160000000>;
 		};
 	};
 };
