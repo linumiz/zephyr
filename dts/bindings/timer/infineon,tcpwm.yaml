@@ -36,20 +36,20 @@ properties:
     description: |
       Specifies which type of divider to use.
       Defined by cy_en_divider_types_t in cy_sysclk.h.
-    required: true
+  #  required: true
 
   divider-sel:
     type: int
     description: |
       Specifies which divider of the selected type to configure.
-    required: true
+ #   required: true
 
   divider-val:
     type: int
     description: |
       Causes integer division of (divider value + 1), or division by 1 to 256
       (8-bit divider) or 1 to 65536 (16-bit divider).
-    required: true
+#    required: true
 
   ifx,peri-group:
     type: int
