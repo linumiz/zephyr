@@ -30,7 +30,7 @@ struct gpio_cat1_config {
 	struct gpio_driver_config common;
 	GPIO_PRT_Type *regs;
 	uint8_t ngpios;
-#if !(CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7 || CONFIG_SOC_FAMILY_CYT2BL)
+#if !(CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_SERIES_TVII_B_E)
 	uint8_t intr_priority;
 #endif
 };
@@ -234,7 +234,7 @@ static DEVICE_API(gpio, gpio_cat1_api) = {
 };
 
 /* Interrupts are not currently supported on the Cat1C CM0+ */
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_FAMILY_CYT2B7 || CONFIG_SOC_FAMILY_CYT2BL)
+#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C || CONFIG_SOC_SERIES_TVII_B_E)
 #define INTR_PRIORITY(n)
 
 #if (CONFIG_CPU_CORTEX_M0PLUS)
