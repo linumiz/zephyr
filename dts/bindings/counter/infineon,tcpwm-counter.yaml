@@ -20,3 +20,20 @@ properties:
 
   system-interrupts:
     description: Required for cat1c devices
+  
+  divider-type:
+    type: int
+    description: |
+      Specifies which type of divider to use.
+      Defined by cy_en_divider_types_t in cy_sysclk.h.
+
+  divider-sel:
+    type: int
+    description: |
+      Specifies which divider of the selected type to configure.
+
+  divider-val:
+    type: int
+    description: |
+      Causes integer division of (divider value + 1), or division by 1 to 256
+      (8-bit divider) or 1 to 65536 (16-bit divider).
