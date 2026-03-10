@@ -9,7 +9,7 @@
 
 / {
     model = "Infineon CYTVII-B-E-1M-100-CPU";
-	compatible = "infineon,tvii1m";
+	compatible = "infineon,tviibe1m";
 
 	chosen {
 		zephyr,sram = &sram_m4;
@@ -18,5 +18,6 @@
 		zephyr,console = &uart3;
 		zephyr,shell-uart = &uart3;
 		zephyr,canbus = &can0;
+		zephyr,flash-controller = &flash_controller;
 	};
 };
