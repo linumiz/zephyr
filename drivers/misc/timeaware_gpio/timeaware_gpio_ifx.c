@@ -1,5 +1,5 @@
 /*
- * copyright (c) 2026 Linumiz 
+ * copyright (c) 2026 Linumiz
  * SPDX-License-Identifier: Apache-2.0
  *
  */
@@ -8,31 +8,31 @@
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/misc/timeaware_gpio/timeaware_gpio.h>
-#include <zephyr/drivers/pinctrl.h> 
-#include <zephyr/logging/log.h>                                
+#include <zephyr/drivers/pinctrl.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(tgpio_ifx_tcpwm, CONFIG_TGPIO_LOG_LEVEL);
 
-#include <cy_tcpwm_counter.h>  
-#include <cy_tcpwm_pwm.h>        
-#include <cy_sysclk.h>      
+#include <cy_tcpwm_counter.h>
+#include <cy_tcpwm_pwm.h>
+#include <cy_sysclk.h>
 
 struct tgpio_ifx_tcpwm_config {
-	TCPWM_GRP_CNT_Type *reg_base;      
-	bool resolution_32_bits;     
+	TCPWM_GRP_CNT_Type *reg_base;
+	bool resolution_32_bits;
 	cy_en_divider_types_t divider_type;
 	uint32_t divider_sel;
 	uint32_t divider_val;
 	uint32_t clock_peri_group;
-	const struct pinctrl_dev_config *pcfg;       
-	void (*irq_enable_func)(const struct device *dev);  
+	const struct pinctrl_dev_config *pcfg;
+	void (*irq_enable_func)(const struct device *dev);
 };
 
 struct tgpio_ifx_tcpwm_data {
 	struct {
-		uint64_t last_timestamp; 
-		uint64_t event_count; 
-	} pin; 
-	uint32_t cnt_idx;                  
+		uint64_t last_timestamp;
+		uint64_t event_count;
+	} pin;
+	uint32_t cnt_idx;
 };
 
 static void tgpio_ifx_tcpwm_isr(const struct device *dev)
@@ -54,7 +54,7 @@ static void tgpio_ifx_tcpwm_isr(const struct device *dev)
 static int tgpio_ifx_tcpwm_get_time(const struct device *dev, uint64_t *t)
 {
 	struct tgpio_ifx_tcpwm_data *data = dev->data;
-	*t = Cy_TCPWM_Counter_GetCounter(TCPWM0, data->cnt_idx); 
+	*t = Cy_TCPWM_Counter_GetCounter(TCPWM0, data->cnt_idx);
 	return 0;
 }
 
@@ -68,10 +68,10 @@ static int tgpio_ifx_tcpwm_cyc_per_sec(const struct device *dev, uint32_t *cyc)
 static int tgpio_ifx_tcpwm_pin_disable(const struct device *dev, uint32_t pin)
 {
 	struct tgpio_ifx_tcpwm_data *data = dev->data;
-	if (pin != 0) return -EINVAL; 
+	if (pin != 0) return -EINVAL;
 
-	Cy_TCPWM_TriggerStopOrKill_Single(TCPWM0, data->cnt_idx);  
-	Cy_TCPWM_Disable_Single(TCPWM0, data->cnt_idx);            
+	Cy_TCPWM_TriggerStopOrKill_Single(TCPWM0, data->cnt_idx);
+	Cy_TCPWM_Disable_Single(TCPWM0, data->cnt_idx);
 	return 0;
 }
 
@@ -82,7 +82,7 @@ static int tgpio_ifx_tcpwm_set_per_out(const struct device *dev, uint32_t pin,
 	const struct tgpio_ifx_tcpwm_config *cfg = dev->config;
 
 	if (pin != 0) return -EINVAL;
-	if (period > UINT32_MAX) return -EINVAL; 
+	if (period > UINT32_MAX) return -EINVAL;
 
 	uint32_t idx = data->cnt_idx;
 	int ret = pinctrl_apply_state(cfg->pcfg, PINCTRL_STATE_DEFAULT);
@@ -101,22 +101,22 @@ static int tgpio_ifx_tcpwm_set_per_out(const struct device *dev, uint32_t pin,
 		.runMode = periodic ? CY_TCPWM_PWM_CONTINUOUS : CY_TCPWM_PWM_ONESHOT,
 		.countInputMode = CY_TCPWM_INPUT_LEVEL,
 		.countInput = CY_TCPWM_INPUT_1,
-		.period0 = (uint32_t)period - 1,       
-		.compare0 = (uint32_t)(period / 2),    
-		.enablePeriodSwap = false,          
+		.period0 = (uint32_t)period - 1,
+		.compare0 = (uint32_t)(period / 2),
+		.enablePeriodSwap = false,
 		.enableCompareSwap = false,
-		.interruptSources = 0,                
+		.interruptSources = 0,
 	};
 
 	if (Cy_TCPWM_PWM_Init(TCPWM0, idx, &pwm_cfg) != CY_TCPWM_SUCCESS) {
 		return -EIO;
 	}
 
-	Cy_TCPWM_PWM_Enable(TCPWM0, idx);         
-	Cy_TCPWM_TriggerStart_Single(TCPWM0, idx); 
+	Cy_TCPWM_PWM_Enable(TCPWM0, idx);
+	Cy_TCPWM_TriggerStart_Single(TCPWM0, idx);
 
-	ARG_UNUSED(start_time);  
-	data->pin.event_count = 0; 
+	ARG_UNUSED(start_time);
+	data->pin.event_count = 0;
 	return 0;
 }
 
@@ -165,7 +165,7 @@ static int tgpio_ifx_tcpwm_config_ext_ts(const struct device *dev, uint32_t pin,
 	Cy_TCPWM_SetInterruptMask(TCPWM0, idx, CY_TCPWM_INT_ON_CC0);
 
 	Cy_TCPWM_TriggerReloadOrIndex_Single(TCPWM0, idx);
-	Cy_TCPWM_TriggerStart_Single(TCPWM0, idx); 
+	Cy_TCPWM_TriggerStart_Single(TCPWM0, idx);
 
 	return 0;
 }
@@ -206,7 +206,7 @@ static int tgpio_ifx_tcpwm_init(const struct device *dev)
 	} else if ((uint32_t)cfg->reg_base >= (uint32_t)TCPWM0_GRP1) {
 		clk_connection = PCLK_TCPWM0_CLOCKS256 + (((uint32_t)cfg->reg_base - (uint32_t)TCPWM0_GRP1) / sizeof(TCPWM_GRP_CNT_Type));
 		data->cnt_idx = 256 + (((uint32_t)cfg->reg_base - (uint32_t)TCPWM0_GRP1) / sizeof(TCPWM_GRP_CNT_Type));
-	} else {  
+	} else {
 		clk_connection = PCLK_TCPWM0_CLOCKS0 + (((uint32_t)cfg->reg_base - (uint32_t)TCPWM0_GRP0) / sizeof(TCPWM_GRP_CNT_Type));
 		data->cnt_idx = ((uint32_t)cfg->reg_base - (uint32_t)TCPWM0_GRP0) / sizeof(TCPWM_GRP_CNT_Type);
 	}
@@ -217,7 +217,7 @@ static int tgpio_ifx_tcpwm_init(const struct device *dev)
 	return 0;
 }
 
-#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) || defined(CONFIG_SOC_SERIES_TVII_B_E)
 
 #define TGPIO_IFX_IRQ_ENABLE(inst)                                                   \
 	static void tgpio_ifx_irq_enable_##inst(const struct device *dev) {          \

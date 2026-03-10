@@ -31,7 +31,7 @@ struct ifx_tcpwm_counter_config {
 	cy_en_divider_types_t divider_type;
 	uint32_t divider_sel;
 	uint32_t divider_val;
-#if defined(COMPONENT_CAT1C)
+#if defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_SERIES_TVII_B_E)
 	uint32_t clock_peri_group;
 #endif
 	void (*irq_enable_func)(const struct device *dev);
@@ -47,7 +47,7 @@ struct ifx_tcpwm_counter_data {
 	struct counter_alarm_cfg alarm_cfg;
 	struct counter_top_cfg top_value_cfg_counter;
 	uint32_t guard_period;
-#if !defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if !defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C ) && !defined(CONFIG_SOC_SERIES_TVII_B_E)
 	struct ifx_cat1_clock clock;
 #endif
 };
@@ -148,7 +148,7 @@ static int ifx_tcpwm_counter_init(const struct device *dev)
 	cy_stc_tcpwm_counter_config_t counter_config = counter_default_config;
 	uint32_t clk_connection;
 
-#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) || defined(CONFIG_SOC_SERIES_TVII_B_E)
 	if ((uint32_t)config->reg_base >= (uint32_t)TCPWM0_GRP2) {
 		clk_connection = (PCLK_TCPWM0_CLOCKS512 +
 				 (((uint32_t)config->reg_base - (uint32_t)TCPWM0_GRP2) /
@@ -235,7 +235,7 @@ static uint32_t ifx_tcpwm_counter_get_freq(const struct device *dev)
 	struct ifx_tcpwm_counter_data *const data = dev->data;
 	const struct ifx_tcpwm_counter_config *config = dev->config;
 
-#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) || defined(CONFIG_SOC_SERIES_TVII_B_E)
 	uint32_t frequency = Cy_SysClk_PeriPclkGetFrequency(config->clock_peri_group,
 						 config->divider_type, config->divider_sel);
 #else
@@ -517,7 +517,7 @@ static DEVICE_API(counter, counter_api) = {
 		}
 #endif
 
-#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) || defined(CONFIG_SOC_SERIES_TVII_B_E)
 /* Counter driver init macros */
 #define INFINEON_TCPWM_COUNTER_INIT(n)                                                             \
                                                                                                    \

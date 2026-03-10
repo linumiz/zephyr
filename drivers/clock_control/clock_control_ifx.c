@@ -70,6 +70,7 @@ static int ifx_clock_init(const struct device *dev)
 	}
 #endif
 
+	Cy_SysClk_ClkSlowSetDivider(1);
 	int i;
 	for (i = 0; i < SRSS_NUM_CLKPATH; i++) {
 		ret = Cy_SysClk_ClkPathSetSource(
