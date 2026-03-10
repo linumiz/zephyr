@@ -18,19 +18,19 @@
             status = "disabled";
         };
 
-        clk_ilo0: clk_ilo0 {
-            #clock-cells = <0>;
-            compatible = "fixed-clock";
-            clock-frequency = <32768>;
-            status = "disabled";
-        };
+		clk_ilo0: clk_ilo0 {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <32768>;
+			status = "okay";
+		};
 
-        clk_ilo1: clk_ilo1 {
-            #clock-cells = <0>;
-            compatible = "fixed-clock";
-            clock-frequency = <32768>;
-            status = "disabled";
-        };
+		clk_ilo1: clk_ilo1 {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <32768>;
+			status = "okay";
+		};
 
         path-source {
             #address-cells = <1>;
@@ -98,18 +98,18 @@
             #address-cells = <1>;
             #size-cells = <0>;
 
-            pll0: pll@1 {
-                #clock-cells = <0>;
-                compatible = "infineon,cat1-pll";
-                reg = <1>;
-                clocks = <&clk_eco>;
-                p-div = <25>;
-                q-div = <2>;
-                frac-div = <0x00000>;
-                output-div = <2>;
-                status = "disabled";
-            };
-        };
+			pll0: pll@1 {
+				#clock-cells = <0>;
+				compatible = "infineon,cat1-pll";
+				reg = <1>;
+				clocks = <&clk_eco>;
+				p-div = <25>;
+				q-div = <2>;
+				frac-div = <0x00000>;
+				output-div = <2>;
+				status = "okay";
+			};
+		};
 
         clk_hf {
             #address-cells = <1>;
