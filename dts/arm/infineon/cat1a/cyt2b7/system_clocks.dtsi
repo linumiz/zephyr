@@ -120,7 +120,7 @@
                 compatible = "infineon,cat1-hf-clock";
                 reg = <0>;
                 clocks = <&pll0>;
-                divider = <2>;
+                divider = <1>;
                 status = "okay";
             };
 
