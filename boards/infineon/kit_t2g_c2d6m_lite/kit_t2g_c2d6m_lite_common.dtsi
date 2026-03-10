@@ -20,6 +20,8 @@
 		sw0 = &user_bt1;
 		sw1 = &user_bt2;
 		pwm-led0 = &pwm_led0;
+		pwm-led1 = &pwm_led1;
+		pwm-led2 = &pwm_led2;
 	};
 
 	leds {
@@ -57,7 +59,13 @@
 		compatible = "pwm-leds";
 
 		pwm_led0: pwm_led_0 {
-			pwms = <&pwm0_26 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+			pwms = <&tcpwm0_grp0_pwm 0x19 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+		};
+		pwm_led1: pwm_led_1 {
+			pwms = <&tcpwm0_grp0_pwm 0x1a PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+		};
+		pwm_led2: pwm_led_2 {
+			pwms = <&tcpwm0_grp0_pwm 0x1b PWM_MSEC(20) PWM_POLARITY_INVERTED>;
 		};
 	};
 
