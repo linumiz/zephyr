@@ -22,14 +22,14 @@
 			#clock-cells = <0>;
 			compatible = "fixed-clock";
 			clock-frequency = <32768>;
-			status = "disabled";
+			status = "okay";
 		};
 
 		clk_ilo1: clk_ilo1 {
 			#clock-cells = <0>;
 			compatible = "fixed-clock";
 			clock-frequency = <32768>;
-			status = "disabled";
+			status = "okay";
 		};
 
 		path-source {
@@ -115,7 +115,7 @@
 				q-div = <2>;
 				frac-div = <0x00000>;
 				output-div = <2>;
-				status = "disabled";
+				status = "okay";
 			};
 		};
 
