@@ -63,13 +63,14 @@ void z_soc_irq_init()
 {
 	uint8_t i;
 
-#ifdef CONFIG_INFINEON_CAT1A_M0PLUS
+//#ifdef CONFIG_INFINEON_CAT1A_M0PLUS
 	/* Setup IRQ lines as priorities. IRQ0 to IRQ2 are used for syscalls */
-	for (i = CAT1A_SROM_IRQ_OFFSET; i < 8; i++) {
-		NVIC_SetPriority(NvicMux0_IRQn + i, MAX(i - CAT1A_SROM_IRQ_OFFSET, IRQ_PRIO_LOWEST));
-		NVIC_EnableIRQ(NvicMux0_IRQn + i);
-	}
-#else
+//	for (i = CAT1A_SROM_IRQ_OFFSET; i < 8; i++) {
+//		NVIC_SetPriority(NvicMux0_IRQn + i, MAX(i - CAT1A_SROM_IRQ_OFFSET, IRQ_PRIO_LOWEST));
+//		NVIC_EnableIRQ(NvicMux0_IRQn + i);
+//	}
+//#else
+#if !(CONFIG_INFINEON_CAT1A_M0PLUS)
 	/* Setup IRQ lines as priorities */
 	for (i = 0; i < 8; i++) {
 		NVIC_SetPriority(NvicMux0_IRQn + i, MAX(i, IRQ_PRIO_LOWEST));

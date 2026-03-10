@@ -23,6 +23,7 @@
 #elif (CONFIG_SOC_DIE_CYT2BL)
 	 #include "tviibe4m_config.h"
 #endif
+#define IFX_FAST_CLOCK_DOMAIN_FREQ	160 /* 160 MHz */
 
 void cat1a_srom_syscall_isr(void *arg)
 {
@@ -35,6 +36,7 @@ void cat1a_srom_syscall_isr(void *arg)
 	NVIC_ClearPendingIRQ(NvicMux0_IRQn);
 	/* Read back the register to ensure that the write has happened */
 	NVIC->ICPR[0U];
+
 }
 
 static void cat1a_m0p_srom_init()
@@ -94,9 +96,10 @@ void soc_prep_hook(void)
 
 	Cy_WDT_Unlock();
 	Cy_WDT_Disable();
-	// SystemCoreClockUpdate();
-
+	//SystemCoreClockUpdate();
 	cat1a_m0p_srom_init();
+	Cy_SysLib_SetWaitStates(false, IFX_FAST_CLOCK_DOMAIN_FREQ);
+
 }
 
 static int early_init() {
@@ -109,7 +112,7 @@ static int soc_start_cm4()
 {
 #if CONFIG_INFINEON_CAT1A_START_M4
 	Cy_SysEnableCM4(DT_REG_ADDR(DT_NODELABEL(code_flash0)) +
-			DT_REG_ADDR(DT_NODELABEL(m4_partition)));
+					    DT_REG_ADDR(DT_NODELABEL(m4_partition)));
 #endif
 	return 0;
 }
