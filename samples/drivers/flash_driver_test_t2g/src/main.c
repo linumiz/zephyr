@@ -26,7 +26,7 @@ LOG_MODULE_REGISTER(flash_test, LOG_LEVEL_INF);
 #if FLASH0_SELECTED
 	#define TEST_SIZE 0x8000  /* CFLASH - LRG - 32 KB - Erase sector */
 	#define USE_CFLASH 1
-	#define TEST_OFFSET 0x8000
+	#define TEST_OFFSET 0x26FFF
 #elif FLASH1_SELECTED
 	#define TEST_SIZE 0x2000  /* CFLASH - SMS - 8 KB - Erase sector */
 	#define USE_CFLASH 1
@@ -34,7 +34,7 @@ LOG_MODULE_REGISTER(flash_test, LOG_LEVEL_INF);
 #elif FLASH2_SELECTED
 	#define TEST_SIZE 0x800  /* WFLASH - LRG - 2 KB - Erase sector */
 	#define USE_WFLASH 1
-	#define TEST_OFFSET 0x2F800
+	#define TEST_OFFSET 0x800
 #elif FLASH3_SELECTED
 	#define TEST_SIZE 0x80  /* WFLASH - SMS - 128 bytes - Erase sector */
 	#define USE_WFLASH 1
@@ -49,7 +49,7 @@ LOG_MODULE_REGISTER(flash_test, LOG_LEVEL_INF);
 int main(void)
 {
 	/* Use the zephyr_flash_controller for the flash driver */
-	 const struct device *flash_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+	const struct device *flash_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
 
 	/* Use the smif_0 or smif_1 for the flash driver */
 
