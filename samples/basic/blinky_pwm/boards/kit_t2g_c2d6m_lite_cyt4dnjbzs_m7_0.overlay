@@ -1,13 +1,31 @@
-&tcpwm0_26 {
-	status = "okay";
-	divider-type = <1>;
-	divider-sel = <2>;
-	divider-val = <79>;
+&tcpwm0_grp0_pwm {
 	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+	status = "okay";
 };
 
-&pwm0_26 {
+&pwm_ch0_25 {
+	divider-type = <1>;
+        divider-sel = <0>;
+        divider-val = <1000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&p7_5_pwm0_25_line_out>;
+	status = "okay";
+};
+
+&pwm_ch0_26 {
+	divider-type = <1>;
+        divider-sel = <2>;
+        divider-val = <79>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&p7_6_pwm0_26_line_out>;
+	status = "okay";
+};
+
+&pwm_ch0_27 {
+	divider-type = <1>;
+        divider-sel = <1>;
+        divider-val = <79>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&p7_7_pwm0_27_line_out>;
 	status = "okay";
 };
