@@ -13,28 +13,28 @@
 
 LOG_MODULE_REGISTER(flash_test, LOG_LEVEL_INF);
 
-#define FLASH0 DT_NODELABEL(flash0)
-#define FLASH1 DT_NODELABEL(flash1)
-#define FLASH2 DT_NODELABEL(flash2)
-#define FLASH3 DT_NODELABEL(flash3)
+#define FLASH0 DT_NODELABEL(code_flash0)
+#define FLASH1 DT_NODELABEL(code_flash1)
+#define FLASH2 DT_NODELABEL(work_flash0)
+#define FLASH3 DT_NODELABEL(work_flash1)
 
-#define FLASH0_SELECTED DT_NODE_EXISTS(DT_CHILD(FLASH0, partitions))
-#define FLASH1_SELECTED DT_NODE_EXISTS(DT_CHILD(FLASH1, partitions))
-#define FLASH2_SELECTED DT_NODE_EXISTS(DT_CHILD(FLASH2, partitions))
-#define FLASH3_SELECTED DT_NODE_EXISTS(DT_CHILD(FLASH3, partitions))
+#define FLASH0_SELECTED DT_NODE_HAS_COMPAT(DT_CHILD(FLASH0, partitions), fixed_partitions)
+#define FLASH1_SELECTED DT_NODE_HAS_COMPAT(DT_CHILD(FLASH1, partitions), fixed_partitions)
+#define FLASH2_SELECTED DT_NODE_HAS_COMPAT(DT_CHILD(FLASH2, partitions), fixed_partitions)
+#define FLASH3_SELECTED DT_NODE_HAS_COMPAT(DT_CHILD(FLASH3, partitions), fixed_partitions)
 
 #if FLASH0_SELECTED
 	#define TEST_SIZE 0x8000  /* CFLASH - LRG - 32 KB - Erase sector */
 	#define USE_CFLASH 1
-	#define TEST_OFFSET 0x5E8000
+	#define TEST_OFFSET 0x26FFF
 #elif FLASH1_SELECTED
 	#define TEST_SIZE 0x2000  /* CFLASH - SMS - 8 KB - Erase sector */
 	#define USE_CFLASH 1
-	#define TEST_OFFSET 0x10000
+	#define TEST_OFFSET 0x2000
 #elif FLASH2_SELECTED
 	#define TEST_SIZE 0x800  /* WFLASH - LRG - 2 KB - Erase sector */
 	#define USE_WFLASH 1
-	#define TEST_OFFSET 0x0
+	#define TEST_OFFSET 0x800
 #elif FLASH3_SELECTED
 	#define TEST_SIZE 0x80  /* WFLASH - SMS - 128 bytes - Erase sector */
 	#define USE_WFLASH 1
@@ -49,13 +49,13 @@ LOG_MODULE_REGISTER(flash_test, LOG_LEVEL_INF);
 int main(void)
 {
 	/* Use the zephyr_flash_controller for the flash driver */
-	// const struct device *flash_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+	const struct device *flash_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
 
 	/* Use the smif_0 or smif_1 for the flash driver */
 
 	// const struct device *flash_dev = DEVICE_DT_GET(DT_NODELABEL(smif0));
 
-	const struct device *flash_dev = DEVICE_DT_GET(DT_NODELABEL(smif0));
+	//const struct device *flash_dev = DEVICE_DT_GET(DT_NODELABEL(smif0));
 
 	int ret;
 
