@@ -1,0 +1,36 @@
+/*
+ * Copyright (c) 2026 Infineon Technologies AG
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	chosen {
+		zephyr,ipc_shm = &ipc_shm0;
+		zephyr,ipc = &ipm0;
+	};
+
+	ipm0: ipm@0 {
+		compatible = "zephyr,mbox-ipm";
+		mboxes = <&mbox 1>, <&mbox 0>;
+		mbox-names = "tx", "rx";
+		status = "okay";
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/*
+		 * Address: 0x08010000 (M4_0 Start - 16KB)
+		 * Size: 16KB (0x4000)
+		 */
+		ipc_shm0: memory@08010000 {
+			compatible = "mmio-sram";
+			reg = <0x08010000 0x4000>;
+		};
+	};
+};
+
+&mbox {
+	status = "okay";
+};
