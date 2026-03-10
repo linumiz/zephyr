@@ -31,7 +31,7 @@ struct ifx_tcpwm_counter_config {
 	cy_en_divider_types_t divider_type;
 	uint32_t divider_sel;
 	uint32_t divider_val;
-#if defined(COMPONENT_CAT1C)
+#if defined(COMPONENT_CAT1C) || defined (CONFIG_SOC_FAMILY_CYT2BL)
 	uint32_t clock_peri_group;
 #endif
 	void (*irq_enable_func)(const struct device *dev);
@@ -47,7 +47,7 @@ struct ifx_tcpwm_counter_data {
 	struct counter_alarm_cfg alarm_cfg;
 	struct counter_top_cfg top_value_cfg_counter;
 	uint32_t guard_period;
-#if !defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if !defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) || defined (CONFIG_SOC_FAMILY_CYT2BL)
 	struct ifx_cat1_clock clock;
 #endif
 };
@@ -148,7 +148,7 @@ static int ifx_tcpwm_counter_init(const struct device *dev)
 	cy_stc_tcpwm_counter_config_t counter_config = counter_default_config;
 	uint32_t clk_connection;
 
-#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) || defined (CONFIG_SOC_FAMILY_CYT2BL)
 	if ((uint32_t)config->reg_base >= (uint32_t)TCPWM0_GRP2) {
 		clk_connection = (PCLK_TCPWM0_CLOCKS512 +
 				 (((uint32_t)config->reg_base - (uint32_t)TCPWM0_GRP2) /
@@ -235,7 +235,7 @@ static uint32_t ifx_tcpwm_counter_get_freq(const struct device *dev)
 	struct ifx_tcpwm_counter_data *const data = dev->data;
 	const struct ifx_tcpwm_counter_config *config = dev->config;
 
-#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) || defined (CONFIG_SOC_FAMILY_CYT2BL) 
 	uint32_t frequency = Cy_SysClk_PeriPclkGetFrequency(config->clock_peri_group,
 						 config->divider_type, config->divider_sel);
 #else
@@ -517,7 +517,7 @@ static DEVICE_API(counter, counter_api) = {
 		}
 #endif
 
-#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) || defined (CONFIG_SOC_FAMILY_CYT2BL)
 /* Counter driver init macros */
 #define INFINEON_TCPWM_COUNTER_INIT(n)                                                             \
                                                                                                    \
@@ -535,17 +535,17 @@ static DEVICE_API(counter, counter_api) = {
 							  : UINT16_MAX,                            \
 				 .flags = COUNTER_CONFIG_INFO_COUNT_UP,                            \
 				 .channels = 1},                                                   \
-		.reg_base = (TCPWM_GRP_CNT_Type *)DT_REG_ADDR(DT_INST_PARENT(n)),                  \
-		.index = (DT_REG_ADDR(DT_INST_PARENT(n)) -                                         \
-			  DT_REG_ADDR(DT_PARENT(DT_INST_PARENT(n)))) /                             \
-			 DT_REG_SIZE(DT_INST_PARENT(n)),                                           \
+		.reg_base = (TCPWM_GRP_CNT_Type *)DT_INST_REG_ADDR(n),                  	   \
+		.index = (DT_INST_REG_ADDR(n) -                                         	   \
+			  DT_REG_ADDR(DT_INST_PARENT(n))) /                                        \
+			 DT_INST_REG_SIZE(n),                                                      \
 		.irq_num = DT_INST_PROP_BY_IDX(n, system_interrupts, 0),                           \
 		.resolution_32_bits =                                                              \
 			(DT_PROP(DT_INST_PARENT(n), resolution) == 32) ? true : false,             \
 		.irq_enable_func = ifx_counter_irq_enable_func_##n,                                \
-		.divider_type = DT_PROP(DT_INST_PARENT(n), divider_type),                          \
-		.divider_sel = DT_PROP(DT_INST_PARENT(n), divider_sel),                            \
-		.divider_val = DT_PROP(DT_INST_PARENT(n), divider_val),				   \
+		.divider_type = DT_INST_PROP(n, divider_type),                          	   \
+		.divider_sel = DT_INST_PROP(n, divider_sel),                            	   \
+		.divider_val = DT_INST_PROP(n, divider_val),				           \
 		.clock_peri_group = DT_PROP(DT_INST_PARENT(n), ifx_peri_group),			   \
 	};                                                                                         \
                                                                                                    \
