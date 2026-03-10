@@ -1,0 +1,25 @@
+&tcpwm0_grp0_tgpio {
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+    divider-type = <1>;   /* 16-bit divider */
+    divider-sel = <0>;    /* instance #0 */
+    divider-val = <0>;    /* no division */
+    status = "okay";
+};
+
+&tgpio_ch0_28 {
+    pinctrl-0 = <&p4_1_tc0_28_tr>;
+    pinctrl-names = "default";
+    status = "okay";
+};
+
+&tgpio_ch0_24 {
+    pinctrl-0 = <&p6_4_tc0_24_tr>;
+    pinctrl-names = "default";
+    status = "okay";
+};
+
+&tgpio_ch0_26 {
+    pinctrl-0 = <&p7_6_pwm0_26_line_out>;
+    pinctrl-names = "default";
+    status = "okay";
+};
