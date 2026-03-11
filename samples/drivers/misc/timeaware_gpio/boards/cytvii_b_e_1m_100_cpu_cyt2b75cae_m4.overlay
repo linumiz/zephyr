@@ -1,0 +1,19 @@
+tgpio: &tcpwm0_grp0_tgpio {
+    ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+    divider-type = <1>;   /* 16-bit divider */
+    divider-sel = <0>;    /* instance #0 */
+    divider-val = <1000>;    /* no division */
+    status = "okay";
+};
+
+&tgpio_ch0_2 {
+    pinctrl-0 = <&p6_5_tc0_2_tr>;
+    pinctrl-names = "default";
+    status = "okay";
+};
+
+&tgpio_ch0_21 {
+    pinctrl-0 = <&p8_2_pwm0_21_line_out>;
+    pinctrl-names = "default";
+    status = "okay";
+};
