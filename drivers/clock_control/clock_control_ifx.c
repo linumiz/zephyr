@@ -70,7 +70,9 @@ static int ifx_clock_init(const struct device *dev)
 	}
 #endif
 
+	#if !defined(CONFIG_SOC_SERIES_TVII_B_E)
 	Cy_SysClk_ClkSlowSetDivider(1);
+	#endif
 
 	int i;
 	for (i = 0; i < SRSS_NUM_CLKPATH; i++) {
