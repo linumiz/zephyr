@@ -7,7 +7,9 @@
 #include <infineon/cat1a/cyt2bl/system_clocks.dtsi>
 #include <zephyr/dt-bindings/gpio/gpio.h>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
-#include <zephyr/dt-bindings/pwm/pwm.h>
+#include <dt-bindings/adc/adc.h>
+#include <dt-bindings/pwm/pwm.h>
+
 
 #include "kit_t2g_b_e_lite-pinctrl.dtsi"
 
@@ -25,6 +27,7 @@
 		pwm-led1 = &pwm_led1;
 		pwm-led2 = &pwm_led2;
 	};
+
 
 	leds {
 		compatible = "gpio-leds";
@@ -60,6 +63,7 @@
 			zephyr,code = <INPUT_KEY_1>;
 		};
 	};
+
 
 	reserved-memory {
 		#address-cells = <1>;
@@ -207,7 +211,7 @@ adc0: &adc0 {
 	clocks = <&clk_hf0>;
 	clock-frequency = <10670000>;
 	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
-	ifx,peri-clk = <0x001c>;
+	ifx,peri-clk = <0x0026>;
 	ifx,peri-div = <1>; /* 8-bit divider */
 	ifx,peri-div-inst = <2>;
 
