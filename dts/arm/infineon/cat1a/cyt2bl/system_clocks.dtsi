@@ -103,7 +103,7 @@
 				#clock-cells = <0>;
 				compatible = "infineon,cat1-pll";
 				reg = <1>;
-				clocks = <&clk_imo>;
+				clocks = <&clk_eco>;
 				p-div = <25>;
 				q-div = <2>;
 				frac-div = <0x00000>;
@@ -121,7 +121,7 @@
 				compatible = "infineon,cat1-hf-clock";
 				reg = <0>;
 				clocks = <&pll0>;
-				divider = <2>;
+				divider = <0>;
 				status = "okay";
 			};
 
