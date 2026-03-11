@@ -148,7 +148,7 @@
 		compatible = "pwm-leds";
 
 		pwm_led0: pwm_led_0 {
-			pwms = <&pwm0_21 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+			pwms = <&tcpwm0_grp0_pwm 0x15 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
 		};
 	};
 
