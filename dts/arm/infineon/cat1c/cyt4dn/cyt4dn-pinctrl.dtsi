@@ -358,6 +358,12 @@
 				pinmux = <DT_CAT1_PINMUX(7, 7, HSIOM_SEL_ACT_0)>;
 				drive-push-pull;
 			};
+
+                        /omit-if-no-ref/ p0_3_tc0_21_tr: p0_3_tc0_21_tr {
+				pinmux = <DT_CAT1_PINMUX(0, 3, HSIOM_SEL_ACT_2)>;
+				drive-push-pull;
+				input-enable;
+                        };
 		};
 	};
 };
