@@ -10,6 +10,7 @@
 #define DIV_24_5_BIT    03
 
 #include <dt-bindings/clock/ifx_clock_source_def.h>
+
  / {
     clocks {
         clk_wco: clk_wco{
@@ -120,7 +121,7 @@
                 compatible = "infineon,cat1-hf-clock";
                 reg = <0>;
                 clocks = <&pll0>;
-                divider = <1>;
+                divider = <0>;
                 status = "okay";
             };
 
