@@ -74,6 +74,11 @@ static int ifx_clock_init(const struct device *dev)
 	Cy_SysClk_ClkSlowSetDivider(1);
 	#endif
 
+	/* Peripheral Clock Divider for Body Entry devices to limit it to 100MHZ*/
+	#if defined(CONFIG_SOC_SERIES_TVII_B_E)
+	Cy_SysClk_ClkPeriSetDivider(1);
+	#endif
+
 	int i;
 	for (i = 0; i < SRSS_NUM_CLKPATH; i++) {
 		ret = Cy_SysClk_ClkPathSetSource(
