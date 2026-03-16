@@ -56,7 +56,7 @@ static void ifx_cat1_sar_isr(const struct device *dev)
 	uint32_t ch = 0;
 	uint32_t status = Cy_SAR2_Channel_GetInterruptStatus(config->base, last_channel);
 	Cy_SAR2_Channel_ClearInterrupt(config->base, last_channel, CY_SAR2_INT_GRP_DONE);
-	
+
 	if (status & CY_SAR2_INT_GRP_DONE) {
 		while (channels != 0)
 		{
@@ -89,7 +89,7 @@ static void adc_context_start_sampling(struct adc_context *ctx)
 	const struct ifx_cat1_sar_config *config = dev->config;
 	uint8_t last_ch = find_msb_set(ctx->sequence.channels)-1;
 	uint8_t first_ch = find_lsb_set(ctx->sequence.channels)-1;
-        
+
 	(config->base)->CH[last_ch].TR_CTL |= GROUP_END;
 
 	Cy_SAR2_Channel_ClearInterrupt(config->base, last_ch, CY_SAR2_INT_GRP_DONE);
@@ -137,7 +137,7 @@ static int ifx_cat1_sar_channel_setup(const struct device *dev,
         cy_ch_cfg.extMuxEnable = false;
         cy_ch_cfg.preconditionMode = CY_SAR2_PRECONDITION_MODE_OFF;
         cy_ch_cfg.overlapDiagMode = CY_SAR2_OVERLAP_DIAG_MODE_OFF;
-	
+
   	if (channel_cfg->acquisition_time != ADC_ACQ_TIME_DEFAULT) {
 		switch (ADC_ACQ_TIME_UNIT(channel_cfg->acquisition_time)) {
 		case ADC_ACQ_TIME_TICKS:
@@ -172,7 +172,7 @@ static int ifx_cat1_sar_channel_setup(const struct device *dev,
         cy_ch_cfg.interruptMask = 0U;
 
 	adc_context_lock(&data->ctx, false, NULL);
-	
+
 	status = Cy_SAR2_Channel_Init(config->base, channel_id, &cy_ch_cfg);
         if (status != CY_SAR2_SUCCESS) {
                 ret = -EIO;
@@ -204,7 +204,7 @@ static int ifx_cat1_sar_read_internal(const struct device *dev,
                 LOG_ERR("Oversampling not supported");
                 return -ENOTSUP;
         }
-	
+
 	if (count == 0) {
                 LOG_ERR("No channels selected");
                 return -EINVAL;
@@ -251,7 +251,7 @@ static int ifx_cat1_sar_read_async(const struct device *dev,
 	adc_context_lock(&data->ctx, true, async);
 	ret = ifx_cat1_sar_read_internal(dev, sequence);
 	adc_context_release(&data->ctx, ret);
-	
+
 	return ret;
 }
 #endif
@@ -283,18 +283,27 @@ static int ifx_clock_config(const struct device *dev, uint32_t target_freq)
     const struct ifx_cat1_sar_config *config = dev->config;
     uint32_t divider;
     uint32_t hf_clock_frequency;
-    
+	uint32_t peri_clk_frequency;
+
     if (target_freq < SAR_MIN_FREQ_HZ || target_freq > SAR_MAX_FREQ_HZ) {
         LOG_ERR("Invalid SAR frequency: %u", target_freq);
         return -EINVAL;
     }
 
+	/* Use Peri Clock (source being hf0) as source clock for ADC in Body Entry devices */
+	#if defined(CONFIG_SOC_SERIES_TVII_B_E)
+	peri_clk_frequency = Cy_SysClk_ClkPeriGetFrequency();
+	#else
     clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf2)),
                                  NULL, &hf_clock_frequency);
-    
+	#endif
 
+	#if defined(CONFIG_SOC_SERIES_TVII_B_E)
+	divider = (peri_clk_frequency + (target_freq / 2)) / target_freq;
+	#else
     divider = (hf_clock_frequency + (target_freq / 2)) / target_freq;
-    
+	#endif
+
     Cy_SysClk_PeriPclkDisableDivider(config->clock_peri_group,
                                      config->peri_div_type,
                                      config->peri_div_type_inst);
@@ -313,13 +322,13 @@ static int ifx_clock_config(const struct device *dev, uint32_t target_freq)
 }
 
 static int ifx_cat1_sar_init(const struct device *dev) {
-	
+
 	const struct ifx_cat1_sar_config *config = dev->config;
 	struct ifx_cat1_sar_data *data = dev->data;
 	int ret = 0;
 
 	LOG_INF("Initilizing infineon CAT1 SAR2 ADC");
-	
+
 	data->dev = dev;
 
 	ret = ifx_clock_config(dev, config->frequency);
@@ -332,7 +341,7 @@ static int ifx_cat1_sar_init(const struct device *dev) {
 		return ret;
 	}
 
-	LOG_INF("ADC Intilized successfully");	
+	LOG_INF("ADC Intilized successfully");
 	adc_context_unlock_unconditionally(&data->ctx);
 	return ret;
 }
