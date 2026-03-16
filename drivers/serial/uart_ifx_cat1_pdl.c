@@ -360,7 +360,7 @@ static int ifx_cat1_uart_configure(const struct device *dev, const struct uart_c
 	data->scb_config.enableCts = data->cts_enabled;
 
 	#if defined(CONFIG_SOC_SERIES_TVII_B_E)
-	result = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf0)), NULL, &clock_frequency);
+	clock_frequency = Cy_SysClk_ClkPeriGetFrequency();
 	#else
 	result = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf2)), NULL, &clock_frequency);
 	#endif
