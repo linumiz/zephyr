@@ -1578,10 +1578,10 @@
 
 		dma0: dw@40280000 {
 			#dma-cells = <1>;
-			compatible = "infineon,cat1-dma";
+			compatible = "infineon,cat1-dma-pdl";
 			reg = <0x40280000 0x10000>;
 			dma-channels = <89>;
-			system-interrupts = <152 6>, /* CH0 */
+			interrupts = <152 6>, /* CH0 */
 					    <153 6>, /* CH1 */
 					    <154 6>, /* CH2 */
 					    <155 6>, /* CH3 */
@@ -1675,10 +1675,10 @@
 
 		dma1: dw@40290000 {
 			#dma-cells = <1>;
-			compatible = "infineon,cat1-dma";
+			compatible = "infineon,cat1-dma-pdl";
 			reg = <0x40290000 0x10000>;
 			dma-channels = <33>;
-			system-interrupts = <241 6>, /* CH0 */
+			interrupts = <241 6>, /* CH0 */
 					    <242 6>, /* CH1 */
 					    <243 6>, /* CH2 */
 					    <244 6>, /* CH3 */
