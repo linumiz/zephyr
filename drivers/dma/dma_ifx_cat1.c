@@ -422,6 +422,7 @@ static int ifx_cat1_dma_start(const struct device *dev, uint32_t channel)
 #if !defined(CONFIG_SOC_SERIES_TVII_B_E)
 	/* Enable the interrupt  */
 	irq_enable(data->channels[channel].irq);
+#endif
 
 	/* Enable DMA channel */
 	Cy_DMA_Channel_Enable(cfg->regs, channel);
