@@ -576,6 +576,13 @@ static int ifx_cat1_spi_init(const struct device *dev)
 	.spi_rx_trigger	= TRIG_OUT_1TO1_2_SCB_RX_TO_PDMA10,
 #endif
 
+#elif defined(CONFIG_SOC_SERIES_TVII_B_E)
+
+#if defined(CONFIG_SOC_DIE_CYT2B7)
+#define SPI_DMA_TRIGGERS(index)                                                                  \
+	.spi_rx_trigger	= TRIG_OUT_1TO1_8_SCB_RX_TO_PDMA10,
+#endif
+
 #else
 #define SPI_DMA_TRIGGERS(index)                                                                    \
 	.spi_rx_trigger = (en_peri0_trig_input_pdma0_tr_t)(PERI_0_TRIG_IN_MUX_0_SCB_RX_TR_OUT0),   \
@@ -704,7 +711,7 @@ static int ifx_cat1_spi_init(const struct device *dev)
 	static struct ifx_cat1_spi_data spi_cat1_data_##n = {                                      \
 		SPI_CONTEXT_INIT_LOCK(spi_cat1_data_##n, ctx),                                     \
 		SPI_CONTEXT_INIT_SYNC(spi_cat1_data_##n, ctx),                                     \
-		SPI_DMA_CHANNEL(n, tx, MEMORY_TO_PERIPHERAL, 1, 1)                                 \
+		SPI_DMA_CHANNEL(n, tx, MEMORY_TO_PERIPHERAL, 1, 1)                               \
 			SPI_DMA_CHANNEL(n, rx, PERIPHERAL_TO_MEMORY, 1, 1) SPI_DMA_TRIGGERS(n)     \
 				SPI_CONTEXT_CS_GPIOS_INITIALIZE(DT_DRV_INST(n), ctx)               \
 					SPI_PERI_CLOCK_INIT(n)                                     \
@@ -932,7 +939,7 @@ static cy_rslt_t ifx_cat1_spi_int_frequency(const struct device *dev, uint32_t h
 	uint32_t peri_freq = Cy_SysClk_ClkHfGetFrequency(hfclk);
 #elif defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
 	uint32_t peri_freq;
-	ret = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf0)),
+	ret = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf2)),
 	                              NULL, &peri_freq);
 	if (ret < 0) {
 		LOG_ERR("Failed to get HF clock frequency");
