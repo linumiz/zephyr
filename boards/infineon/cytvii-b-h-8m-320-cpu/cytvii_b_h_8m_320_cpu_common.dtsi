@@ -10,6 +10,7 @@
 #include <zephyr/dt-bindings/pinctrl/ifx_cat1-pinctrl.h>
 #include <dt-bindings/adc/adc.h>
 #include <common/freq.h>
+#include <zephyr/dt-bindings/pwm/pwm.h>
 
 / {
 	aliases {
@@ -37,6 +38,7 @@
 		dma0 = &dma0;
 		uart3 = &uart3;
 		eeprom-0 = &eeprom0;
+		pwm-led0 = &pwm_led0;
 	};
 
 	leds {
@@ -140,6 +142,14 @@
 			label = "SW_5";
 			gpios = <&gpio_prt28 1 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
 			zephyr,code = <INPUT_KEY_5>;
+		};
+	};
+
+	pwmleds {
+		compatible = "pwm-leds";
+
+		pwm_led0: pwm_led_0 {
+			pwms = <&tcpwm1_grp0_pwm 18 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
 		};
 	};
 
