@@ -39,11 +39,10 @@
 				sw5 = &bb_user_bt5;
 				watchdog0 = &watchdog0;
 				spi1 = &spi1;
-				eeprom-0 = &eeprom0;
 				pwm-led0 = &pwm_led0;
-    };
+	};
 
-    leds {
+	leds {
 				compatible = "gpio-leds";
 
 				cpu_user_led0: led0 {
@@ -183,7 +182,7 @@
 
 			m4_partition: partition@20000 {
 						label = "m4_partition";
-						reg = <0x20000 DT_SIZE_K(960)>;
+						reg = <0x20000 DT_SIZE_K(832)>;
 			};
 	};
 };
@@ -219,27 +218,21 @@ i2c6: &scb6 {
 
 spi1: &scb1 {
 		compatible = "infineon,cat1-spi-pdl";
-		status = "disabled";
+		status = "okay";
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		 /* SPI pins */
 		pinctrl-0 = <&p18_0_scb1_spi_miso &p18_1_scb1_spi_mosi &p18_2_scb1_spi_scl>;
 		pinctrl-names = "default";
 		cs-gpios = <&gpio_prt18 3 GPIO_ACTIVE_LOW>;
+
 		clocks = <&clk_hf0>;
 		ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
 		ifx,peri-clk = <0x0015>;
 		ifx,peri-div = <1>; /* 16-bit divider */
 		ifx,peri-div-inst = <3>;
-
-					eeprom0: eeprom0@0 {
-					/* M95040-RMC6TG aka U5 (4 kbit eeprom in DFN8 package) */
-					compatible = "atmel,at25";
-					reg = <0x00>;
-					size = <512>;
-					pagesize = <32>;
-					address-width = <16>;
-					spi-max-frequency = <DT_FREQ_M(10)>;
-					timeout = <5>;
-		};
-
 };
 
 can0: &can0_0 {
