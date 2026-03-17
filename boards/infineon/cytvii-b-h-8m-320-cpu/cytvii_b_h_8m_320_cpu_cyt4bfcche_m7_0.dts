@@ -18,7 +18,7 @@
 	compatible = "infineon,cytvii-b-h-8m-320-cpu", "infineon,CYTVIIBH8M";
 
 	aliases {
-		adc0 = &adc0;
+		adc1 = &adc1;
 	};
 
 	chosen {
