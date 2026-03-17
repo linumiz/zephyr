@@ -18,6 +18,7 @@
 #include <cy_wdt.h>
 #include <cy_sysclk.h>
 
+#define IFX_FAST_CLOCK_DOMAIN_FREQ	160 /* 160 MHz */
 #if (CONFIG_SOC_DIE_CYT2B7)
      #include "tviibe1m_config.h"
 #elif (CONFIG_SOC_DIE_CYT2BL)
@@ -97,6 +98,7 @@ void soc_prep_hook(void)
 	// SystemCoreClockUpdate();
 
 	cat1a_m0p_srom_init();
+	Cy_SysLib_SetWaitStates(false, IFX_FAST_CLOCK_DOMAIN_FREQ);
 }
 
 static int early_init() {
