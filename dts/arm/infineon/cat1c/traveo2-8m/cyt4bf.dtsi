@@ -3105,6 +3105,18 @@
 			ifx,peri-div-inst = <2>;
 		};
 
+		adc1: adc@40901000 {
+			compatible = "infineon,ifx-sar";
+			reg = <0x40901000 0x1000>;
+			#io-channel-cells = <1>;
+			system-interrupts = <155 3>;
+			clock-frequency = <26670000>;
+			ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+			ifx,peri-clk = <0x012B>;
+			ifx,peri-div = <0>; /* 8-bit divider */
+			ifx,peri-div-inst = <2>;
+		};
+
 		can0_0: can@40520000 {
 			compatible = "infineon,cat1-can";
 			reg = <0x40520000 0x200>, <0x40530000 0xA000>;
