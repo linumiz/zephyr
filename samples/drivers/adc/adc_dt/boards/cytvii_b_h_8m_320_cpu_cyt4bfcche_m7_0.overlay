@@ -7,36 +7,34 @@
 
 / {
 	zephyr,user {
-		io-channels = <&adc0 0>;
+		io-channels = <&adc1 10>;
 	};
 };
 
 &pinctrl {
-/* Configure P12.6 for analog input - ADC1 channel 10 */
-p12_6_pass0_sar0_an10: p12_6_pass0_sar0_an10 {
-pinmux = <DT_CAT1_PINMUX(12, 6, HSIOM_SEL_AMUXA)>;
-};
+		/* Configure P12.6 for analog input */
+		p12_6_pass0_sar1_an10: p12_6_pass0_sar1_an10 {
+		pinmux = <DT_CAT1_PINMUX(12, 6, HSIOM_SEL_AMUXA)>;
+		};
+	};
+
+&adc1 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		pinctrl-0 = <&p12_6_pass0_sar1_an10>;
+		pinctrl-names = "default";
+
+channel@10 {
+		reg = <10>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_VDD_1";
+		zephyr,vref-mv = <3300>;
+		zephyr,input-positive = <10>;
+		zephyr,resolution = <12>;
+		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 1)>;
+	};
 };
 
 &gpio_prt12 {
 	status = "okay";
-};
-
-
-&adc0 {
-	#address-cells = <1>;
-	#size-cells = <0>;
-
-	pinctrl-0 = <&p12_6_pass0_sar0_an10>;
-	pinctrl-names = "default";
-
-	channel@0 {
-		reg = <0>;
-		zephyr,gain = "ADC_GAIN_1";
-		zephyr,reference = "ADC_REF_VDD_1";
-		zephyr,vref-mv = <3300>; /* VDDA = 3.3V reference */
-		zephyr,input-positive = <10>;
-		zephyr,resolution = <12>;
-		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 10)>;
-	};
 };
