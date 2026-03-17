@@ -237,7 +237,7 @@ uart3: &scb3 {
 	pinctrl-names = "default";
 };
 
-&adc0 {
+&adc1 {
 	status = "okay";
 	clocks = <&clk_hf2>;
 
@@ -429,7 +429,7 @@ can0: &can0_0 {
 	status = "okay";
 };
 
-&adc0 {
+&adc1 {
 	status = "okay";
 };
 
