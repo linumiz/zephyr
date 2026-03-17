@@ -1,0 +1,11 @@
+&tcpwm0_grp0_cnt {
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+	status = "okay";
+};
+
+&counter0_0{
+	divider-type = <1>;
+        divider-sel = <0>;
+        divider-val = <20000>;
+        status = "okay";
+};
