@@ -9,7 +9,7 @@
 / {
 	flash_controller: flash-controller@0x40240000 {
 
-		compatible = "infineon,flash-controller";
+		compatible = "infineon,cat1-flash-controller-pdl";
 		reg = <0x40240000 0x10000>;
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -440,10 +440,10 @@
 
 		dma0: dw@40280000 {
 			#dma-cells = <1>;
-			compatible = "infineon,cat1-dma";
+			compatible = "infineon,cat1-dma-pdl";
 			reg = <0x40280000 0x10000>;
-			dma-channels = <89>;
-			system-interrupts = <164 6>, /* CH0 */
+			dma-channels = <93>;
+			interrupts = <164 6>, /* CH0 */
 					    <165 6>, /* CH1 */
 					    <166 6>, /* CH2 */
 					    <167 6>, /* CH3 */
@@ -541,10 +541,10 @@
 
 		dma1: dw@40290000 {
 			#dma-cells = <1>;
-			compatible = "infineon,cat1-dma";
+			compatible = "infineon,cat1-dma-pdl";
 			reg = <0x40290000 0x10000>;
-			dma-channels = <33>;
-			system-interrupts = <241 6>, /* CH0 */
+			dma-channels = <45>;
+			interrupts = <241 6>, /* CH0 */
 					    <256 6>, /* CH1 */
 					    <257 6>, /* CH2 */
 					    <258 6>, /* CH3 */
@@ -593,13 +593,13 @@
 		};
 
 		tcpwm0: tcpwm0@40380000{
-			  reg = <0x40380000 0x2980>; 
-			  #address-cells = <1>;
-			  #size-cells = <1>;
-			  tcpwm0_grp0: tcpwm@40380000 {
-			     reg = <0x40380000 0x1f80>;
-			     #address-cells = <1>;
-			     #size-cells = <1>;
+				reg = <0x40380000 0x2980>;
+				#address-cells = <1>;
+				#size-cells = <1>;
+				tcpwm0_grp0: tcpwm@40380000 {
+				reg = <0x40380000 0x1f80>;
+				#address-cells = <1>;
+				#size-cells = <1>;
 				tcpwm0_grp0_pwm: pwm@40380000 {
 					compatible = "infineon,cat1-pwm";
 					reg = <0x40380000 0x1f80>;
@@ -1818,7 +1818,7 @@
 						system-interrupts = <362 4>;
 						status = "disabled";
 					};
-				};		
+				};
 			   };
 
 			   tcpwm0_grp1: tcpwm@40388000 {
@@ -2073,7 +2073,7 @@
 						system-interrupts = <374 4>;
 						status = "disabled";
 					};
-				};			  
+				};
 			   };
 			  tcpwm0_grp2: tcpwm@40390000 {
 			        reg = <0x40390000 0x400>;
@@ -2133,7 +2133,7 @@
 						reg = <0x7>;
 						system-interrupts = <382 4>;
 						status = "disabled";
-					};	
+					};
 				};
 
 			 tcpwm0_grp2_tgpio: tgpio@40390000 {
