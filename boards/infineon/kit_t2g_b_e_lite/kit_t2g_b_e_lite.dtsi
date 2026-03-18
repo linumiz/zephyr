@@ -7,16 +7,11 @@
 #include <infineon/cat1a/cyt2bl/system_clocks.dtsi>
 #include <zephyr/dt-bindings/gpio/gpio.h>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
-<<<<<<< HEAD:boards/infineon/kit_t2g_b_e_lite/kit_t2g_b_e_lite.dtsi
-#include <dt-bindings/adc/adc.h>
-#include <dt-bindings/pwm/pwm.h>
+#include <zephyr/dt-bindings/adc/adc.h>
+#include <zephyr/dt-bindings/pwm/pwm.h>
 
 
 #include "kit_t2g_b_e_lite-pinctrl.dtsi"
-=======
-#include <infineon/cat1a/cyt2bl/cyt2bl.100-lqfp.dtsi>
-#include <zephyr/dt-bindings/pwm/pwm.h>
->>>>>>> e00abc7acde (boards: infineon: kit_t2g_b_e_lite: add pwm nodes):boards/infineon/kit_t2g_b_e_lite/kit_t2g_b_e_lite.dts
 
 / {
 	aliases {
@@ -26,7 +21,6 @@
 		sw0 = &user_bt0;
 		sw1 = &user_bt1;
 		watchdog0 = &watchdog0;
-		dma0 = &dma0;
 		i2c0 = &scb4;
 		pwm-led0 = &pwm_led0;
 		pwm-led1 = &pwm_led1;
@@ -69,9 +63,6 @@
 		};
 	};
 
-	 pwmleds {
-                compatible = "pwm-leds";
-
 	reserved-memory {
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -88,7 +79,10 @@
 			reg = <0x08008000 DT_SIZE_K(224)>;
 		};
 	};
-                pwm_led0: pwm_led_0 {
+
+	 pwmleds {
+                compatible = "pwm-leds";
+				  pwm_led0: pwm_led_0 {
                         pwms = <&tcpwm0_grp0_pwm 0x9 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
                 };
                 pwm_led1: pwm_led_1 {
@@ -98,12 +92,15 @@
                         pwms = <&tcpwm0_grp0_pwm 0xb PWM_MSEC(20) PWM_POLARITY_INVERTED>;
                 };
 
-        };
+
+	};
+
+
+
 };
 
 &code_flash0 {
 	partitions {
-		compatible = "fixed-partitions";
 		#address-cells = <1>;
 		#size-cells = <1>;
 
@@ -123,7 +120,7 @@
 	status = "okay";
 };
 
-&dma0 {
+&dma1 {
 	status = "okay";
 };
 
@@ -133,8 +130,8 @@ uart0: &scb0 {
 	clocks = <&clk_hf0>;
 	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
 	ifx,peri-clk = <0x001e>;
-	ifx,peri-div = <1>; /* 16-bit divider */
-	ifx,peri-div-inst = <3>;
+	ifx,peri-div = <0>; /* 16-bit divider */
+	ifx,peri-div-inst = <0>;
 
 	status = "okay";
 
@@ -154,8 +151,8 @@ spi1: &scb3 {
 	pinctrl-names = "default";
 	cs-gpios = <&gpio_prt13 3 GPIO_ACTIVE_LOW>;
 
-	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x0108>;
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+	ifx,peri-clk = <0x0021>;
 	ifx,peri-div = <1>; /* 16-bit divider */
 	ifx,peri-div-inst = <3>;
 
@@ -221,6 +218,10 @@ adc0: &adc0 {
 };
 
 &gpio_prt0 {
+	status = "okay";
+};
+
+&gpio_prt13 {
 	status = "okay";
 };
 
