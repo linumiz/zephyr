@@ -1,0 +1,13 @@
+&tcpwm0_grp0_pwm {
+	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(0, 0)>;
+	status = "okay";
+};
+
+&pwm_ch0_9 {
+	divider-type = <1>;
+        divider-sel = <0>;
+        divider-val = <1000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&p5_0_pwm0_9_line_out>;
+	status = "okay";
+};
