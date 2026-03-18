@@ -20,5 +20,19 @@
 
 &p6_2_scb4_i2c_scl {
 	drive-open-drain;
-	input-enable;    
+	input-enable;
 };
+
+&p13_0_scb3_spi_m_miso {
+		input-enable;
+	};
+
+&p13_1_scb3_spi_m_mosi {
+		drive-push-pull;
+	};
+
+&p13_2_scb3_spi_m_clk {
+		drive-push-pull;
+	 };
+
+
