@@ -359,7 +359,11 @@ static int ifx_cat1_uart_configure(const struct device *dev, const struct uart_c
 	data->scb_config.parity = convert_uart_parity_z_to_cy(cfg->parity);
 	data->scb_config.enableCts = data->cts_enabled;
 
-	result = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf0)), NULL, &clock_frequency);
+	#if defined(CONFIG_SOC_SERIES_TVII_B_E)
+	clock_frequency = Cy_SysClk_ClkPeriGetFrequency();
+	#else
+	result = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf2)), NULL, &clock_frequency);
+	#endif
 	if (result < 0) {
 		return result;
 	}
