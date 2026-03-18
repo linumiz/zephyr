@@ -18,7 +18,7 @@ const uintptr_t __irq_vector_table _irq_vector_table[16] = {
 };
 #elif CONFIG_SOC_DIE_CYT2B7
 const uintptr_t __irq_vector_table _irq_vector_table[16] = {
-	((uintptr_t)0x49),         ((uintptr_t)0x2A5),        ((uintptr_t)cat1a_srom_syscall_isr),
+	((uintptr_t)0x49),         ((uintptr_t)0x22d),        ((uintptr_t)cat1a_srom_syscall_isr),
 	((uintptr_t)_isr_wrapper), ((uintptr_t)_isr_wrapper), ((uintptr_t)_isr_wrapper),
 	((uintptr_t)_isr_wrapper), ((uintptr_t)_isr_wrapper), ((uintptr_t)_isr_wrapper),
 	((uintptr_t)_isr_wrapper), ((uintptr_t)_isr_wrapper), ((uintptr_t)_isr_wrapper),
