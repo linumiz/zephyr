@@ -21,8 +21,8 @@
 #include <string.h>
 
 #define TGPIO_LABEL	DT_NODELABEL(tgpio)
-#define TGPIO_PIN_IN	21
-#define TGPIO_PIN_OUT	26
+#define TGPIO_PIN_IN	12
+#define TGPIO_PIN_OUT	9
 
 int main(void)
 {
