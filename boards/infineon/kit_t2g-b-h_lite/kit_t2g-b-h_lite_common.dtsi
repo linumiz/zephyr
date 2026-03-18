@@ -25,6 +25,9 @@
 		dma0=&dma0;
 		adc0=&adc0;
 		i2c0=&i2c0;
+		pwm-led0 = &pwm_led0;
+		pwm-led1 = &pwm_led1;
+
 	};
 
 	leds {
@@ -57,6 +60,19 @@
 			zephyr,code = <INPUT_KEY_1>;
 		};
 	};
+
+	pwmleds {
+		compatible = "pwm-leds";
+
+		pwm_led0: pwm_led_0 {
+			pwms = <&tcpwm1_grp0_pwm 9 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+		};
+
+		pwm_led1: pwm_led_1 {
+			pwms = <&tcpwm1_grp0_pwm 10 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+		};
+	};
+
 
 	reserved-memory {
 		#address-cells = <1>;
