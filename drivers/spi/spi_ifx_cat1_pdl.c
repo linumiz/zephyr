@@ -101,7 +101,7 @@ struct ifx_cat1_spi_data {
 #ifdef CONFIG_IFX_CAT1_SPI_DMA
 	struct ifx_cat1_dma_stream dma_rx;
 	struct ifx_cat1_dma_stream dma_tx;
-#if !defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if !defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) && !defined(CONFIG_SOC_SERIES_TVII_B_E)
 	en_peri0_trig_input_pdma0_tr_t spi_rx_trigger;
 	en_peri0_trig_output_pdma0_tr_t dma_rx_trigger;
 #else
@@ -483,7 +483,7 @@ static int ifx_cat1_spi_init(const struct device *dev)
 	data->resource.block_num = ifx_cat1_uart_get_hw_block_num(config->reg_addr);
 
 #ifdef CONFIG_IFX_CAT1_SPI_DMA
-#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) || defined(CONFIG_SOC_SERIES_TVII_B_E)
 	/* spi_rx_trigger is initialized to TRIG_OUT_1TO1_1_SCB_RX_TO_PDMA10,
 	 * this is incremented by the resource.block_num to get the trigger for the selected SCB
 	 */
@@ -520,7 +520,7 @@ static int ifx_cat1_spi_init(const struct device *dev)
 		data->dma_tx.dma_cfg.dma_callback = dma_callback;
 	}
 
-#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+#if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C) || defined(CONFIG_SOC_SERIES_TVII_B_E)
 	Cy_TrigMux_Select(data->spi_rx_trigger, false, TRIGGER_TYPE_LEVEL);
 #else
 	Cy_TrigMux_Connect(data->spi_rx_trigger, data->dma_rx_trigger, false, TRIGGER_TYPE_LEVEL);
@@ -569,6 +569,11 @@ static int ifx_cat1_spi_init(const struct device *dev)
 #if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
 #define SPI_DMA_TRIGGERS(index)                                                                    \
 	.spi_rx_trigger	= TRIG_OUT_1TO1_1_SCB_RX_TO_PDMA10,
+#elif defined(CONFIG_SOC_SERIES_TVII_B_E)
+#if defined(CONFIG_SOC_DIE_CYT2BL)
+#define SPI_DMA_TRIGGERS(index) 								\
+        .spi_rx_trigger = TRIG_OUT_1TO1_8_SCB_RX_TO_PDMA10,
+#endif
 #else
 #define SPI_DMA_TRIGGERS(index)                                                                    \
 	.spi_rx_trigger = (en_peri0_trig_input_pdma0_tr_t)(PERI_0_TRIG_IN_MUX_0_SCB_RX_TR_OUT0),   \
