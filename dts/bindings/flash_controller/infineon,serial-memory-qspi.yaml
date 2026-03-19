@@ -25,3 +25,8 @@ properties:
   pinctrl-names:
     description: Name of the pinctrl state used by the SMIF/QSPI controller.
     required: true
+
+  hf-clock:
+    type: int
+    description: The HF clock that is interfaced with the SMIF module
+    required: true
