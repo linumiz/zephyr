@@ -1,0 +1,7 @@
+&code_flash1 {
+    partitions {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        compatible = "fixed-partitions";
+    };
+};
