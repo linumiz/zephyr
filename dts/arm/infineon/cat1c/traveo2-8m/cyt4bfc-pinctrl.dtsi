@@ -1430,6 +1430,67 @@
 				pinmux = <DT_CAT1_PINMUX(0, 3, HSIOM_SEL_ACT_13)>;
 				input-enable;
 			};
+
+			/omit-if-no-ref/ p24_1_smif0_clk: p24_1_smif0_clk {
+				pinmux = <DT_CAT1_PINMUX(24, 1, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p24_2_smif0_rwds: p24_2_smif0_rwds {
+				pinmux = <DT_CAT1_PINMUX(24, 2, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p24_3_smif0_sel0: p24_3_smif0_sel0 {
+				pinmux = <DT_CAT1_PINMUX(24, 3, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p24_4_smif0_sel1: 24_4_smif0_sel1 {
+				pinmux = <DT_CAT1_PINMUX(24, 4, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p25_0_smif0_data0: p25_0_smif0_data0 {
+				pinmux = <DT_CAT1_PINMUX(25, 0, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p25_1_smif0_data1: p25_1_smif0_data1 {
+				pinmux = <DT_CAT1_PINMUX(25, 1, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p25_2_smif0_data2: p25_2_smif0_data2 {
+				pinmux = <DT_CAT1_PINMUX(25, 2, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p25_3_smif0_data3: p25_3_smif0_data3 {
+				pinmux = <DT_CAT1_PINMUX(25, 3, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p25_4_smif0_data4: p25_4_smif0_data4 {
+				pinmux = <DT_CAT1_PINMUX(25, 4, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p25_5_smif0_data5: p25_5_smif0_data5 {
+				pinmux = <DT_CAT1_PINMUX(25, 5, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p25_6_smif0_data6: p25_6_smif0_data6 {
+				pinmux = <DT_CAT1_PINMUX(25, 6, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p25_7_smif0_data7: p25_7_smif0_data7 {
+				pinmux = <DT_CAT1_PINMUX(25, 7, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
 		};
 	};
 };
