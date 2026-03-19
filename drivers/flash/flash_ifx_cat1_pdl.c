@@ -54,25 +54,43 @@ static int ifx_cat1_flash_read(const struct device *dev, off_t offset, void *dat
 {
 	const struct ifx_cat1_flash_config *dev_config = dev->config;
 	uint32_t read_offset = dev_config->base_addr + offset;
+	cy_stc_flash_blankcheck_config_t blank_config;
+	cy_en_flashdrv_status_t blank_check_status;
 
 	flash_ifx_mutex_lock(dev);
 
+	if(ifx_cat1_flash_parameters.write_block_size == 64)
+	{
+		blank_config.addrToBeChecked = (uint32_t)read_offset;
+		blank_config.numOfWordsToBeChecked = data_len / 4;
+
+		blank_check_status = Cy_Flash_BlankCheck(&blank_config, CY_FLASH_DRIVER_BLOCKING);
+		LOG_INF("Blank check status=0x%x",blank_check_status);
+		if(blank_check_status == CY_FLASH_DRV_SUCCESS)
+		{
+			memset((void *)data, ifx_cat1_flash_parameters.erase_value , data_len);
+			flash_ifx_mutex_unlock(dev);
+			return 0;
+
+		}
+	}
+
+
 	/* As per PDL: Before reading data from previously programmed/erased
-	 * flash rows, the user must clear or invalidate the flash cache
-	 */
-#if defined (ENABLE_CM7_DATA_CACHE) && defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE)
-	/* FOR M7 CORES */
-	SCB_CleanInvalidateDCache_by_Addr((uint32_t *)read_offset, data_len);
-#else
-	/* FOR M0P Cores */
-	FLASHC_FLASH_CMD = FLASHC_FLASH_CMD_INV_Msk;
-#endif
-	memcpy(data, (uint32_t *)read_offset, data_len);
+	* flash rows, the user must clear or invalidate the flash cache
+	*/
 
-	flash_ifx_mutex_unlock(dev);
-
-	return 0;
-}
+	#if defined (ENABLE_CM7_DATA_CACHE) && defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE)
+		/* FOR M7 CORES */
+		SCB_CleanInvalidateDCache_by_Addr((uint32_t *)read_offset, data_len);
+	#else
+		/* FOR M0P Cores */
+		FLASHC_FLASH_CMD = FLASHC_FLASH_CMD_INV_Msk;
+	#endif
+		memcpy(data, (uint32_t *)read_offset, data_len);
+		flash_ifx_mutex_unlock(dev);
+		return 0;
+	}
 
 static int ifx_cat1_flash_write(const struct device *dev, off_t offset, const void *data,
 				size_t data_len)
