@@ -33,7 +33,7 @@ if (CONFIG_SOC_FAMILY_INFINEON_CAT1 OR CONFIG_SOC_FAMILY_PSOC6_LEGACY)
 
   ## Add mtb-templates-cat1 sources for CAT1 devices
   add_subdirectory(mtb-template-cat1)
-  if (CONFIG_SOC_SERIES_CYT4DN)
+  if (CONFIG_BOARD_KIT_T2G_C2D6M_LITE OR CONFIG_BOARD_CYTVII_B_H_8M_320_CPU)
     add_subdirectory(serial-memory-ms)
     add_subdirectory(zephyr-ifx-cycfg)
     add_subdirectory(mtb-hal-t2gc2d6m)

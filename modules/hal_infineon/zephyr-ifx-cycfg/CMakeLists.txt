@@ -22,7 +22,18 @@ if(CONFIG_SOC_SERIES_PSC3)
 endif()
 
 if(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+if(CONFIG_BOARD_KIT_T2G_C2D6M_LITE)
   set(zephyr_ifx_cycfg_dir ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/zephyr-ifx-cycfg/kit_t2g_c2d6m_lite)
+endif()
+
+if(CONFIG_BOARD_CYTVII_B_H_8M_320_CPU)
+  set(zephyr_ifx_cycfg_dir ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/zephyr-ifx-cycfg/cytvii_b_h_8m_320_cpu)
+  if(CONFIG_DT_HAS_INFINEON_IFX_QSPI_NOR_FLASH_ENABLED AND CONFIG_DT_HAS_INFINEON_IFX_HYPERBUS_FLASH_ENABLED)
+    message(FATAL_ERROR "QSPI NOR flash and HyperBus flash cannot both be enabled simultaneously")
+  endif()
+  zephyr_compile_definitions_ifdef(CONFIG_DT_HAS_INFINEON_IFX_QSPI_NOR_FLASH_ENABLED  SMIF_MODE_DUAL_QSPI)
+  zephyr_compile_definitions_ifdef(CONFIG_DT_HAS_INFINEON_IFX_HYPERBUS_FLASH_ENABLED  SMIF_MODE_HYPERBUS)
+endif()
 
   zephyr_include_directories(${zephyr_ifx_cycfg_dir})
   zephyr_library_sources_ifdef(CONFIG_INFINEON_SERIAL_MEMORY_QSPI ${zephyr_ifx_cycfg_dir}/cycfg_qspi_memslot.c)
