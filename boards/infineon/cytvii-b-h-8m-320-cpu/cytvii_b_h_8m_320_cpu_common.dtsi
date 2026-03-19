@@ -258,6 +258,56 @@ can0: &can0_0 {
 	pinctrl-names = "default";
 };
 
+&smif_0 {
+	status = "okay";
+	pinctrl-0 = <
+		&p24_1_smif0_clk &p24_2_smif0_rwds
+		&p24_3_smif0_sel0 &p24_4_smif0_sel1
+		&p25_0_smif0_data0 &p25_1_smif0_data1
+		&p25_2_smif0_data2 &p25_3_smif0_data3
+		&p25_4_smif0_data4 &p25_5_smif0_data5
+		&p25_6_smif0_data6 &p25_7_smif0_data7
+	>;
+	pinctrl-names = "default";
+	hf-clock = <6>;
+
+	hyperflash: hyperflash@60000000 {
+		compatible = "infineon-ifx-hyperbus-flash";
+		status = "disabled";
+		reg = <0x60000000 DT_SIZE_M(64)>;
+		chip-select = <1>;
+		write-block-size = <512>;
+		erase-block-size = <0x40000>;
+	};
+
+	hyperram: hyperram@64000000 {
+		compatible = "infineon-ifx-hyperbus-flash";
+		status = "disabled";
+		reg = <0x64000000 DT_SIZE_M(8)>;
+		chip-select = <2>;
+		write-block-size = <2>;
+		erase-block-size = <1>;
+	};
+
+	qspi_flash0: qspi_flash0@0 {
+		compatible = "infineon-ifx-qspi-nor-flash";
+		status = "disabled";
+		chip-select = <1>;
+		reg = <0x00000000 DT_SIZE_M(32)>;
+		write-block-size = <256>;
+		erase-block-size = <0x40000>;
+	};
+
+	qspi_flash1: qspi_flash1@60000000 {
+		compatible = "infineon-ifx-qspi-nor-flash";
+		status = "disabled";
+		chip-select = <2>;
+		reg = <0x00000000 DT_SIZE_M(32)>;
+		write-block-size = <256>;
+		erase-block-size = <0x40000>;
+	};
+};
+
 &gpio_prt0 {
 	status = "okay";
 };
@@ -291,6 +341,14 @@ can0: &can0_0 {
 };
 
 &gpio_prt23 {
+	status = "okay";
+};
+
+&gpio_prt24 {
+	status = "okay";
+};
+
+&gpio_prt25 {
 	status = "okay";
 };
 
