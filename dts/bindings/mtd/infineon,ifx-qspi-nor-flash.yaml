@@ -1,0 +1,13 @@
+# Copyright (c) 2026, Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+description: Infineon Hyperbus flash modules
+
+compatible: "infineon-ifx-qspi-nor-flash"
+
+include: soc-nv-flash.yaml
+
+properties:
+  chip-select:
+    type: int
+    description: The chip select of the HyperFlash/HyperRAM node
