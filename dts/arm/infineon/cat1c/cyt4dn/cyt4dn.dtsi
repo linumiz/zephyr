@@ -101,11 +101,13 @@
 			&p25_5_smif0_sel1
 		>;
 		pinctrl-names = "default";
+		hf-clock = <8>;
 		status = "okay";
 
-		hyperflash0: hyperflash0@00000000 {
-			compatible = "soc-nv-flash";
+		hyperflash0: hyperflash0@0 {
+			compatible = "infineon-ifx-hyperbus-flash";
 			reg = <0x00000000 DT_SIZE_M(512)>;
+			chip-select = <0>;
 			write-block-size = <256>;
 			erase-block-size = <4096>;
 
@@ -136,13 +138,15 @@
 			&p28_5_smif1_sel1
 		>;
 		pinctrl-names = "default";
-		status = "okay";
+		hf-clock = <9>;
+		status = "disabled";
 
-		hyperram0: hyperram0@00000000 {
-			compatible = "soc-nv-flash";
+		hyperram0: hyperram0@0 {
+			compatible = "infineon-ifx-hyperbus-flash";
 			reg = <0x00000000 DT_SIZE_M(64)>;
 			write-block-size = <256>;
-			erase-block-size = <0>; /* RAM cannot be erased */
+			erase-block-size = <1>; /* RAM cannot be erased */
+			chip-select = <1>;
 
 			partitions {
 				#address-cells = <1>;
