@@ -64,7 +64,7 @@
 		reg = <0x28080000 DT_SIZE_K(128)>;
 	};
 
-	smif0: smif0@40420000 {
+	smif_0: smif0@40420000 {
 		compatible = "infineon,serial-memory-qspi";
 		reg = <0x40420000 0x10000>;
 		#address-cells = <1>;
