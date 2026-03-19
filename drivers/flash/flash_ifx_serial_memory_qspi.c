@@ -23,10 +23,12 @@ LOG_MODULE_REGISTER(flash_infineon_cat1, CONFIG_FLASH_LOG_LEVEL);
 
 /* Device config structure */
 struct ifx_serial_memory_flash_config {
-	SMIF_CORE_Type *base;
+	SMIF_Type *base;
 	const cy_stc_smif_config_t *config;
 	uint32_t base_addr;
 	uint32_t max_addr;
+	uint32_t erase_block_size;
+	uint8_t chip_select;
 #if CONFIG_FLASH_PAGE_LAYOUT
 	struct flash_pages_layout layout;
 #endif
@@ -55,6 +57,22 @@ static inline void ifx_serial_memory_sem_give(const struct device *dev)
 	struct ifx_serial_memory_flash_data *data = dev->data;
 
 	k_sem_give(&data->sem);
+}
+
+static int ifx_hyperbus_flash_erase(const struct device *dev, off_t offset, size_t size)
+{
+	struct ifx_serial_memory_flash_data *data = dev->data;
+	const struct ifx_serial_memory_flash_config *cfg = dev->config;
+	cy_stc_smif_mem_config_t *mem_cfg =
+		cfg->smif_block_cfg->memConfig[data->serial_memory_obj.smif_active_slot];
+	cy_en_smif_status_t status = CY_SMIF_SUCCESS;
+
+	for (uint32_t addr = offset; (addr < (offset + size)); addr += cfg->erase_block_size) {
+		status = Cy_SMIF_HyperBus_EraseSector(cfg->base, mem_cfg,
+						      addr, &data->smif_context);
+	}
+
+	return status;
 }
 
 static int ifx_serial_memory_flash_read(const struct device *dev, off_t offset, void *data,
@@ -112,6 +130,10 @@ static int ifx_serial_memory_flash_write(const struct device *dev, off_t offset,
 static int ifx_serial_memory_flash_erase(const struct device *dev, off_t offset, size_t size)
 {
 	struct ifx_serial_memory_flash_data *data = dev->data;
+	const struct ifx_serial_memory_flash_config *cfg = dev->config;
+	cy_stc_smif_mem_config_t *mem_cfg =
+		cfg->smif_block_cfg->memConfig[data->serial_memory_obj.smif_active_slot];
+
 	cy_rslt_t rslt;
 	int ret = 0;
 
@@ -121,7 +143,15 @@ static int ifx_serial_memory_flash_erase(const struct device *dev, off_t offset,
 
 	ifx_serial_memory_sem_take(dev);
 
-	rslt = mtb_serial_memory_erase(&data->serial_memory_obj, offset, size);
+	if (mem_cfg->deviceCfg == NULL &&
+	    mem_cfg->hbdeviceCfg != NULL &&
+	    mem_cfg->hbdeviceCfg->hbDevType == CY_SMIF_HB_FLASH) {
+		rslt = ifx_hyperbus_flash_erase(dev, offset, size);
+	} else {
+		rslt = mtb_serial_memory_erase(&data->serial_memory_obj,
+					       offset, size);
+	}
+
 	if (rslt != CY_RSLT_SUCCESS) {
 		LOG_ERR("Error in erasing : 0x%x", rslt);
 		ret = -EIO;
@@ -178,11 +208,25 @@ static int ifx_serial_memory_flash_init(const struct device *dev)
     	Cy_SMIF_Enable(cfg->base, &data->smif_context);
 
 	/* Set-up serial memory. */
-	result = mtb_serial_memory_setup(&data->serial_memory_obj, MTB_SERIAL_MEMORY_CHIP_SELECT_1,
+	result = mtb_serial_memory_setup(&data->serial_memory_obj,
+					 cfg->chip_select,
 					 cfg->base, cfg->clock,
 					 &data->smif_context, cfg->smif_block_cfg);
 	if (result != CY_RSLT_SUCCESS) {
 		LOG_ERR("Serial memory setup failed (QSPI) : 0x%x", result);
+	}
+
+	/*
+	 * Cy_SMIF_MemInit iterates all devices in smifMemConfigs and the
+	 * last device overwrites context->dummyCycles. PDL functions like
+	 * CY_SMIF_HyperBus_ReadStatus (called inside EraseSector and
+	 * Write) use context->dummyCycles for status polling latency.
+	 * The correct value for the active device must be restored.
+	 */
+	if (cfg->smif_block_cfg->memConfig[data->serial_memory_obj.smif_active_slot]->hbdeviceCfg !=
+	    NULL) {
+		data->smif_context.dummyCycles =
+			cfg->smif_block_cfg->memConfig[data->serial_memory_obj.smif_active_slot]->hbdeviceCfg->dummyCycles;
 	}
 
 	k_sem_init(&data->sem, 1, 1);
@@ -200,24 +244,9 @@ static const struct flash_driver_api ifx_serial_memory_flash_driver_api = {
 #endif
 };
 
-#define SOC_NV_FLASH_NODE(n) DT_PARENT(DT_INST(n, fixed_partitions))
+#define FLASH_NODE(n) DT_PARENT(DT_INST(n, fixed_partitions))
 
-#define PAGE_LEN(n) DT_PROP(SOC_NV_FLASH_NODE(n), erase_block_size)
-
-/* Per-instance HF clock numbers */
-#if DT_SAME_NODE(DT_DRV_INST(0), DT_NODELABEL(smif_0))
-#define IFX_FLASH_HF_INST_NUM_0 8U
-#else
-#define IFX_FLASH_HF_INST_NUM_0 9U
-#endif
-
-#if DT_SAME_NODE(DT_DRV_INST(1), DT_NODELABEL(smif_0))
-#define IFX_FLASH_HF_INST_NUM_1 8U
-#else
-#define IFX_FLASH_HF_INST_NUM_1 9U
-#endif
-
-#define IFX_FLASH_HF_INST_NUM(n) UTIL_CAT(IFX_FLASH_HF_INST_NUM_, n)
+#define PAGE_LEN(n) DT_PROP(FLASH_NODE(n), erase_block_size)
 
 /* Per-instance block configs */
 #if DT_SAME_NODE(DT_DRV_INST(0), DT_NODELABEL(smif_0))
@@ -247,7 +276,7 @@ static const struct flash_driver_api ifx_serial_memory_flash_driver_api = {
 	extern cy_stc_smif_config_t IFX_SMIF_CONFIG(n); 							\
 														\
 	static const mtb_hal_hf_clock_t flash_clock_ref##n = {                       				\
-		.inst_num = IFX_FLASH_HF_INST_NUM(n),                                				\
+		.inst_num = DT_PROP(DT_PARENT(FLASH_NODE(n)), hf_clock),                         		\
 	};                                                                             				\
                                                                                    				\
 	static const mtb_hal_clock_t CYBSP_SMIF_CORE_0_XSPI_FLASH_hal_clock##n = {    				\
@@ -258,18 +287,20 @@ static const struct flash_driver_api ifx_serial_memory_flash_driver_api = {
 	static struct ifx_serial_memory_flash_data flash_data##n;						\
 														\
 	static const struct ifx_serial_memory_flash_config flash_config##n = {					\
-		.base =  (SMIF_CORE_Type *)DT_REG_ADDR(DT_DRV_INST(n)),						\
+		.base =  (SMIF_Type *)DT_REG_ADDR(DT_DRV_INST(n)),						\
 		.config = &IFX_SMIF_CONFIG(n),									\
-		.base_addr = DT_REG_ADDR(SOC_NV_FLASH_NODE(n)),							\
-		.max_addr = DT_REG_ADDR(SOC_NV_FLASH_NODE(n)) + DT_REG_SIZE(SOC_NV_FLASH_NODE(n)),		\
+		.base_addr = DT_REG_ADDR(FLASH_NODE(n)),							\
+		.max_addr = DT_REG_ADDR(FLASH_NODE(n)) + DT_REG_SIZE(FLASH_NODE(n)),				\
+		.erase_block_size  = PAGE_LEN(n),                               				\
+		.chip_select = DT_PROP(FLASH_NODE(n), chip_select),						\
 		.params = {											\
 			.write_block_size = 									\
-				DT_PROP(SOC_NV_FLASH_NODE(n), write_block_size),				\
+				DT_PROP(FLASH_NODE(n), write_block_size),					\
 			.erase_value = 0xFF,									\
 		},												\
 		IF_ENABLED(CONFIG_FLASH_PAGE_LAYOUT, (                               				\
 		.layout = {                                                          				\
-			.pages_count = DT_REG_SIZE(SOC_NV_FLASH_NODE(n)) /          				\
+			.pages_count = DT_REG_SIZE(FLASH_NODE(n)) /          					\
 				       PAGE_LEN(n),                                 				\
 			.pages_size  = PAGE_LEN(n),                               				\
 		},))												\
