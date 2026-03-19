@@ -26,11 +26,11 @@ LOG_MODULE_REGISTER(flash_test, LOG_LEVEL_INF);
 #if FLASH0_SELECTED
 	#define TEST_SIZE 0x8000  /* CFLASH - LRG - 32 KB - Erase sector */
 	#define USE_CFLASH 1
-	#define TEST_OFFSET 0x5E8000
+	#define TEST_OFFSET 0x8000
 #elif FLASH1_SELECTED
 	#define TEST_SIZE 0x2000  /* CFLASH - SMS - 8 KB - Erase sector */
 	#define USE_CFLASH 1
-	#define TEST_OFFSET 0x3E000
+	#define TEST_OFFSET 0x2000
 #elif FLASH2_SELECTED
 	#define TEST_SIZE 0x800  /* WFLASH - LRG - 2 KB - Erase sector */
 	#define USE_WFLASH 1
@@ -161,7 +161,7 @@ CY_ALIGN(32) uint8_t read_buf[512] = {0};
 		//return ret;
 	}
 	LOG_INF("Erase completed");
-
+#if 1
 	// Testing read after erase
 	LOG_INF("Reading 0x%x bytes from offset 0x%x after erase", sizeof(read_buf), TEST_OFFSET);
 	ret = flash_read(flash_dev, TEST_OFFSET, read_buf, sizeof(read_buf));
@@ -180,7 +180,7 @@ CY_ALIGN(32) uint8_t read_buf[512] = {0};
 			read_buf[i+8], read_buf[i+9], read_buf[i+10], read_buf[i+11],
 			read_buf[i+12], read_buf[i+13], read_buf[i+14], read_buf[i+15]);
 	}
-
+#endif
 	LOG_INF("Writing 0x%x bytes at offset 0x%x", sizeof(write_buf), TEST_OFFSET);
 	ret = flash_write(flash_dev, TEST_OFFSET, write_buf, sizeof(write_buf));
 	if (ret != 0) {
