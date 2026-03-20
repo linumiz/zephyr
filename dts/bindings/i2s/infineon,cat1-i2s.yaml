@@ -1,0 +1,27 @@
+# Copyright (c) 2026 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+description: Infineon CAT1 AUDIOSS I2S controller
+
+compatible: "infineon,cat1-i2s"
+
+include: [base.yaml, pinctrl-device.yaml, "infineon,system-interrupts.yaml"]
+
+properties:
+  reg:
+    required: true
+
+  system-interrupts:
+    required: true
+
+  dmas:
+    required: true
+
+  dma-names:
+    required: true
+
+  pinctrl-0:
+    required: true
+
+  pinctrl-names:
+    required: true
