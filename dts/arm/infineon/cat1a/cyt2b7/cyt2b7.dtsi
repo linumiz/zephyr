@@ -36,7 +36,7 @@
 		work_flash0: flash@14000000 {
 			compatible = "soc-nv-flash";
 			reg = <0x14000000 DT_SIZE_K(72)>;
-			write-block-size = <512>;
+			write-block-size = <64>;
 			erase-block-size = <2048>;
 		};
 
