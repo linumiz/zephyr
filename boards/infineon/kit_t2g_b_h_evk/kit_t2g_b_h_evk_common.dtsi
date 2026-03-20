@@ -22,8 +22,7 @@
 		sw0 = &user_bt0;
 		sw1 = &user_bt1;
 		watchdog0 = &watchdog0;
-		dma0 = &dma0;
-		smif0 = &smif0;
+		dma1 = &dma1;
 		pwm-led0 = &pwm_led0;
 		pwm-led1 = &pwm_led1;
 	};
@@ -172,64 +171,6 @@ i2c9: &scb9 {
     ifx,peri-div-inst = <1>;
 };
 
-&eth0_mac {
-	status = "okay";
-	pinctrl-0 = < &p26_2_eth_txd_0 &p26_3_eth_txd_1 &p26_4_eth_txd_2 &p26_5_eth_txd_3
-				&p26_0_eth_ref_clk &p26_1_eth_tx_en	&p26_6_eth_tx_clk
-				&p26_7_eth_rxd_0 &p27_0_eth_rxd_1 &p27_1_eth_rxd_2 &p27_2_eth_rxd_3
-				&p27_4_eth_rx_ctl &p27_3_eth_rx_clk  >;
-
-	pinctrl-names = "default";
-	phy-connection-type = "rgmii";
-
-	phy-handle = <&eth0_phy>;
-	clock-frequency = <125000000>;
-	local-mac-address = [b0 19 21 67 36 00];
-};
-
-&eth0_mdio {
-	status = "okay";
-	pinctrl-0 = <&p27_5_eth_mdc &p27_6_eth_mdio>;
-	pinctrl-names = "default";
-
-	eth0_phy: phy@1 {
-		compatible = "ti,dp83867";
-		reg = <0x1>;
-		status = "okay";
-		reset-gpios = <&gpio_prt27 7 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-		ti,interface-type = "rgmii-id";
-		ti,rx-internal-delay = <8>;
-		ti,tx-internal-delay = <8>;
-	};
-};
-
-/* QSPI External NOR Flash */
-&smif0 {
-    status = "okay";
-    pinctrl-0 = <
-        &p6_3_smif0_clk &p6_5_smif0_sel0
-        &p7_1_smif0_data0 &p7_2_smif0_data1
-        &p7_3_smif0_data2 &p7_4_smif0_data3
-    >;
-    pinctrl-names = "default";
-
-    norflash0: s25hl512t@0 {
-		status ="okay";
-        compatible = "soc-nv-flash";
-        reg = <0x00000000 DT_SIZE_M(64)>;
-        write-block-size = <512>;
-        erase-block-size = <DT_SIZE_K(256)>;
-
-        partitions {
-            compatible = "fixed-partitions";
-            #address-cells = <1>;
-            #size-cells = <1>;
-        };
-
-    };
-};
-
-
 &can0 {
     status = "okay";
 };
@@ -238,7 +179,7 @@ i2c9: &scb9 {
 	status = "okay";
 };
 
-&dma0 {
+&dma1 {
 	status = "okay";
 };
 
@@ -278,14 +219,6 @@ i2c9: &scb9 {
     status = "okay";
 };
 
-&work_flash0 {
-	status = "okay";
-};
-
-&work_flash1 {
-	status = "okay";
-};
-
 &clk_eco {
 	status = "okay";
 	clock-frequency = <16000000>;
@@ -306,7 +239,6 @@ i2c9: &scb9 {
 &pll3 {
 	status = "okay";
 };
-
 
 &clk_hf0 {
 	status = "okay";
@@ -332,4 +264,5 @@ i2c9: &scb9 {
 &clk_hf7 {
 	status = "okay";
 };
+
 
