@@ -1430,6 +1430,43 @@
 				pinmux = <DT_CAT1_PINMUX(0, 3, HSIOM_SEL_ACT_13)>;
 				input-enable;
 			};
+
+			/omit-if-no-ref/ p11_0_i2s0_tx_mck: p11_0_i2s0_tx_mck {
+                                pinmux = <DT_CAT1_PINMUX(11, 0, HSIOM_SEL_ACT_13)>;
+                                drive-push-pull;
+                        };
+
+                        /omit-if-no-ref/ p11_1_i2s0_tx_sck: p11_1_i2s0_tx_sck {
+                                pinmux = <DT_CAT1_PINMUX(11, 1, HSIOM_SEL_ACT_13)>;
+                                drive-push-pull;
+                        };
+
+                        /omit-if-no-ref/ p11_2_i2s0_tx_fsync: p11_2_i2s0_tx_fsync {
+                                pinmux = <DT_CAT1_PINMUX(11, 2, HSIOM_SEL_ACT_13)>;
+                                drive-push-pull;
+                        };
+
+                        /omit-if-no-ref/ p12_0_i2s0_tx_sd: p12_0_i2s0_tx_sd {
+                                pinmux = <DT_CAT1_PINMUX(12, 0, HSIOM_SEL_ACT_13)>;
+                                drive-push-pull;
+                        };
+
+		        /omit-if-no-ref/ p12_2_i2s0_rx_sck: p12_2_i2s0_rx_sck {
+                                pinmux = <DT_CAT1_PINMUX(12, 2, HSIOM_SEL_ACT_13)>;
+                                drive-push-pull;
+                        };
+
+                        /omit-if-no-ref/ p12_3_i2s0_rx_fsync: p12_3_i2s0_rx_fsync {
+                                pinmux = <DT_CAT1_PINMUX(12, 3, HSIOM_SEL_ACT_13)>;
+                                drive-push-pull;
+                        };
+
+                        /omit-if-no-ref/ p12_4_i2s0_rx_sd: p12_4_i2s0_rx_sd {
+                                pinmux = <DT_CAT1_PINMUX(12, 4, HSIOM_SEL_ACT_13)>;
+                                drive-push-pull;
+				input-enable;
+                        };
+
 		};
 	};
 };
