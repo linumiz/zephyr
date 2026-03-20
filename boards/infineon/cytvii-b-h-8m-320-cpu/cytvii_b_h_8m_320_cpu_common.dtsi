@@ -198,7 +198,7 @@ spi0: &scb5 {
 	ifx,peri-clk = <0x0123>;
 	ifx,peri-div = <1>; /* 16-bit divider */
 	ifx,peri-div-inst = <3>;
-	/*
+
 	w25q128jvsq2449_spi: spi-nor-flash@0 {
 		compatible = "jedec,spi-nor";
 		status = "okay";
@@ -207,7 +207,7 @@ spi0: &scb5 {
 		size = <DT_SIZE_M(128)>;
 		jedec-id = [ef 40 18];
 	};
-	*/
+
 	eeprom0: eeprom_m95040@0 {
 		compatible = "atmel,at25";
 		status = "okay";
@@ -218,7 +218,6 @@ spi0: &scb5 {
 		spi-max-frequency = <DT_FREQ_M(8)>;
 		timeout = <5>;
 	};
-
 };
 
 uart3: &scb3 {
@@ -256,6 +255,13 @@ can0: &can0_0 {
 
 	pinctrl-0 = <&p0_2_can0_0_tx &p0_3_can0_0_rx>;
 	pinctrl-names = "default";
+};
+
+&i2s0 {
+        pinctrl-0 = <&p11_0_i2s0_tx_mck &p11_1_i2s0_tx_sck &p11_2_i2s0_tx_fsync &p12_0_i2s0_tx_sd
+		     &p12_2_i2s0_rx_sck &p12_3_i2s0_rx_fsync &p12_4_i2s0_rx_sd>;
+        pinctrl-names = "default";
+        status = "disabled";
 };
 
 &gpio_prt0 {
