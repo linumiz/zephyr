@@ -14,7 +14,17 @@ config I2S_INFINEON
 	help
 	  This option enables the I2S driver.
 
-if I2S_INFINEON
+config I2S_INFINEON_CAT1
+	bool "Infineon CAT1 AUDIOSS I2S driver"
+	default y
+	depends on DT_HAS_INFINEON_CAT1_I2S_ENABLED
+	select  USE_INFINEON_I2S
+	select DMA
+	help
+	  ISR-driven DMA I2S driver for Infineon TRAVEO T2G AUDIOSS block.
+	  Supports I2S and Left-Justified formats, stereo only, 8/16/18/20/24/32-bit.
+
+if I2S_INFINEON || I2S_INFINEON_CAT1
 
 config I2S_INFINEON_RX_QUEUE_SIZE
 	int "RX queue length"
