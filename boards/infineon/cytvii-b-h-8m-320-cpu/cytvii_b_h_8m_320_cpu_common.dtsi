@@ -362,6 +362,13 @@ can0: &can0_0 {
 	};
 };
 
+&i2s0 {
+        pinctrl-0 = <&p11_0_i2s0_tx_mck &p11_1_i2s0_tx_sck &p11_2_i2s0_tx_fsync &p12_0_i2s0_tx_sd
+		     &p12_2_i2s0_rx_sck &p12_3_i2s0_rx_fsync &p12_4_i2s0_rx_sd>;
+        pinctrl-names = "default";
+        status = "disabled";
+};
+
 &gpio_prt0 {
 	status = "okay";
 };
@@ -449,6 +456,9 @@ can0: &can0_0 {
 	status = "okay";
 };
 
+&pll3 {
+	status = "okay";
+};
 
 &clk_hf0 {
 	status = "okay";
