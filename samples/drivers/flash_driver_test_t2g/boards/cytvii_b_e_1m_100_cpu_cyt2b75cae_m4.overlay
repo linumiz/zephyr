@@ -1,4 +1,4 @@
-&code_flash1 {
+&work_flash0 {
 	partitions {
 		#address-cells = <1>;
 		#size-cells = <1>;

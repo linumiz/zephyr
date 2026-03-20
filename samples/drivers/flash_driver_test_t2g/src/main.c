@@ -30,11 +30,11 @@ LOG_MODULE_REGISTER(flash_test, LOG_LEVEL_INF);
 #elif FLASH1_SELECTED
 	#define TEST_SIZE 0x2000  /* CFLASH - SMS - 8 KB - Erase sector */
 	#define USE_CFLASH 1
-	#define TEST_OFFSET 0x2000
+	#define TEST_OFFSET 0x0
 #elif FLASH2_SELECTED
 	#define TEST_SIZE 0x800  /* WFLASH - LRG - 2 KB - Erase sector */
 	#define USE_WFLASH 1
-	#define TEST_OFFSET 0x800
+	#define TEST_OFFSET 0x0
 #elif FLASH3_SELECTED
 	#define TEST_SIZE 0x80  /* WFLASH - SMS - 128 bytes - Erase sector */
 	#define USE_WFLASH 1
