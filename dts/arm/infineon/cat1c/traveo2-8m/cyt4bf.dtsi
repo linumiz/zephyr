@@ -3264,5 +3264,38 @@
 				#size-cells = <0>;
 			};
 		};
+
+		i2s0: i2s@40800000 {
+                        #address-cells = <1>;
+                        #size-cells = <0>;
+                        compatible = "infineon,cat1-i2s";
+                        reg = <0x40800000 0x1000>;
+                        system-interrupts = <564 4>;
+                        dmas = <&dma1 55>, <&dma1 56>;
+                        dma-names = "tx", "rx";
+                        status = "disabled";
+                };
+
+		i2s1: i2s@40801000 {
+                        #address-cells = <1>;
+                        #size-cells = <0>;
+                        compatible = "infineon,cat1-i2s";
+                        reg = <0x40801000 0x1000>;
+                        system-interrupts = <565 4>;
+                        dmas = <&dma1 57>, <&dma1 58>;
+                        dma-names = "tx", "rx";
+                        status = "disabled";
+                };
+
+		i2s2: i2s@40802000 {
+                        #address-cells = <1>;
+                        #size-cells = <0>;
+                        compatible = "infineon,cat1-i2s";
+                        reg = <0x40802000 0x1000>;
+                        system-interrupts = <566 4>;
+                        dmas = <&dma1 59>, <&dma1 60>;
+                        dma-names = "tx", "rx";
+                        status = "disabled";
+                };
 	};
 };
