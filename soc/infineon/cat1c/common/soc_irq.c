@@ -17,10 +17,23 @@
 
 #include <cy_sysint.h>
 
+static void enable_cpu_int(uint32_t cpu_int)
+{
+#if (CONFIG_INFINEON_CAT1C_M0PLUS)
+	/* Lower irqs (0-2) are used for SROM, upper IRQs for priority mapping */
+	cpu_int = MAX(cpu_int, IRQ_PRIO_LOWEST);
+	NVIC_SetPriority(NvicMux0_IRQn + cpu_int, cpu_int);
+#else
+	NVIC_SetPriority(NvicMux0_IRQn + cpu_int, MAX(cpu_int, IRQ_PRIO_LOWEST));
+#endif
+	NVIC_EnableIRQ(NvicMux0_IRQn + cpu_int);
+}
+
 void enable_sys_int(uint32_t int_num, uint32_t priority, void (*isr)(const void *), const void *arg)
 {
 	irq_connect_dynamic(int_num, priority, isr, arg, 0);
 	irq_enable(int_num);
+	enable_cpu_int(priority);
 }
 
 /* Cy_SysInt_Init wrapper for Zephyr IRQ integration */
@@ -54,15 +67,7 @@ cy_israddress Cy_SysInt_GetSystemIrqVector(cy_en_intr_t sysIntSrc)
 /* Custom interrupt controller */
 void z_soc_irq_init()
 {
-	uint8_t i;
-
-#if !defined(CONFIG_INFINEON_CAT1C_M0PLUS) /* For M7 */
-	/* Setup IRQ lines as priorities */
-	for (i = 0; i < 8; i++) {
-		NVIC_SetPriority(NvicMux0_IRQn + i, MAX(i, IRQ_PRIO_LOWEST));
-		NVIC_EnableIRQ(NvicMux0_IRQn + i);
-	}
-#endif
+	return;
 }
 
 void z_soc_irq_enable(unsigned int irq)
@@ -113,12 +118,6 @@ int z_soc_irq_is_enabled(unsigned int irq)
 
 void z_soc_irq_priority_set(unsigned int irq, unsigned int prio, unsigned int flags)
 {
-	prio = MAX(prio, IRQ_PRIO_LOWEST);
-#if CONFIG_INFINEON_CAT1C_M0PLUS
-	/* Lower irqs are used for SROM, upper IRQs for priority mapping */
-	prio += 4;
-#endif
-
 #if (CONFIG_INFINEON_CAT1C_M0PLUS)
 	CPUSS_CM0_SYSTEM_INT_CTL[irq] =
 		_VAL2FLD(CPUSS_CM0_SYSTEM_INT_CTL_CM0_CPU_INT_IDX, NvicMux0_IRQn + prio) |
