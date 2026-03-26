@@ -1491,6 +1491,17 @@
 				drive-push-pull;
 				input-enable;
 			};
+			/* tcpwm_line */
+            /omit-if-no-ref/ p0_0_pwm1_18_line_out: p0_0_pwm1_18_line_out {
+                pinmux = <DT_CAT1_PINMUX(0, 0, HSIOM_SEL_ACT_0)>;
+                drive-push-pull;
+            };
+			/* tcpwm tgpio trigger */
+            /omit-if-no-ref/ p21_4_tc1_38_tr: p21_4_tc1_38_tr {
+                pinmux = <DT_CAT1_PINMUX(21, 4, HSIOM_SEL_ACT_2)>;
+                drive-push-pull;
+                input-enable;
+            };
 		};
 	};
 };
