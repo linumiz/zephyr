@@ -568,7 +568,7 @@ static int ifx_cat1_spi_init(const struct device *dev)
 
 #if defined(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
 
-#if defined(CONFIG_SOC_SERIES_CYT4DN)  
+#if defined(CONFIG_SOC_SERIES_CYT4DN)
 #define SPI_DMA_TRIGGERS(index)                                                                  \
 	.spi_rx_trigger	= TRIG_OUT_1TO1_1_SCB_RX_TO_PDMA10,
 #else
@@ -986,7 +986,7 @@ static cy_rslt_t ifx_cat1_spi_int_frequency(const struct device *dev, uint32_t h
 		CY_UNUSED_PARAMETER(last_ovrsmpl_val);
 	}
 
-#if !defined(CONFIG_SOC_SERIES_TVII_B_E)
+#if 0
 	en_clk_dst_t clk_idx = ifx_cat1_scb_get_clock_index(data->resource.block_num);
 
 	if ((data->clock.block & 0x02) == 0) {
