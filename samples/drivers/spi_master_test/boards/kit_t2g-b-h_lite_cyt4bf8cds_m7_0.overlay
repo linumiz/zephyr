@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2026 Linumiz
+ * Copyright (c) 2025 Linumiz
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* Configure SCB5 as SPI Master */
+/* Configure SCB3 as SPI Master */
 &scb3 {
     compatible = "infineon,cat1-spi-pdl";
     status = "okay";
@@ -16,7 +16,6 @@
     pinctrl-names = "default";
     cs-gpios = <&gpio_prt13 3 GPIO_ACTIVE_LOW>;
 
-    clocks = <&clk_hf2>;
     ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
     ifx,peri-clk = <0x0121>;
     ifx,peri-div = <1>; /* 16-bit divider */
@@ -28,7 +27,7 @@
 		spi-max-frequency = <1000000>;
 	};
 
-    dmas = <&dma1 26>, <&dma1 27>;
+    dmas = <&dma1 22>, <&dma1 23>;
     dma-names = "tx", "rx";
 };
 
