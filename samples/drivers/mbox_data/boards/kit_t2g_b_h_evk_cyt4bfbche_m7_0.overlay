@@ -1,0 +1,12 @@
+&mbox {
+    status = "okay";
+};
+
+/ {
+    mbox-consumer {
+        compatible = "vnd,mbox-consumer";
+        mboxes = <&mbox 3>, <&mbox 2>;
+        mbox-names = "tx", "rx";
+    };
+};
+
