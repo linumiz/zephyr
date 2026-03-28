@@ -1,0 +1,23 @@
+/*
+ * Copyright (c) 2026 Linumiz
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	aliases {
+		comp = &comp0;
+	};
+};
+
+&comp0 {
+	status = "okay";
+	positive-inputs = <2>;
+	pinctrl-0 = <&comp0_out_pa7>;
+	pinctrl-names = "default";
+	ti,mode = "fast";
+	ti,reference-source = "vdda";
+	ti,reference-terminal = "neg";
+	ti,filter-enable;
+	ti,filter-delay = <2700>;
+};
