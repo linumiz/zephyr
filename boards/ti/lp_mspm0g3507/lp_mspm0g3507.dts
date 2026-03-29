@@ -133,3 +133,9 @@
 &dac0 {
 	status = "okay";
 };
+
+&vref0 {
+	status = "okay";
+	pinctrl-0 = <&analog_pa23>;
+	pinctrl-names = "default";
+};
