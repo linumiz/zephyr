@@ -843,11 +843,14 @@ static void eth_xlnx_gem_configure_clocks(const struct device *dev,
 
 #if !defined(CONFIG_PHY_GENERIC_MII)
 	if (PHY_LINK_IS_SPEED_100M(state->speed)) {
+#if defined(CONFIG_PHY_REALTEK_RTL8211F)
 		reg_val |= BIT(10); /*REFETH_CLK dvider */
-	}
 #endif
+	}
 
 	reg_val |= BIT(1); /* RGMII */
+#endif
+
 #if defined (CONFIG_PHY_GENERIC_MII)
 	reg_val |= BIT(0); /* RMII */
 #endif
