@@ -852,7 +852,7 @@ static void eth_xlnx_gem_configure_clocks(const struct device *dev,
 #endif
 
 #if defined (CONFIG_PHY_GENERIC_MII)
-	reg_val |= BIT(0); /* RMII */
+	reg_val |= BIT(0) | BIT(1); /* RMII */
 #endif
 
 	sys_write32(reg_val, cfg->clk_ctrl_reg_address);
