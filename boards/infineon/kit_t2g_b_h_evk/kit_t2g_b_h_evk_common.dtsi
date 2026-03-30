@@ -171,6 +171,37 @@ i2c9: &scb9 {
     ifx,peri-div-inst = <1>;
 };
 
+&eth1_mac {
+	status = "okay";
+	pinctrl-0 = <&p26_0_eth_ref_clk &p26_1_eth_tx_ctl &p26_2_eth_txd_clk
+		     &p26_3_eth_txd_0 &p26_4_eth_txd_1 &p26_5_eth_txd_2
+		     &p26_6_eth_txd_3 &p26_7_eth_rxd_0 &p27_0_eth_rxd_1
+		     &p27_1_eth_rxd_2 &p27_2_eth_rxd_3 &p27_3_eth_rx_ctl
+		     &p27_4_eth_rxd_clk>;
+
+	pinctrl-names = "default";
+	phy-connection-type = "rgmii";
+
+	phy-handle = <&eth1_phy>;
+	clock-frequency = <125000000>;
+	local-mac-address = [b0 19 21 67 36 00];
+};
+
+&eth1_mdio {
+	status = "okay";
+	pinctrl-0 = <&p27_5_eth_mdio &p27_6_eth_mdc>;
+	pinctrl-names = "default";
+
+	eth1_phy: phy@0 {
+		compatible = "ti,dp83867";
+		reg = <0x0>;
+		status = "okay";
+		ti,interface-type = "rgmii-id";
+		ti,rx-internal-delay = <8>;
+		ti,tx-internal-delay = <8>;
+	};
+};
+
 &can0 {
     status = "okay";
 };
