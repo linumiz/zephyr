@@ -87,6 +87,7 @@ enum eth_xlnx_mdc_clock_divider {
  */
 struct xlnx_gem_mdio_config {
 	uint32_t gem_base_addr;
+	uint32_t mxeth_addr;
 	const struct pinctrl_dev_config *pcfg;
 };
 
@@ -271,10 +272,9 @@ static int xlnx_gem_mdio_initialize(const struct device *dev)
 	if (ret < 0) {
 		return ret;
 	}
-	uint32_t reg_addr = 0x40480000;
-	reg_val = BIT(31);  /* enable rgmii mode and enable eth ip block */
 
-	sys_write32(reg_val, reg_addr);
+	reg_val = BIT(31);  /* enable eth ip block */
+	sys_write32(reg_val, dev_conf->mxeth_addr);
 
 	/* Set the MDC divider in gem.net_config */
 	reg_val = sys_read32(dev_conf->gem_base_addr + ETH_XLNX_GEM_NWCFG_OFFSET);
@@ -299,8 +299,9 @@ static DEVICE_API(mdio, xlnx_gem_mdio_api) = {
 #define XLNX_GEM_MDIO_DEV_CONFIG(port)\
 	PINCTRL_DT_INST_DEFINE(port); \
 	static const struct xlnx_gem_mdio_config xlnx_gem##port##_mdio_cfg = {\
-		.gem_base_addr = DT_REG_ADDR_BY_IDX(DT_PARENT(DT_INST(port, xlnx_gem)), 0),\
-	.pcfg				= PINCTRL_DT_INST_DEV_CONFIG_GET(port), \
+		.gem_base_addr = DT_REG_ADDR_BY_IDX(DT_PARENT(DT_INST(port, xlnx_gem)), 0), \
+		.mxeth_addr    = DT_REG_ADDR_BY_IDX(DT_INST_PARENT(port), 1), \
+		.pcfg	       = PINCTRL_DT_INST_DEV_CONFIG_GET(port), \
 	};
 
 #define XLNX_GEM_MDIO_DEV_INIT(port)\
