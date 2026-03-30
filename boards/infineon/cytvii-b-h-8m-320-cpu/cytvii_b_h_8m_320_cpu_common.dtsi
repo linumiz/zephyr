@@ -231,6 +231,19 @@ spi0: &scb5 {
 
 };
 
+i2c2: &scb2 {
+	  compatible = "infineon,cat1-i2c-pdl";
+      	  status = "okay";
+	  ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
+	  ifx,peri-clk = <0x0120>;
+	  ifx,peri-div = <0>; /* 8-bit divider */
+	  ifx,peri-div-inst = <1>;
+          #address-cells = <1>;
+          #size-cells = <0>;
+          pinctrl-0 = <&p14_2_scb2_i2c_scl &p14_1_scb2_i2c_sda>;
+          pinctrl-names = "default";
+};
+
 uart3: &scb3 {
 	compatible = "infineon,cat1-uart-pdl";
 	status = "okay";
