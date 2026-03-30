@@ -24,3 +24,6 @@ CONFIG_GPIO=y
 # Enable clock controller
 CONFIG_CLOCK_CONTROL=y
 CONFIG_NOCACHE_MEMORY=y
+
+# TI's Ethernet PHY
+CONFIG_PHY_TI_DP83867=y
