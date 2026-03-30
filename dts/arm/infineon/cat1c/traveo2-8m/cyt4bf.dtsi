@@ -3216,7 +3216,7 @@
 			eth0_mac: ethernet {
 				compatible = "xlnx,gem";
 				status = "disabled";
-				system-interrupts = <556 4>, <557 4>;
+				system-interrupts = <556 4>, <557 4>, <558 4>;
 				amba-ahb-burst-length = <XLNX_GEM_AMBA_AHB_BURST_INCR4>;
 				hw-rx-buffer-size = <XLNX_GEM_HW_RX_BUFFER_SIZE_8KB>;
 				hw-rx-buffer-offset = <0>;
@@ -3230,6 +3230,34 @@
 			};
 
 			eth0_mdio: mdio {
+				compatible = "xlnx,gem-mdio";
+				status = "disabled";
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+		};
+
+		eth1: ethernet@40490000 {
+			compatible = "xlnx,gem-controller";
+			reg = <0x40491000 0x1000>, <0x40490000 0x1000>;
+
+			eth1_mac: ethernet {
+				compatible = "xlnx,gem";
+				status = "disabled";
+				system-interrupts = <559 4>, <560 4>, <561 4>;
+				amba-ahb-burst-length = <XLNX_GEM_AMBA_AHB_BURST_INCR4>;
+				hw-rx-buffer-size = <XLNX_GEM_HW_RX_BUFFER_SIZE_8KB>;
+				hw-rx-buffer-offset = <0>;
+				hw-tx-buffer-size-full;
+				rx-buffer-descriptors = <16>;
+				tx-buffer-descriptors = <16>;
+				rx-buffer-size = <1536>;
+				tx-buffer-size = <1536>;
+				discard-rx-fcs;
+				unicast-hash;
+			};
+
+			eth1_mdio: mdio {
 				compatible = "xlnx,gem-mdio";
 				status = "disabled";
 				#address-cells = <1>;
