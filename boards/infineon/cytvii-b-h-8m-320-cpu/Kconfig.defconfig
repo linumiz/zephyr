@@ -10,4 +10,8 @@ config HAS_INFINEON_M0P_LAUNCHER_IMAGE
     bool
     default y
 
+config PHY_TI_DP83867
+	bool
+	default y if NET_L2_ETHERNET
+
 endif
