@@ -1,0 +1,26 @@
+/ {
+        aliases {
+                i2s-codec-tx = &i2s0;
+        };
+};
+
+&scb5 {
+    status = "okay";
+    cs-gpios = <&gpio_prt4 4 GPIO_ACTIVE_LOW>;
+
+    audio_codec: audio-codec@0 {
+        compatible = "ti,tlv320aic26";
+        reg = <0>;
+        spi-max-frequency = <12000000>;
+        mclk-frequency = <12000000>;
+        status = "okay";
+    };
+};
+
+&dma1 {
+	status = "okay";
+};
+
+&i2s0 {
+	status = "okay";
+};
