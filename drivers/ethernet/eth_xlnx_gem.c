@@ -838,8 +838,8 @@ static void eth_xlnx_gem_reset_hw(const struct device *dev)
 static void eth_xlnx_gem_configure_clocks(const struct device *dev,
 					  struct phy_link_state *state)
 {
-	/* ETH_CTL */
-	uint32_t reg_val = sys_read32(0x40480000);
+	const struct eth_xlnx_gem_dev_cfg *cfg = dev->config;
+	uint32_t reg_val = sys_read32(cfg->clk_ctrl_reg_address);
 
 #if !defined(CONFIG_PHY_GENERIC_MII)
 	if (PHY_LINK_IS_SPEED_100M(state->speed)) {
@@ -852,7 +852,7 @@ static void eth_xlnx_gem_configure_clocks(const struct device *dev,
 	reg_val |= BIT(0); /* RMII */
 #endif
 
-	sys_write32(reg_val, 0x40480000);
+	sys_write32(reg_val, cfg->clk_ctrl_reg_address);
 
 	return;
 
