@@ -31,3 +31,32 @@
     drive-open-drain;
     input-enable;
 };
+
+/* SMIF0 / QSPI NOR flash pin drive modes */
+&p6_3_smif0_clk {
+    drive-push-pull;
+};
+
+&p6_5_smif0_sel0 {
+    drive-push-pull;
+};
+
+&p7_1_smif0_data0 {
+    drive-push-pull;
+    input-enable;
+};
+
+&p7_2_smif0_data1 {
+    drive-push-pull;
+    input-enable;
+};
+
+&p7_3_smif0_data2 {
+    drive-push-pull;
+    input-enable;
+};
+
+&p7_4_smif0_data3 {
+    drive-push-pull;
+    input-enable;
+};
