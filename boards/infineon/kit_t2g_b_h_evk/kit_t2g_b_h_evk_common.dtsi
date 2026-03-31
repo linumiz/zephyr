@@ -23,7 +23,7 @@
 		sw1 = &user_bt1;
 		watchdog0 = &watchdog0;
 		dma1 = &dma1;
-		smif0 = &smif0;
+		smif0 = &smif_0;
 		pwm-led0 = &pwm_led0;
 		pwm-led1 = &pwm_led1;
 	};
@@ -112,6 +112,27 @@
 			label = "m7_1_partition";
 			reg = <0x280000 DT_SIZE_K(5568)>;
 		};
+	};
+};
+
+/* QSPI External NOR Flash */
+&smif_0 {
+    status = "okay";
+    pinctrl-0 = <
+        &p6_3_smif0_clk &p6_5_smif0_sel0
+        &p7_1_smif0_data0 &p7_2_smif0_data1
+        &p7_3_smif0_data2 &p7_4_smif0_data3
+    >;
+    pinctrl-names = "default";
+	hf-clock = <6>;
+
+	qspi_flash0: qspi_flash0@0 {
+		compatible = "infineon-ifx-qspi-nor-flash";
+		status = "okay";
+		chip-select = <1>;
+		reg = <0x00000000 DT_SIZE_M(64)>;
+		write-block-size = <512>;
+		erase-block-size = <0x40000>;  /* S25HL512T: 256KB sector erase */
 	};
 };
 
