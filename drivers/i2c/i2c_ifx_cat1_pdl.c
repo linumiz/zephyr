@@ -291,7 +291,7 @@ uint32_t _i2c_set_peri_divider(const struct device *dev, uint32_t freq, bool is_
 		return 0;
 	}
 
-#if defined(CONFIG_SOC_FAMILY_CYT2B7) || defined(CONFIG_SOC_FAMILY_CYT2BL)
+#if defined(CONFIG_SOC_SERIES_TVII_B_E)
 	ret = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf0)),
 	                              NULL, &hf_clock_frequency);
 #else
