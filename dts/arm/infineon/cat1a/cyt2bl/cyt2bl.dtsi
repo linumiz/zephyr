@@ -415,7 +415,7 @@
 
 		watchdog0: watchdog@4026c000 {
 			compatible = "infineon,cat1-watchdog";
-			reg = <0x4026c000 0x4001>;
+			reg = <0x4026c000 0x4000>;
 			system-interrupts = <15 1>;
 			status = "disabled";
 		};
