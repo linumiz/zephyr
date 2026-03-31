@@ -70,12 +70,15 @@
 						};
 						/omit-if-no-ref/ p18_0_scb1_spi_miso: p18_0_scb1_spi_miso {
 									pinmux = <DT_CAT1_PINMUX(18, 0, HSIOM_SEL_ACT_7)>;
+									input-enable;
 						};
 						/omit-if-no-ref/ p18_1_scb1_spi_mosi: p18_1_scb1_spi_mosi {
 									pinmux = <DT_CAT1_PINMUX(18, 1, HSIOM_SEL_ACT_7)>;
+									drive-push-pull;
 						};
 						/omit-if-no-ref/ p18_2_scb1_spi_scl: p18_2_scb1_spi_scl {
 									pinmux = <DT_CAT1_PINMUX(18, 2, HSIOM_SEL_ACT_7)>;
+									drive-push-pull;
 						};
 						/omit-if-no-ref/ p18_3_scb1_spi_sel0: p18_3_scb1_spi_sel0 {
 									pinmux = <DT_CAT1_PINMUX(18, 3, HSIOM_SEL_ACT_7)>;
