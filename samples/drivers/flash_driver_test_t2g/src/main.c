@@ -12,7 +12,7 @@
 #include <string.h>
 
 LOG_MODULE_REGISTER(flash_test, LOG_LEVEL_INF);
-
+#if 0
 #define FLASH0 DT_NODELABEL(flash0)
 #define FLASH1 DT_NODELABEL(flash1)
 #define FLASH2 DT_NODELABEL(flash2)
@@ -22,6 +22,10 @@ LOG_MODULE_REGISTER(flash_test, LOG_LEVEL_INF);
 #define FLASH1_SELECTED DT_NODE_EXISTS(DT_CHILD(FLASH1, partitions))
 #define FLASH2_SELECTED DT_NODE_EXISTS(DT_CHILD(FLASH2, partitions))
 #define FLASH3_SELECTED DT_NODE_EXISTS(DT_CHILD(FLASH3, partitions))
+
+#endif
+/* Select SMIF external flash test */
+#define USE_SMIF 1
 
 #if FLASH0_SELECTED
 	#define TEST_SIZE 0x8000  /* CFLASH - LRG - 32 KB - Erase sector */
@@ -39,6 +43,11 @@ LOG_MODULE_REGISTER(flash_test, LOG_LEVEL_INF);
 	#define TEST_SIZE 0x80  /* WFLASH - SMS - 128 bytes - Erase sector */
 	#define USE_WFLASH 1
 	#define TEST_OFFSET 0x0
+#elif USE_SMIF
+	/* S25HL512T: 256 KB erase sector, 512-byte page (Large buffer variant), test at sector 0 */
+	#define TEST_SIZE 0x40000
+	#define USE_CFLASH 1
+	#define TEST_OFFSET 0x0
 #else
 	/* FOR SMIF */
 	#define TEST_SIZE 0x80  /* WFLASH - SMS - 128 bytes - Erase sector */
@@ -55,7 +64,7 @@ int main(void)
 
 	// const struct device *flash_dev = DEVICE_DT_GET(DT_NODELABEL(smif0));
 
-	const struct device *flash_dev = DEVICE_DT_GET(DT_NODELABEL(smif0));
+	const struct device *flash_dev = DEVICE_DT_GET(DT_NODELABEL(smif_0));
 
 	int ret;
 
