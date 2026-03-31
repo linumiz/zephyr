@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define DT_DRV_COMPAT	  infineon_cat1_flash_controller_pdl
+#define DT_DRV_COMPAT     infineon_cat1_flash_controller_pdl
 #define SOC_NV_FLASH_NODE DT_PARENT(DT_INST(0, fixed_partitions))
 
-#define PAGE_LEN DT_PROP(SOC_NV_FLASH_NODE, write_block_size)
+#define PAGE_LEN   DT_PROP(SOC_NV_FLASH_NODE, write_block_size)
 #define SECTOR_LEN DT_PROP(SOC_NV_FLASH_NODE, erase_block_size)
 
 #include <zephyr/kernel.h>
@@ -59,38 +59,34 @@ static int ifx_cat1_flash_read(const struct device *dev, off_t offset, void *dat
 
 	flash_ifx_mutex_lock(dev);
 
-	if(ifx_cat1_flash_parameters.write_block_size == 64)
-	{
+	if (ifx_cat1_flash_parameters.write_block_size == 64) {
 		blank_config.addrToBeChecked = (uint32_t)read_offset;
 		blank_config.numOfWordsToBeChecked = data_len / 4;
 
 		blank_check_status = Cy_Flash_BlankCheck(&blank_config, CY_FLASH_DRIVER_BLOCKING);
-		LOG_INF("Blank check status=0x%x",blank_check_status);
-		if(blank_check_status == CY_FLASH_DRV_SUCCESS)
-		{
-			memset((void *)data, ifx_cat1_flash_parameters.erase_value , data_len);
+		LOG_INF("Blank check status=0x%x", blank_check_status);
+		if (blank_check_status == CY_FLASH_DRV_SUCCESS) {
+			memset((void *)data, ifx_cat1_flash_parameters.erase_value, data_len);
 			flash_ifx_mutex_unlock(dev);
 			return 0;
-
 		}
 	}
 
-
 	/* As per PDL: Before reading data from previously programmed/erased
-	* flash rows, the user must clear or invalidate the flash cache
-	*/
+	 * flash rows, the user must clear or invalidate the flash cache
+	 */
 
-	#if defined (ENABLE_CM7_DATA_CACHE) && defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE)
-		/* FOR M7 CORES */
-		SCB_CleanInvalidateDCache_by_Addr((uint32_t *)read_offset, data_len);
-	#else
-		/* FOR M0P Cores */
-		FLASHC_FLASH_CMD = FLASHC_FLASH_CMD_INV_Msk;
-	#endif
-		memcpy(data, (uint32_t *)read_offset, data_len);
-		flash_ifx_mutex_unlock(dev);
-		return 0;
-	}
+#if defined(ENABLE_CM7_DATA_CACHE) && defined(CONFIG_CACHE_MANAGEMENT) && defined(CONFIG_DCACHE)
+	/* FOR M7 CORES */
+	SCB_CleanInvalidateDCache_by_Addr((uint32_t *)read_offset, data_len);
+#else
+	/* FOR M0P Cores */
+	FLASHC_FLASH_CMD = FLASHC_FLASH_CMD_INV_Msk;
+#endif
+	memcpy(data, (uint32_t *)read_offset, data_len);
+	flash_ifx_mutex_unlock(dev);
+	return 0;
+}
 
 static int ifx_cat1_flash_write(const struct device *dev, off_t offset, const void *data,
 				size_t data_len)
@@ -118,7 +114,7 @@ static int ifx_cat1_flash_write(const struct device *dev, off_t offset, const vo
 
 	while (data_len) {
 		cy_en_flashdrv_status_t rslt = CY_FLASH_DRV_SUCCESS;
-		rslt = Cy_Flash_ProgramRow(write_offset, (const uint32_t*)data_ptr);
+		rslt = Cy_Flash_ProgramRow(write_offset, (const uint32_t *)data_ptr);
 		if (rslt != CY_FLASH_DRV_SUCCESS) {
 			LOG_ERR("Error in writing @ 0x%x (Err:0x%x)", write_offset, rslt);
 			ret = -EIO;
@@ -209,11 +205,15 @@ static int ifx_cat1_flash_init(const struct device *dev)
 	const struct ifx_cat1_flash_config *dev_config = dev->config;
 
 	/* Check bounds and see which one to enable */
-	if (((CY_FLASH_LG_SBM_TOP <= dev_config->base_addr) && (dev_config->base_addr < CY_FLASH_LG_SBM_END)) ||
-	    ((CY_FLASH_SM_SBM_TOP <= dev_config->base_addr) && (dev_config->base_addr < CY_FLASH_SM_SBM_END))) {
+	if (((CY_FLASH_LG_SBM_TOP <= dev_config->base_addr) &&
+	     (dev_config->base_addr < CY_FLASH_LG_SBM_END)) ||
+	    ((CY_FLASH_SM_SBM_TOP <= dev_config->base_addr) &&
+	     (dev_config->base_addr < CY_FLASH_SM_SBM_END))) {
 		Cy_Flashc_MainWriteEnable();
-	} else if (((CY_WFLASH_LG_SBM_TOP <= dev_config->base_addr) && (dev_config->base_addr < CY_WFLASH_LG_SBM_END)) ||
-		   ((CY_WFLASH_SM_SBM_TOP <= dev_config->base_addr) && (dev_config->base_addr < CY_WFLASH_SM_SBM_END))) {
+	} else if (((CY_WFLASH_LG_SBM_TOP <= dev_config->base_addr) &&
+		    (dev_config->base_addr < CY_WFLASH_LG_SBM_END)) ||
+		   ((CY_WFLASH_SM_SBM_TOP <= dev_config->base_addr) &&
+		    (dev_config->base_addr < CY_WFLASH_SM_SBM_END))) {
 		Cy_Flashc_WorkWriteEnable();
 	}
 

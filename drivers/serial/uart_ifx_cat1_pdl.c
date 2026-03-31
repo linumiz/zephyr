@@ -56,7 +56,8 @@ struct ifx_cat1_uart_config {
 	struct uart_config dt_cfg;
 	uint16_t irq_num;
 	uint8_t irq_priority;
-#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE) || defined(CONFIG_SOC_SERIES_TVII_B_E)
+#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) ||                                        \
+	defined(CONFIG_SOC_FAMILY_INFINEON_EDGE) || defined(CONFIG_SOC_SERIES_TVII_B_E)
 	uint32_t clock_peri_group;
 	uint32_t clock_id;
 	uint8_t peri_div_type;
@@ -359,11 +360,12 @@ static int ifx_cat1_uart_configure(const struct device *dev, const struct uart_c
 	data->scb_config.parity = convert_uart_parity_z_to_cy(cfg->parity);
 	data->scb_config.enableCts = data->cts_enabled;
 
-	#if defined(CONFIG_SOC_SERIES_TVII_B_E)
+#if defined(CONFIG_SOC_SERIES_TVII_B_E)
 	clock_frequency = Cy_SysClk_ClkPeriGetFrequency();
-	#else
-	result = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf2)), NULL, &clock_frequency);
-	#endif
+#else
+	result = clock_control_get_rate(DEVICE_DT_GET(DT_NODELABEL(clk_hf2)), NULL,
+					&clock_frequency);
+#endif
 	if (result < 0) {
 		return result;
 	}
@@ -371,15 +373,19 @@ static int ifx_cat1_uart_configure(const struct device *dev, const struct uart_c
 	clk_scb = IFX_CAT1_UART_OVERSAMPLE_MIN * cfg->baudrate;
 	div = (int)clock_frequency / clk_scb;
 
-	Cy_SysClk_PeriPclkDisableDivider(config->clock_peri_group, config->peri_div_type, config->peri_div_type_inst);
-	Cy_SysClk_PeriPclkSetDivider(config->clock_peri_group, config->peri_div_type, config->peri_div_type_inst, div);
-	Cy_SysClk_PeriPclkEnableDivider(config->clock_peri_group, config->peri_div_type, config->peri_div_type_inst);
-	Cy_SysClk_PeriPclkAssignDivider(config->clock_id, config->peri_div_type, config->peri_div_type_inst);
+	Cy_SysClk_PeriPclkDisableDivider(config->clock_peri_group, config->peri_div_type,
+					 config->peri_div_type_inst);
+	Cy_SysClk_PeriPclkSetDivider(config->clock_peri_group, config->peri_div_type,
+				     config->peri_div_type_inst, div);
+	Cy_SysClk_PeriPclkEnableDivider(config->clock_peri_group, config->peri_div_type,
+					config->peri_div_type_inst);
+	Cy_SysClk_PeriPclkAssignDivider(config->clock_id, config->peri_div_type,
+					config->peri_div_type_inst);
 
 	Cy_SCB_UART_Init(config->reg_addr, &(data->scb_config), NULL);
 	Cy_SCB_UART_Enable(config->reg_addr);
 	/* Configure the baud rate */
-//	result = ifx_cat1_uart_set_baud(dev, cfg->baudrate);
+	//	result = ifx_cat1_uart_set_baud(dev, cfg->baudrate);
 
 	/* Enable RTS/CTS flow control */
 	if ((result == CY_RSLT_SUCCESS) && cfg->flow_ctrl) {
@@ -819,7 +825,8 @@ static int ifx_cat1_uart_init(const struct device *dev)
 	}
 #endif
 
-#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_UART_INTERRUPT_DRIVEN) || (CONFIG_SOC_SERIES_TVII_B_E && CONFIG_UART_INTERRUPT_DRIVEN)
+#if (CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_UART_INTERRUPT_DRIVEN) ||                          \
+	(CONFIG_SOC_SERIES_TVII_B_E && CONFIG_UART_INTERRUPT_DRIVEN)
 	/* Enable the UART interrupt */
 	enable_sys_int(config->irq_num, config->irq_priority,
 		       (void (*)(const void *))(void *)ifx_cat1_uart_irq_handler, dev);
@@ -865,10 +872,11 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 	.irq_num = DT_INST_PROP_BY_IDX(n, system_interrupts, SYS_INT_NUM),                         \
 	.irq_priority = DT_INST_PROP_BY_IDX(n, system_interrupts, SYS_INT_PRI)
 #else
-//#define IRQ_INFO(n) .irq_num = DT_INST_IRQN(n), .irq_priority = DT_INST_IRQ(n, priority)
+// #define IRQ_INFO(n) .irq_num = DT_INST_IRQN(n), .irq_priority = DT_INST_IRQ(n, priority)
 #endif
 
-#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE) || defined(CONFIG_SOC_SERIES_TVII_B_E)
+#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) ||                                        \
+	defined(CONFIG_SOC_FAMILY_INFINEON_EDGE) || defined(CONFIG_SOC_SERIES_TVII_B_E)
 #define PERI_INFO(n) .clock_peri_group = DT_PROP_BY_IDX(DT_INST_PHANDLE(n, clocks), peri_group, 1),
 #else
 #define PERI_INFO(n)
@@ -879,7 +887,7 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 	void uart_handle_events_func_##n(void)                                                     \
 	{                                                                                          \
 		ifx_cat1_uart_irq_handler(DEVICE_DT_INST_GET(n));                                  \
-	}                                                                                          \
+	}
 
 #define CALL_UART_IRQ_CONFIG(n) ifx_cat1_uart_irq_config_func_##n();
 #else
@@ -913,7 +921,7 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 #define INFINEON_CAT1_UART_INIT(n)                                                                 \
 	PINCTRL_DT_INST_DEFINE(n);                                                                 \
 	INTERRUPT_DRIVEN_UART_INIT(n)                                                              \
-	static struct ifx_cat1_uart_data ifx_cat1_uart##n##_data;      				   \
+	static struct ifx_cat1_uart_data ifx_cat1_uart##n##_data;                                  \
                                                                                                    \
 	static int ifx_cat1_uart_init##n(const struct device *dev)                                 \
 	{                                                                                          \
@@ -928,10 +936,10 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 		.dt_cfg.flow_ctrl = DT_INST_PROP(n, hw_flow_control),                              \
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),                                         \
 		.reg_addr = (CySCB_Type *)DT_INST_REG_ADDR(n),                                     \
-		.clock_peri_group = DT_INST_PROP(n, ifx_peri_group),				   \
-		.clock_id = DT_INST_PROP(n, ifx_peri_clk),					   \
-		.peri_div_type = DT_INST_PROP(n, ifx_peri_div),					   \
-		.peri_div_type_inst = DT_INST_PROP(n, ifx_peri_div_inst),			   \
+		.clock_peri_group = DT_INST_PROP(n, ifx_peri_group),                               \
+		.clock_id = DT_INST_PROP(n, ifx_peri_clk),                                         \
+		.peri_div_type = DT_INST_PROP(n, ifx_peri_div),                                    \
+		.peri_div_type_inst = DT_INST_PROP(n, ifx_peri_div_inst),                          \
 		IRQ_INFO(n)};                                                                      \
                                                                                                    \
 	DEVICE_DT_INST_DEFINE(n, &ifx_cat1_uart_init##n, NULL, &ifx_cat1_uart##n##_data,           \
