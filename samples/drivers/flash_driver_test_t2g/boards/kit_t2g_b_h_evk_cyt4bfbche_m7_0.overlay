@@ -1,9 +1,13 @@
-&work_flash1 {
-	partitions {
-		#address-cells = <1>;
-		#size-cells = <1>;
-		compatible = "fixed-partitions";
-	};
+&smif_0 {
+    status = "okay";
 };
 
+&qspi_flash0 {
+    status = "okay";
 
+    partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+    };
+};
