@@ -20,9 +20,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TGPIO_LABEL	DT_NODELABEL(tgpio)
-#define TGPIO_PIN_IN	2
-#define TGPIO_PIN_OUT	21
+#define TGPIO_LABEL   DT_NODELABEL(tgpio)
+#define TGPIO_PIN_IN  2
+#define TGPIO_PIN_OUT 21
 
 int main(void)
 {
@@ -49,8 +49,7 @@ int main(void)
 	tm += cycles;
 	printk("[TGPIO] Periodic pulses start at: %016llx\n", tm);
 
-	ret = tgpio_pin_periodic_output(tgpio_dev, TGPIO_PIN_OUT,
-					 tm, cycles, true);
+	ret = tgpio_pin_periodic_output(tgpio_dev, TGPIO_PIN_OUT, tm, cycles, true);
 	if (ret) {
 		printk("[TGPIO] periodic output configuration failed\n");
 		return -EINVAL;
