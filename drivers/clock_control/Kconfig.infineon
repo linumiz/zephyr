@@ -4,11 +4,19 @@
 # an affiliate of Cypress Semiconductor Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+config CLOCK_CONTROL_IFX_CAT1
+	bool "Infineon CAT1 clock control driver"
+	default y
+	depends on SOC_FAMILY_INFINEON_CAT1
+	depends on DT_HAS_INFINEON_CAT1_HF_CLOCK_ENABLED
+	help
+	  This option enables the clock control driver for Infineon CAT1 family.
+
 config CLOCK_CONTROL_INFINEON_CAT1
 	bool "Infineon CAT1 clock control driver"
 	default y
 	depends on SOC_FAMILY_INFINEON_CAT1
-	depends on DT_HAS_FIXED_CLOCK_ENABLED
+	depends on DT_HAS_INFINEON_FIXED_CLOCK_ENABLED
 	help
 	  This option enables the clock control driver for Infineon CAT1 family.
 
