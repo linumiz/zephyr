@@ -22,6 +22,12 @@ if(CONFIG_SOC_SERIES_PSC3)
 endif()
 
 if(CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+
+if(CONFIG_BOARD_KIT_T2G_B_H_LITE)
+  set(zephyr_ifx_cycfg_dir ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/zephyr-ifx-cycfg/kit_t2g_b_h_lite)
+  zephyr_compile_definitions_ifdef(CONFIG_DT_HAS_INFINEON_IFX_QSPI_NOR_FLASH_ENABLED  SMIF_MODE_DUAL_QSPI)
+endif()
+
 if(CONFIG_BOARD_KIT_T2G_C2D6M_LITE)
   set(zephyr_ifx_cycfg_dir ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/zephyr-ifx-cycfg/kit_t2g_c2d6m_lite)
 endif()
