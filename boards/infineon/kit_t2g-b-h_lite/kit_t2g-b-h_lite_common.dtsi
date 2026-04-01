@@ -241,6 +241,39 @@ spi1: &scb3 {
 	ifx,peri-div-inst = <2>;
 };
 
+&smif_0 {
+	status = "okay";
+	pinctrl-0 = <
+		&p6_3_smif0_clk &p6_4_smif0_rwds
+		&p6_5_smif0_sel0 &p7_0_smif0_sel1
+		&p7_1_smif0_data0 &p7_2_smif0_data1
+		&p7_3_smif0_data2 &p7_4_smif0_data3
+		&p7_5_smif0_data4 &p8_0_smif0_data5
+		&p8_1_smif0_data6 &p8_2_smif0_data7
+	>;
+	pinctrl-names = "default";
+	hf-clock = <6>;
+
+	qspi_flash0: qspi_flash0@0 {
+		compatible = "infineon-ifx-qspi-nor-flash";
+		status = "disabled";
+		chip-select = <1>;
+		reg = <0x00000000 DT_SIZE_M(64)>;
+		write-block-size = <512>;
+		erase-block-size = <0x40000>;
+	};
+
+	qspi_flash1: qspi_flash1@60000000 {
+		compatible = "infineon-ifx-qspi-nor-flash";
+		status = "disabled";
+		chip-select = <2>;
+		reg = <0x00000000 DT_SIZE_M(64)>;
+		write-block-size = <512>;
+		erase-block-size = <0x40000>;
+	};
+};
+
+
 &eth0_mac {
 	pinctrl-0 = <&p18_4_eth_txd_0 &p18_5_eth_txd_1 &p18_0_eth_ref_clk
 	&p18_1_eth_tx_en &p19_0_eth_rxd_0 &p19_1_eth_rxd_1
