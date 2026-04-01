@@ -1146,6 +1146,67 @@
 			/omit-if-no-ref/ p6_4_sdhc0_clk_card: p6_4_sdhc0_clk_card {
 				pinmux = <DT_CAT1_PINMUX(6, 4, HSIOM_SEL_ACT_13)>;
 			};
+
+			/omit-if-no-ref/ p6_3_smif0_clk: p6_3_smif0_clk {
+				pinmux = <DT_CAT1_PINMUX(6, 3, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p6_4_smif0_rwds: p6_4_smif0_rwds {
+				pinmux = <DT_CAT1_PINMUX(6, 4, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p6_5_smif0_sel0: p6_5_smif0_sel0 {
+				pinmux = <DT_CAT1_PINMUX(6, 5, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p7_0_smif0_sel1: p7_0_smif0_sel1 {
+				pinmux = <DT_CAT1_PINMUX(7, 0, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p7_1_smif0_data0: p7_1_smif0_data0 {
+				pinmux = <DT_CAT1_PINMUX(7, 1, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p7_2_smif0_data1: p7_2_smif0_data1 {
+				pinmux = <DT_CAT1_PINMUX(7, 2, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p7_3_smif0_data2: p7_3_smif0_data2 {
+				pinmux = <DT_CAT1_PINMUX(7, 3, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p7_4_smif0_data3: p7_4_smif0_data3 {
+				pinmux = <DT_CAT1_PINMUX(7, 4, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p7_5_smif0_data4: p7_5_smif0_data4 {
+				pinmux = <DT_CAT1_PINMUX(7, 5, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p8_0_smif0_data5: p8_0_smif0_data5 {
+				pinmux = <DT_CAT1_PINMUX(8, 0, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p8_1_smif0_data6: p8_1_smif0_data6 {
+				pinmux = <DT_CAT1_PINMUX(8, 1, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
+			/omit-if-no-ref/ p8_2_smif0_data7: p8_2_smif0_data7 {
+				pinmux = <DT_CAT1_PINMUX(8, 2, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+			};
 		};
 	};
 };
