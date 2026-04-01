@@ -1,0 +1,23 @@
+/*
+ * Copyright (c) 2026 Linumiz
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <arm/infineon/cat1c/cyt4dn/cyt4dn_m0p.dtsi>
+#include "kit_t2g_c2d6m_lite_common.dtsi"
+
+/ {
+	model = "Infineon Evaluation board for CYT4DNJBZS M0+";
+	compatible = "infineon,kit_t2g_c2d6m_lite", "infineon,T2G_C2D";
+
+	chosen {
+		zephyr,sram = &sram_m0plus;
+		zephyr,flash = &code_flash0;
+		zephyr,code-partition = &m0p_partition;
+	};
+};
+
+&gpio_prt29 {
+        status = "okay";
+};
