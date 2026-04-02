@@ -15,9 +15,16 @@
 		zephyr,sram = &sram_m0plus;
 		zephyr,flash = &code_flash0;
 		zephyr,code-partition = &m0p_partition;
+		zephyr,console = &uart9;
+		zephyr,shell-uart = &uart9;
+
 	};
 };
 
 &gpio_prt29 {
         status = "okay";
+};
+
+&uart9 {
+	status = "okay";
 };
