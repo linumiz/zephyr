@@ -16,6 +16,7 @@
 
 #include <cy_sysint.h>
 
+#if 1
 static void enable_cpu_int(uint32_t cpu_int)
 {
 #if (CONFIG_INFINEON_CAT1C_M0PLUS)
@@ -27,6 +28,7 @@ static void enable_cpu_int(uint32_t cpu_int)
 #endif
 	NVIC_EnableIRQ(NvicMux0_IRQn + cpu_int);
 }
+#endif
 
 void enable_sys_int(uint32_t int_num, uint32_t priority, void (*isr)(const void *), const void *arg)
 {
@@ -66,6 +68,13 @@ cy_israddress Cy_SysInt_GetSystemIrqVector(cy_en_intr_t sysIntSrc)
 /* Custom interrupt controller */
 void z_soc_irq_init()
 {
+#if !defined(CONFIG_INFINEON_CAT1C_M0PLUS) /* For M7 */
+       /* Setup IRQ lines 0-2 for IPC calls to M0P (SROM API) */
+       for (uint8_t i = 0; i < 3; i++) {
+               NVIC_SetPriority(NvicMux0_IRQn + i, MAX(i, IRQ_PRIO_LOWEST));
+               NVIC_EnableIRQ(NvicMux0_IRQn + i);
+       }
+#endif
 	return;
 }
 

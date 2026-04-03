@@ -44,6 +44,7 @@ if(CONFIG_SOC_FAMILY_INFINEON_CAT1
           $<TARGET_FILE:modules_hal_infineon>
         COMMENT "Set weak for PDL symbols to hook into Zephyr APIs"
     )
+    zephyr_compile_definitions(CY_DISABLE_XMC7000_DATA_CACHE)
   endif()
 endif()
 

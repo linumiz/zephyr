@@ -84,6 +84,11 @@ if(CONFIG_USE_INFINEON_ADC)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_sysanalog.c)
 endif()
 
+if(CONFIG_USE_INFINEON_FLASH AND CONFIG_SOC_FAMILY_INFINEON_CAT1C)
+  zephyr_library_sources(${pdl_drv_dir}/source/cy_flash_v2.c)
+  zephyr_library_sources(${pdl_drv_dir}/source/cy_flash_srom.c)
+endif()
+
 # Common part
 zephyr_library_sources(${pdl_drv_dir}/source/cy_gpio.c)
 zephyr_library_sources(${pdl_drv_dir}/source/cy_ipc_drv.c)
