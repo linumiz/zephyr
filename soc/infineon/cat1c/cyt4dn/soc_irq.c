@@ -34,7 +34,6 @@ void enable_sys_int(uint32_t int_num, uint32_t priority, void (*isr)(const void 
 {
 	irq_connect_dynamic(int_num, priority, isr, arg, 0);
 	irq_enable(int_num);
-	enable_cpu_int(priority);
 }
 
 /* Cy_SysInt_Init wrapper for Zephyr IRQ integration */
@@ -127,6 +126,20 @@ int z_soc_irq_is_enabled(unsigned int irq)
 void z_soc_irq_priority_set(unsigned int irq, unsigned int prio, unsigned int flags)
 {
 #if (CONFIG_INFINEON_CAT1C_M0PLUS)
+	/* Lower irqs are used for SROM, upper IRQs for priority mapping */
+	//prio = MAX(prio, IRQ_PRIO_LOWEST);
+
+	/* FIXME: This must also be IRQ_PRIO_LOWEST, But inorder
+	for SROM APIs to work on M0P, this must happen on the specific CPU interrupt (0-2):
+	CPUSS_CM0_SYSTEM_INT_CTL[irq] =
+                _VAL2FLD(CPUSS_CM0_SYSTEM_INT_CTL_CM0_CPU_INT_IDX, NvicMux0_IRQn + prio) |
+                CPUSS_CM0_SYSTEM_INT_CTL_CPU_INT_VALID_Msk;
+	 Right now, someone irrelevant is setting this CTL bit and making the IRQ (0-2) enabled
+	 for CM0, so SROM API calls are working on accident, needs fix!
+	 */
+#endif
+
+#if (CONFIG_INFINEON_CAT1C_M0PLUS)
 	CPUSS_CM0_SYSTEM_INT_CTL[irq] =
 		_VAL2FLD(CPUSS_CM0_SYSTEM_INT_CTL_CM0_CPU_INT_IDX, NvicMux0_IRQn + prio) |
 		CPUSS_CM0_SYSTEM_INT_CTL_CPU_INT_VALID_Msk;
@@ -141,6 +154,7 @@ void z_soc_irq_priority_set(unsigned int irq, unsigned int prio, unsigned int fl
 			CPUSS_CM7_1_SYSTEM_INT_CTL_CPU_INT_VALID_Msk;
 	}
 #endif
+	enable_cpu_int(prio);
 }
 
 void z_soc_irq_eoi(unsigned int irq)
