@@ -1396,26 +1396,39 @@
 
 			/omit-if-no-ref/ p6_3_smif0_clk: p6_3_smif0_clk {
 				pinmux = <DT_CAT1_PINMUX(6, 3, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
+
 			};
 
 			/omit-if-no-ref/ p6_5_smif0_sel0: p6_5_smif0_sel0 {
 				pinmux = <DT_CAT1_PINMUX(6, 5, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
 			};
 
 			/omit-if-no-ref/ p7_1_smif0_data0: p7_1_smif0_data0 {
 				pinmux = <DT_CAT1_PINMUX(7, 1, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
 			};
 
 			/omit-if-no-ref/ p7_2_smif0_data1: p7_2_smif0_data1 {
 				pinmux = <DT_CAT1_PINMUX(7, 2, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
 			};
 
 			/omit-if-no-ref/ p7_3_smif0_data2: p7_3_smif0_data2 {
 				pinmux = <DT_CAT1_PINMUX(7, 3, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
 			};
 
 			/omit-if-no-ref/ p7_4_smif0_data3: p7_4_smif0_data3 {
 				pinmux = <DT_CAT1_PINMUX(7, 4, HSIOM_SEL_ACT_11)>;
+				drive-push-pull;
+				input-enable;
 			};
 
 			/omit-if-no-ref/ p26_0_eth_ref_clk: p26_0_eth_ref_clk {
