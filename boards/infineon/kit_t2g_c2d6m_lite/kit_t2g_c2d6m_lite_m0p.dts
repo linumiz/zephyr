@@ -4,7 +4,7 @@
  */
 
 /dts-v1/;
-#include <arm/infineon/cat1c/cyt4dn/cyt4dn_m0p.dtsi>
+#include <arm/infineon/cat1c/traveo/cyt4dn/cyt4dn_m0p.dtsi>
 #include "kit_t2g_c2d6m_lite_common.dtsi"
 
 / {
@@ -21,10 +21,10 @@
 	};
 };
 
-&gpio_prt29 {
-        status = "okay";
-};
-
 &uart9 {
 	status = "okay";
+};
+
+&gpio_prt29 {
+        status = "okay";
 };
