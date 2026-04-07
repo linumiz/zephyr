@@ -29,6 +29,8 @@
 #include <cy_sysclk.h>
 
 #include <zephyr/drivers/clock_control/clock_control_ifx_cat1.h>
+#include <zephyr/drivers/clock_control/clock_control_ifx.h>
+#include <zephyr/drivers/clock_control.h>
 #include <zephyr/dt-bindings/clock/ifx_clock_source_common.h>
 
 #include <zephyr/logging/log.h>
@@ -108,8 +110,11 @@ struct ifx_cat1_uart_data {
 	struct uart_config cfg;
 	struct ifx_cat1_resource_inst hw_resource;
 	struct ifx_cat1_clock clock;
-#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE)
+#if defined(COMPONENT_CAT1B) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE)
 	uint8_t clock_peri_group;
+#endif
+#if defined(COMPONENT_CAT1C)
+	struct ifx_clk_peri clk_info;
 #endif
 
 #if CONFIG_UART_INTERRUPT_DRIVEN
@@ -134,6 +139,9 @@ struct ifx_cat1_uart_config {
 	uint16_t irq_num;
 	uint8_t irq_priority;
 	en_clk_dst_t clk_dst;
+#if defined(COMPONENT_CAT1C)
+	const struct device *clk_dev;
+#endif
 };
 
 typedef void (*ifx_cat1_uart_event_callback_t)(void *callback_arg);
@@ -228,11 +236,25 @@ cy_rslt_t ifx_cat1_uart_set_baud(const struct device *dev, uint32_t baudrate)
 
 	Cy_SCB_UART_Disable(config->reg_addr, NULL);
 
+#if defined(COMPONENT_CAT1C)
+	peri_frequency = IFX_UART_OVERSAMPLE_MIN * baudrate;
+
+	status = clock_control_set_rate(config->clk_dev, &data->clk_info,
+					&peri_frequency);
+
+	if (status != 0) {
+		return status;
+	}
+
+	Cy_SCB_UART_Enable(config->reg_addr);
+	return 0;
+#endif
+
 #if defined(COMPONENT_CAT1A)
 	peri_frequency = Cy_SysClk_ClkPeriGetFrequency();
-#elif defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) ||                                      \
+#elif defined(COMPONENT_CAT1B) ||  defined(COMPONENT_CAT1C) ||                                    \
 	defined(CONFIG_SOC_FAMILY_INFINEON_EDGE)
-	uint8_t hfclk = ifx_cat1_utils_peri_pclk_get_hfclk(data->clock_peri_group);
+	uint8_t hfclk = ifx_cat1_utils_peri_pclk_get_hfclk(1);//data->clock_peri_group);
 
 	peri_frequency = Cy_SysClk_ClkHfGetFrequency(hfclk);
 #else
@@ -1264,7 +1286,6 @@ static int ifx_cat1_uart_init(const struct device *dev)
 #ifdef CONFIG_UART_ASYNC_API
 	data->scb_config.rxFifoTriggerLevel = 0;
 	data->scb_config.txFifoTriggerLevel = 1;
-#endif
 
 	/* Connect this SCB to the peripheral clock */
 	result = ifx_cat1_utils_peri_pclk_assign_divider(config->clk_dst, &data->clock);
@@ -1283,6 +1304,7 @@ static int ifx_cat1_uart_init(const struct device *dev)
 		return -ENOTSUP;
 	}
 
+#endif
 #if (CONFIG_SOC_FAMILY_INFINEON_CAT1C && CONFIG_UART_INTERRUPT_DRIVEN)
 	/* Enable the UART interrupt */
 	enable_sys_int(config->irq_num, config->irq_priority,
@@ -1423,7 +1445,7 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 #define IRQ_INFO(n) .irq_num = DT_INST_IRQN(n), .irq_priority = DT_INST_IRQ(n, priority)
 #endif
 
-#if defined(COMPONENT_CAT1B) || defined(COMPONENT_CAT1C) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE)
+#if defined(COMPONENT_CAT1B) || defined(CONFIG_SOC_FAMILY_INFINEON_EDGE)
 #define PERI_INFO(n) .clock_peri_group = DT_PROP_BY_IDX(DT_INST_PHANDLE(n, clocks), peri_group, 1),
 #else
 #define PERI_INFO(n)
@@ -1457,6 +1479,13 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 			.channel = DT_INST_PROP_BY_PHANDLE(n, clocks, channel),                    \
 	},                                                                                         \
 	PERI_INFO(n)
+#elif defined(COMPONENT_CAT1C)
+#define UART_PERI_CLOCK_INIT(n)                                                                    \
+	.clk_info = {										   \
+		.rootclk_id = DT_INST_CLOCKS_CELL_BY_IDX(n, 0, rootclk_id),			   \
+		.divider_type = DT_INST_CLOCKS_CELL_BY_IDX(n, 0, divider_type),			   \
+		.divider_inst = DT_INST_CLOCKS_CELL_BY_IDX(n, 0, divider_inst),			   \
+	},
 #else
 #define UART_PERI_CLOCK_INIT(n)                                                                    \
 	.clock =                                                                                   \
@@ -1491,6 +1520,7 @@ static DEVICE_API(uart, ifx_cat1_uart_driver_api) = {
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),                                         \
 		.reg_addr = (CySCB_Type *)DT_INST_REG_ADDR(n),                                     \
 		.clk_dst = DT_INST_PROP(n, clk_dst),                                               \
+		.clk_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(n)),				   \
 		IRQ_INFO(n)};                                                                      \
                                                                                                    \
 	DEVICE_DT_INST_DEFINE(n, &ifx_cat1_uart_init##n, NULL, &ifx_cat1_uart##n##_data,           \
