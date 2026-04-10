@@ -1,0 +1,32 @@
+/*
+ * Copyright (c) 2026 Linumiz
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <arm/infineon/cat1c/traveo/cyt4dn/cyt4dn_m7.dtsi>
+#include <arm/infineon/cat1c/traveo/cyt4dn/memory_partitions.dtsi>
+#include "kit_t2g_c2d6m_lite_common.dtsi"
+
+/ {
+
+	model = "Infineon Evaluation board for CYT4DNJBZS M7 Core 1";
+	compatible = "infineon,kit_t2g_c2d6m_lite", "infineon,cyt4dn";
+
+	chosen {
+		zephyr,sram = &sram_m7_1;
+		zephyr,flash = &flash_m7_1;
+		zephyr,dtcm = &m7_1_dtcm;
+		zephyr,itcm = &m7_1_itcm;
+		zephyr,console = &uart7;
+		zephyr,shell-uart = &uart7;
+	};
+};
+
+&m7_1 {
+	status = "okay";
+};
+
+&uart7 {
+	status = "okay";
+};
