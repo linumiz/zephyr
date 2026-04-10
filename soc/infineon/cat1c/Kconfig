@@ -6,4 +6,10 @@ if SOC_FAMILY_INFINEON_CAT1C
 
 rsource "*/Kconfig"
 
+config INFINEON_TRAVEO_FAMILY
+        bool "Enable Infineon TRAVEO family PDL driver support"
+	default n
+        help
+          Enable PDL-based drivers for Infineon TRAVEO SoCs.
+
 endif # SOC_FAMILY_INFINEON_CAT1C
