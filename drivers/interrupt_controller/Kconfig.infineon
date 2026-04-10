@@ -1,0 +1,11 @@
+# Copyright (c) 2026 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+config INFINEON_INTC_CAT1
+	bool "Infineon CAT1 CPUSS system interrupt multiplexer"
+	depends on DT_HAS_INFINEON_CAT1_INTC_ENABLED
+	depends on SOC_FAMILY_INFINEON_CAT1
+	help
+	  Infineon CAT1 CPUSS interrupt multiplexer driver. Routes
+	  peripheral system interrupts to NVIC lines through a
+	  programmable mux.
