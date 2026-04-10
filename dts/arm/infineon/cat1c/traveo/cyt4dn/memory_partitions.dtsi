@@ -1,0 +1,66 @@
+/*
+ * Copyright (c) 2026 Linumiz
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	sram_m0p: sram@28000800 {
+		compatible = "mmio-sram";
+		reg = <0x28000800 DT_SIZE_K(30)>;
+	};
+
+	flash_m0p: flash@10000000 {
+		compatible = "soc-nv-flash";
+		reg = <0x10000000 DT_SIZE_K(512)>;
+		write-block-size = <512>;
+		erase-block-size = <32768>;
+	};
+
+	sram_m7_0: sram@28008000 {
+		compatible = "mmio-sram";
+		reg = <0x28008000 DT_SIZE_K(224)>;
+	};
+
+	flash_m7_0: flash@10080000 {
+		compatible = "soc-nv-flash";
+		reg = <0x10080000 DT_SIZE_K(2656)>;
+		write-block-size = <512>;
+		erase-block-size = <32768>;
+	};
+
+	sram_m7_1: sram@28040000 {
+		compatible = "mmio-sram";
+		reg = <0x28040000 DT_SIZE_K(256)>;
+	};
+
+	flash_m7_1: flash@10318000 {
+		compatible = "soc-nv-flash";
+		reg = <0x10318000 DT_SIZE_K(3168)>;
+		write-block-size = <512>;
+		erase-block-size = <32768>;
+	};
+
+	m7_0_itcm: itcm@a0000000 {
+		compatible = "zephyr,memory-region", "arm,itcm";
+		reg = <0xa0000000 DT_SIZE_K(64)>;
+		zephyr,memory-region = "M7_0_ITCM";
+	};
+
+	m7_0_dtcm: dtcm@a0010000 {
+		compatible = "zephyr,memory-region", "arm,dtcm";
+		reg = <0xa0010000 DT_SIZE_K(64)>;
+		zephyr,memory-region = "M7_0_DTCM";
+	};
+
+	m7_1_itcm: itcm@a0100000 {
+		compatible = "zephyr,memory-region", "arm,itcm";
+		reg = <0xA0100000 DT_SIZE_K(64)>;
+		zephyr,memory-region = "M7_1_ITCM";
+	};
+
+	m7_1_dtcm: dtcm@a0110000 {
+		compatible = "zephyr,memory-region", "arm,dtcm";
+		reg = <0xA0110000 DT_SIZE_K(64)>;
+		zephyr,memory-region = "M7_1_DTCM";
+	};
+};
