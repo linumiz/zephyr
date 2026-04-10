@@ -1,0 +1,29 @@
+# Copyright (c) 2026 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Infineon TRAVEO T2G (CAT1) system interrupt multiplexer.
+
+  The CAT1 CPUSS routes hundreds of peripheral system interrupts onto
+  a limited set of NVIC IRQ lines through a programmable multiplexer.
+  CM0+ has 8 mux outputs (NvicMux0-7), CM7 has 16 (NvicMux0-15).
+
+  Each system interrupt has a SYSTEM_INT_CTL register containing a
+  CPU_INT_IDX field (selects which NVIC line) and a CPU_INT_VALID bit
+  (enables routing). Multiple system interrupts can map to the same
+  NVIC line; the hardware resolves by reporting the lowest-indexed
+  active source in the corresponding INTx_STATUS register.
+
+  The ISR reads SYSTEM_INT_IDX from INTx_STATUS to identify which
+  peripheral triggered the interrupt, then dispatches accordingly.
+
+  CM7 cores additionally have 8 direct internal IRQs (Internal0-7)
+  that bypass the mux entirely.
+
+compatible: "infineon,cat1-intc"
+
+include: [interrupt-controller.yaml, base.yaml]
+
+properties:
+  "#interrupt-cells":
+    const: 2
