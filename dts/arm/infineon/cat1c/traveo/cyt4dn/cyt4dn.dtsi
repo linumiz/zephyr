@@ -39,6 +39,14 @@
 	};
 
 	soc {
+		cpuss_intc: interrupt-controller@40200000 {
+			compatible = "infineon,cat1-intc";
+			reg = <0x40200000 0x10000>;
+			#interrupt-cells = <2>;
+			interrupt-controller;
+			status = "okay";
+		};
+
 		pinctrl: pinctrl@40300000 {
 			compatible = "infineon,pinctrl";
 			reg = <0x40300000 0x20000>;
