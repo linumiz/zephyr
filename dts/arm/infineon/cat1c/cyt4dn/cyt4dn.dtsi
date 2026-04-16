@@ -303,15 +303,6 @@
 			#gpio-cells = <2>;
 		};
 
-		gpio_prt10: gpio@40310500 {
-			compatible = "infineon,cat1-gpio";
-			reg = <0x40310500 0x80>;
-			system-interrupts = <34 2>;
-			gpio-controller;
-			status = "disabled";
-			#gpio-cells = <2>;
-		};
-
 		gpio_prt11: gpio@40310580 {
 			compatible = "infineon,cat1-gpio";
 			reg = <0x40310580 0x80>;
@@ -418,16 +409,6 @@
 			system-interrupts = <61 2>;
 			gpio-controller;
 			ngpios = <4>;
-			status = "disabled";
-			#gpio-cells = <2>;
-		};
-
-		gpio_prt22: gpio@40310b00 {
-			compatible = "infineon,cat1-gpio";
-			reg = <0x40310b00 0x80>;
-			system-interrupts = <62 2>;
-			gpio-controller;
-			ngpios = <8>;
 			status = "disabled";
 			#gpio-cells = <2>;
 		};
