@@ -18,7 +18,7 @@
 #include <cy_wdt.h>
 #include <cy_sysclk.h>
 
-#ifdef CONFIG_SOC_DIE_CYT2B7
+#if defined(CONFIG_SOC_DIE_CYT2B7) || defined(CONFIG_SOC_DIE_CYT2BL)
 	#define IFX_FAST_CLOCK_DOMAIN_FREQ	130 /* 130 MHz */
 #endif
 
@@ -101,7 +101,7 @@ void soc_prep_hook(void)
 	// SystemCoreClockUpdate();
 
 	cat1a_m0p_srom_init();
-#ifdef CONFIG_SOC_DIE_CYT2B7
+#if defined(CONFIG_SOC_DIE_CYT2B7) || defined(CONFIG_SOC_DIE_CYT2BL)
 	Cy_SysLib_SetWaitStates(false, IFX_FAST_CLOCK_DOMAIN_FREQ);
 #endif
 }
