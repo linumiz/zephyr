@@ -129,12 +129,12 @@ uart0: &scb0 {
 };
 
 &pinctrl {
-	/omit-if-no-ref/ p12_0_can0_0_tx: p12_0_can0_0_tx {
-		pinmux = <DT_CAT1_PINMUX(5, 0, HSIOM_SEL_ACT_13)>;
+	/omit-if-no-ref/ p12_0_can0_2_tx: p12_0_can0_2_tx {
+		pinmux = <DT_CAT1_PINMUX(12, 0, HSIOM_SEL_ACT_9)>;
 		drive-push-pull;
 	};
-	/omit-if-no-ref/ p12_1_can0_0_rx: p12_1_can0_0_rx {
-		pinmux = <DT_CAT1_PINMUX(5, 1, HSIOM_SEL_ACT_13)>;
+	/omit-if-no-ref/ p12_1_can0_2_rx: p12_1_can0_2_rx {
+		pinmux = <DT_CAT1_PINMUX(12, 1, HSIOM_SEL_ACT_9)>;
 		input-enable;
 	};
 
@@ -191,17 +191,17 @@ uart0: &scb0 {
 	};
 };
 
-can0: &can0_0 {
+can0: &can0_2 {
 	compatible = "infineon,cat1-can";
 	clocks = <&clk_hf2>;
 	clock-frequency = <40000000>;
 	ifx,peri-group = <IFX_PERI_GRP_INST_SEL(1, 0)>;
-	ifx,peri-clk = <0x0100>;
+	ifx,peri-clk = <0x0102>;
 	ifx,peri-div = <3>; /* 24-bit divider */
 	ifx,peri-div-inst = <0>;
-
-	pinctrl-0 = <&p12_0_can0_0_tx &p12_1_can0_0_rx>;
+	pinctrl-0 = <&p12_0_can0_2_tx &p12_1_can0_2_rx>;
 	pinctrl-names = "default";
+	status = "okay";
 };
 
 spi1: &scb3 {
