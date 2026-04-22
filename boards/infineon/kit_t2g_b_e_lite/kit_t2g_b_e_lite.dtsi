@@ -33,17 +33,17 @@
 
 		user_led0: led0 {
 			label = "LED_1";
-			gpios = <&gpio_prt5 0 GPIO_ACTIVE_HIGH>;
+			gpios = <&gpio_prt5 0 GPIO_ACTIVE_LOW>;
 		};
 
 		user_led1: led1 {
 			label = "LED_2";
-			gpios = <&gpio_prt5 1 GPIO_ACTIVE_HIGH>;
+			gpios = <&gpio_prt5 1 GPIO_ACTIVE_LOW>;
 		};
 
 		user_led2: led2 {
 			label = "LED_3";
-			gpios = <&gpio_prt5 2 GPIO_ACTIVE_HIGH>;
+			gpios = <&gpio_prt5 2 GPIO_ACTIVE_LOW>;
 		};
 	};
 
