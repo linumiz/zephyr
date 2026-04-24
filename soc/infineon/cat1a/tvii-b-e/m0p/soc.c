@@ -19,7 +19,7 @@
 #include <cy_sysclk.h>
 
 #if defined(CONFIG_SOC_DIE_CYT2B7) || defined(CONFIG_SOC_DIE_CYT2BL)
-	#define IFX_FAST_CLOCK_DOMAIN_FREQ	130 /* 130 MHz */
+	#define IFX_FAST_CLOCK_DOMAIN_FREQ	160 /* 160 MHz */
 #endif
 
 #if (CONFIG_SOC_DIE_CYT2B7)
