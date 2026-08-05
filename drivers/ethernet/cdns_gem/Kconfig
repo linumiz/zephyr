@@ -1,0 +1,27 @@
+# Cadence GEM Ethernet driver configuration options
+
+# Copyright (c) 2021, Weidmueller Interface GmbH & Co. KG
+# Copyright (c) 2026 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Cadence GEM Ethernet driver"
+
+config ETH_CDNS_GEM_CORE
+	bool
+	select NOCACHE_MEMORY if ARCH_HAS_NOCACHE_MEMORY_SUPPORT
+	select CACHE_MANAGEMENT if DCACHE
+	select NET_CHECKSUM_OFFLOAD_SUPPORTED if NET_L2_ETHERNET
+	help
+	  This is a driver for the Cadence GEM Ethernet controller IP core.
+
+config ETH_XLNX_GEM
+	bool "Xilinx GEM Ethernet driver"
+	default y
+	depends on DT_HAS_XLNX_GEM_ENABLED
+	depends on !QEMU_TARGET || (QEMU_TARGET && NET_QEMU_ETHERNET)
+	select ETH_CDNS_GEM_CORE
+	help
+	  Enable the driver for the Cadence GEM Ethernet controller
+	  instances of the Xilinx Zynq-7000 and ZynqMP SoC families.
+
+endmenu
