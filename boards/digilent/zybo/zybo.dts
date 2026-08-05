@@ -47,7 +47,7 @@
 
 	sram0: memory@0 {
 		compatible = "mmio-sram";
-		reg = <0x00000000 DT_SIZE_M(512)>;
+		reg = <0x00100000 DT_SIZE_M(511)>;
 	};
 
 	leds {
@@ -86,4 +86,20 @@
 
 &psgpio {
 	status = "okay";
+};
+
+&gem0 {
+	status = "okay";
+	local-mac-address = [02 00 00 5a 79 01];
+	clock-frequency = <1000000000>;
+	phy-handle = <&phy0>;
+};
+
+&gem0_mdio {
+	status = "okay";
+
+	phy0: ethernet-phy@1 {
+		compatible = "ethernet-phy";
+		reg = <1>;
+	};
 };
