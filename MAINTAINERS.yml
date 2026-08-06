@@ -6070,6 +6070,7 @@ TI MSPM Platforms:
   collaborators:
     - d-philpot
     - Aman-Lachhiramka-ti
+    - karthi012
   files:
     - soc/ti/mspm/
     - boards/ti/*mspm*/
