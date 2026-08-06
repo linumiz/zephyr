@@ -27,6 +27,7 @@ config MDIO_SHELL
 # zephyr-keep-sorted-start
 rsource "Kconfig.adin2111"
 rsource "Kconfig.bcmgenet"
+rsource "Kconfig.cdns_gem"
 rsource "Kconfig.dwcxgmac"
 rsource "Kconfig.dwmac"
 rsource "Kconfig.esp32"
@@ -47,7 +48,6 @@ rsource "Kconfig.sy1xx"
 rsource "Kconfig.wch"
 rsource "Kconfig.xilinx_axi_ethernet_lite"
 rsource "Kconfig.xilinx_axienet"
-rsource "Kconfig.xlnx_gem"
 rsource "Kconfig.xmc4xxx"
 # zephyr-keep-sorted-stop
 
