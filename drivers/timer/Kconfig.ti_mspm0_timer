@@ -1,0 +1,10 @@
+# Copyright (c) 2026 Linumiz
+# SPDX-License-Identifier: Apache-2.0
+
+config TI_MSPM0_SYSTEM_TIMER
+	bool "TI MSPM0 System Timer Driver"
+	depends on DT_HAS_TI_MSPM0_SYSTEM_TIMER_ENABLED
+	select SYSTEM_TIMER_HAS_DISABLE_SUPPORT
+	select TICKLESS_CAPABLE
+	help
+	  This option enables the TI MSPM0 system timer driver.
