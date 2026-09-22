@@ -53,5 +53,20 @@
 			ti,divider = <1>;
 			status = "disabled";
 		};
+
+		timg8: timg8@40090000 {
+			compatible = "ti,mspm0-timer";
+			reg = <0x40090000 0x2000>;
+			interrupts = <2 0>;
+			clocks = <&ckm MSPM0_CLOCK_ULPCLK>;
+			ti,clk-prescaler = <0>;
+			ti,clk-div = <1>;
+			status = "disabled";
+
+			system_timer: system-timer {
+				compatible = "ti,mspm0-system-timer";
+				status = "disabled";
+			};
+		};
 	};
 };
