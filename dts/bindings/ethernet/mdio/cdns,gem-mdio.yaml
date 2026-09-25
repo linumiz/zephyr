@@ -1,0 +1,8 @@
+# Copyright (c) 2026 Immo Birnbaum
+# SPDX-License-Identifier: Apache-2.0
+
+description: Cadence GEM MDIO node
+
+compatible: "cdns,gem-mdio"
+
+include: [mdio-controller.yaml, pinctrl-device.yaml]

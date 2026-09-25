@@ -121,7 +121,7 @@
 			unicast-hash;
 
 			gem0_mdio: mdio {
-				compatible = "xlnx,gem-mdio";
+				compatible = "cdns,gem-mdio";
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -151,7 +151,7 @@
 			unicast-hash;
 
 			gem1_mdio: mdio {
-				compatible = "xlnx,gem-mdio";
+				compatible = "cdns,gem-mdio";
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -181,7 +181,7 @@
 			unicast-hash;
 
 			gem2_mdio: mdio {
-				compatible = "xlnx,gem-mdio";
+				compatible = "cdns,gem-mdio";
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -211,7 +211,7 @@
 			unicast-hash;
 
 			gem3_mdio: mdio {
-				compatible = "xlnx,gem-mdio";
+				compatible = "cdns,gem-mdio";
 				status = "disabled";
 				#address-cells = <1>;
 				#size-cells = <0>;
