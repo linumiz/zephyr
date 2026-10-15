@@ -97,6 +97,7 @@
 			compatible = "ti,mspm0-spi";
 			reg = <0x4046c000 0x2000>;
 			status = "disabled";
+			interrupts = <11 0>;
 		};
 
 		aes: aes@40442000 {
