@@ -2,13 +2,37 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-title: Infineon Clock Oscillators
+title: Infineon SRSS oscillator
 
-description: Infineon Clock source Oscillators
+description: |
+  Clock source of the SRSS path muxes. reg is the CLK_PATH_SELECT
+  source code of the oscillator; codes 0x100 and up select the DSI
+  mux.
+
+    code   MXS40SRSS  MXS40SSRSS  MXS22SRSS
+    0      IMO        IMO         IHO
+    1      EXT        EXT         EXT
+    2      ECO        ECO         ECO
+    3      -          -           IMO
+    5      LPECO      -           -
+    6      -          IHO         -
+    0x110  ILO0       ILO         -
+    0x111  WCO        WCO         WCO
+    0x113  -          -           PILO
+    0x114  ILO1       -           -
+
+  IMO and IHO always run. An okay ECO is enabled at init with trims
+  calculated from the eco-* properties. The ECO node is named eco@2.
+
+  An okay ILO, PILO or WCO that is not running is enabled at init. A
+  PILO enabled at init is waited on until PILO_OK. The WCO is waited on
+  until WCO_OK only when a pll uses it as input; otherwise get_rate
+  reports 0 until WCO_OK is set. ILO and PILO reset enabled, and their
+  enable bits are write protected by WDT_LOCK.
 
 compatible: "infineon,clk-osc"
 
-include: [base.yaml, fixed-clock.yaml]
+include: fixed-clock.yaml
 
 properties:
   reg:
@@ -16,12 +40,12 @@ properties:
 
   eco-load-capacitance-pf:
     type: int
-    description: Crystal load capacitance in picofarads.
+    description: ECO only. Crystal load capacitance in picofarads.
 
   eco-esr-ohms:
     type: int
-    description: Crystal equivalent series resistance in ohms.
+    description: ECO only. Crystal equivalent series resistance in ohms.
 
   eco-drive-level-uw:
     type: int
-    description: Crystal maximum drive level in microwatts.
+    description: ECO only. Crystal maximum drive level in microwatts.
