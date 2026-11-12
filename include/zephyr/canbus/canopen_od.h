@@ -55,7 +55,7 @@ enum canopen_od_type {
 	CANOPEN_OD_TYPE_TIME_OF_DAY = 0x0C,
 	/** TIME_DIFFERENCE */
 	CANOPEN_OD_TYPE_TIME_DIFFERENCE = 0x0D,
-	/** DOMAIN */
+	/** DOMAIN, data of variable size handled by @ref canopen_od_domain callbacks */
 	CANOPEN_OD_TYPE_DOMAIN = 0x0F,
 	/** INTEGER24 */
 	CANOPEN_OD_TYPE_INTEGER24 = 0x10,
@@ -225,6 +225,53 @@ struct canopen_od_entry {
 	uint8_t count;
 };
 
+/**
+ * @brief Callbacks of a DOMAIN entry.
+ *
+ * The callbacks are called from the CANopen thread with the node locked.
+ */
+struct canopen_od_domain {
+	/**
+	 * @brief Read data for an SDO upload.
+	 *
+	 * @param entry     Object dictionary entry.
+	 * @param offset    Offset of the requested data.
+	 * @param buf       Buffer for the data.
+	 * A block upload can read the same offset again when the client reports a lost
+	 * segment, so the data must not change during a transfer.
+	 *
+	 * @param len       In: size of @p buf. Out: number of bytes copied, fewer than the size
+	 *                  of @p buf only at the end of the data.
+	 * @param user_data User data of the entry.
+	 *
+	 * @retval CANOPEN_SDO_ABORT_NONE Data copied.
+	 * @retval other @ref canopen_sdo_abort code sent to the SDO client.
+	 */
+	uint32_t (*read)(const struct canopen_od_entry *entry, size_t offset, uint8_t *buf,
+			 size_t *len, void *user_data);
+	/**
+	 * @brief Store data of an SDO download.
+	 *
+	 * An expedited download is one call with @p last set. A segmented download starts with
+	 * a call with @p len 0 before any data is sent, so the transfer can be refused in the
+	 * initiate response, for example when @p size is too large.
+	 *
+	 * @param entry     Object dictionary entry.
+	 * @param offset    Offset of the data.
+	 * @param buf       Data.
+	 * @param len       Number of bytes in @p buf, 0 for the first call of a segmented
+	 *                  download and possible for the last call.
+	 * @param size      Total size indicated by the SDO client, 0 if not indicated.
+	 * @param last      True for the last data of the transfer.
+	 * @param user_data User data of the entry.
+	 *
+	 * @retval CANOPEN_SDO_ABORT_NONE Data stored.
+	 * @retval other @ref canopen_sdo_abort code sent to the SDO client.
+	 */
+	uint32_t (*write)(const struct canopen_od_entry *entry, size_t offset, const uint8_t *buf,
+			  size_t len, size_t size, bool last, void *user_data);
+};
+
 /** @brief Application object dictionary. */
 struct canopen_od {
 	/** Entries sorted by ascending index */
@@ -282,6 +329,34 @@ struct canopen_od {
  */
 #define CANOPEN_OD_VAR(_index, _type, _attr, _var)                                                 \
 	CANOPEN_OD_VAR_HOOK(_index, _type, _attr, _var, NULL, NULL)
+
+/**
+ * @brief Initializer for a DOMAIN entry.
+ *
+ * Requires @kconfig{CONFIG_CANOPEN_DOMAIN}. A DOMAIN cannot be mapped into a PDO or stored with
+ * 1010h, and is only accessible over SDO.
+ *
+ * @param _index  Index.
+ * @param _attr   Access attributes, @ref CANOPEN_OD_RO, @ref CANOPEN_OD_WO or
+ *                @ref CANOPEN_OD_RW.
+ * @param _domain Callbacks, a @ref canopen_od_domain.
+ * @param _user   User data passed to the callbacks.
+ */
+#define CANOPEN_OD_DOMAIN(_index, _attr, _domain, _user)                                           \
+	{                                                                                          \
+		.subs = (const struct canopen_od_sub[]){                                           \
+			{                                                                          \
+				.data = (void *)&(_domain),                                        \
+				.sub = 0U,                                                         \
+				.type = CANOPEN_OD_TYPE_DOMAIN,                                    \
+				.attr = (_attr),                                                   \
+			},                                                                         \
+		},                                                                                 \
+		.user_data = (_user),                                                              \
+		.index = (_index),                                                                 \
+		.code = CANOPEN_OD_CODE_VAR,                                                       \
+		.count = 1U,                                                                       \
+	}
 
 /**
  * @brief Initializer for an ARRAY entry.

@@ -24,6 +24,14 @@ Features
 * NMT slave with boot-up message, reset node and reset communication.
 * Heartbeat producer (``1017h``) and consumer (``1016h``).
 * SDO server with expedited and segmented transfers and the abort codes of CiA 301.
+* DOMAIN objects (:c:macro:`CANOPEN_OD_DOMAIN`), enabled with
+  :kconfig:option:`CONFIG_CANOPEN_DOMAIN`: data of any size, streamed by the SDO server through the
+  read and write callbacks of a :c:struct:`canopen_od_domain`.
+* SDO block upload and block download with CRC, enabled with
+  :kconfig:option:`CONFIG_CANOPEN_SDO_BLOCK`. Lost segments are repeated as acknowledged by the
+  client or server. The server always answers a block upload with block transfer and does not use
+  the protocol switch threshold. The block size of a download is
+  :kconfig:option:`CONFIG_CANOPEN_SDO_BLOCK_SIZE`.
 * Transmit and receive PDOs with the synchronous acyclic, synchronous cyclic and event-driven
   transmission types, inhibit time, event timer, SYNC start value and dynamic mapping.
 * SYNC consumer and producer (``1005h``, ``1006h``, ``1007h``, ``1019h``).

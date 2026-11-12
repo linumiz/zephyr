@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <string.h>
+
 #include <zephyr/canbus/canopen.h>
 #include <zephyr/drivers/can.h>
 #include <zephyr/kernel.h>
@@ -13,15 +15,59 @@ LOG_MODULE_REGISTER(canopen_sample, LOG_LEVEL_INF);
 
 #define OD_COUNTER 0x2000U
 #define OD_OUTPUT  0x2001U
+#define OD_DATA    0x5600U
+
+#define DATA_SIZE 256U
 
 static uint32_t counter;
 static uint8_t output;
+
+static uint8_t sample_data[DATA_SIZE];
+static size_t sample_data_len;
+
+static uint32_t data_read(const struct canopen_od_entry *entry, size_t offset, uint8_t *buf,
+			  size_t *len, void *user_data)
+{
+	ARG_UNUSED(entry);
+	ARG_UNUSED(user_data);
+
+	*len = MIN(*len, sample_data_len - MIN(offset, sample_data_len));
+	memcpy(buf, &sample_data[offset], *len);
+
+	return CANOPEN_SDO_ABORT_NONE;
+}
+
+static uint32_t data_write(const struct canopen_od_entry *entry, size_t offset, const uint8_t *buf,
+			   size_t len, size_t size, bool last, void *user_data)
+{
+	ARG_UNUSED(entry);
+	ARG_UNUSED(user_data);
+
+	if ((size > sizeof(sample_data)) || ((offset + len) > sizeof(sample_data))) {
+		return CANOPEN_SDO_ABORT_LENGTH_TOO_HIGH;
+	}
+
+	memcpy(&sample_data[offset], buf, len);
+	sample_data_len = offset + len;
+
+	if (last) {
+		LOG_INF("5600h: %zu bytes received", sample_data_len);
+	}
+
+	return CANOPEN_SDO_ABORT_NONE;
+}
+
+static const struct canopen_od_domain data_domain = {
+	.read = data_read,
+	.write = data_write,
+};
 
 CANOPEN_OD_DEFINE(sample_od,
 	CANOPEN_OD_VAR(OD_COUNTER, CANOPEN_OD_TYPE_UNSIGNED32,
 		       CANOPEN_OD_RO | CANOPEN_OD_ATTR_TPDO, counter),
 	CANOPEN_OD_VAR(OD_OUTPUT, CANOPEN_OD_TYPE_UNSIGNED8,
-		       CANOPEN_OD_RW | CANOPEN_OD_ATTR_RPDO, output));
+		       CANOPEN_OD_RW | CANOPEN_OD_ATTR_RPDO, output),
+	CANOPEN_OD_DOMAIN(OD_DATA, CANOPEN_OD_RW, data_domain, NULL));
 
 static const uint32_t tpdo1_map[] = {CANOPEN_PDO_MAP(OD_COUNTER, 0, 32)};
 static const uint32_t rpdo1_map[] = {CANOPEN_PDO_MAP(OD_OUTPUT, 0, 8)};
