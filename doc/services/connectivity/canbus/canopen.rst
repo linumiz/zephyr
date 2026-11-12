@@ -44,6 +44,8 @@ Features
   node are kept in one settings entry, ``canopen/<node-ID>``, and are ignored after a change of
   the stored objects. :c:func:`canopen_node_start` initializes the settings subsystem, so the
   calling thread needs the stack of the settings backend.
+* RUN and ERR indicator LEDs according to CiA 303-3, enabled with
+  :kconfig:option:`CONFIG_CANOPEN_LEDS`.
 
 Not supported: the master side of node guarding, PDOs requested by remote frames, MPDO, the
 CANopen manager boot-up of CiA 302, LSS (CiA 305) and CANopen FD (CiA 1301).
@@ -79,7 +81,7 @@ Node configuration
 
 A node is described by a :c:struct:`canopen_node_config` with the CAN controller, the
 node-ID, the object dictionary, the power-on configuration of the PDOs
-(:c:struct:`canopen_pdo_config`), the heartbeat consumer entries and the
+(:c:struct:`canopen_pdo_config`), the heartbeat consumer entries, the optional LEDs and the
 callbacks. It is started with :c:func:`canopen_node_init` and :c:func:`canopen_node_start`.
 The bitrate is set by the application with :c:func:`can_set_bitrate` before the node is
 started.
@@ -98,6 +100,18 @@ only.
 Bus state errors are taken from :c:func:`can_add_state_change_callback`. Bus-off recovery uses
 the CAN controller's automatic recovery. With :kconfig:option:`CONFIG_CAN_MANUAL_RECOVERY_MODE`
 the application calls :c:func:`can_recover`.
+
+Indicator LEDs
+**************
+
+The RUN and ERR LEDs are given as :c:struct:`led_dt_spec` in the node configuration, for
+example from ``gpio-leds`` nodes with :c:macro:`LED_DT_SPEC_GET`. The RUN LED blinks in
+pre-operational, single flashes in stopped and is on in operational. The ERR LED is on at
+bus-off, double flashes after a heartbeat consumer timeout, triple flashes when no SYNC is
+received within 1.5 times the communication cycle period (``1006h``), quadruple flashes after
+an RPDO timeout and single flashes while the CAN controller is in error warning or error
+passive state. With ``led_bicolor`` the two LEDs are the colors of one status LED and red has
+priority.
 
 Samples
 *******

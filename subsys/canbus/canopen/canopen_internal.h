@@ -103,6 +103,11 @@ bool canopen_sync_rx(struct canopen_node *node, const struct can_frame *frame);
 void canopen_sync_state(struct canopen_node *node, enum canopen_nmt_state old);
 void canopen_sync_process(struct canopen_node *node);
 bool canopen_sync_window_open(struct canopen_node *node);
+k_timepoint_t canopen_sync_deadline(struct canopen_node *node);
+
+int canopen_leds_init(struct canopen_node *node);
+void canopen_leds_process(struct canopen_node *node);
+k_timepoint_t canopen_leds_deadline(struct canopen_node *node);
 
 void canopen_emcy_reset(struct canopen_node *node, bool app);
 void canopen_emcy_signal(struct canopen_node *node, uint16_t code, uint8_t reg);

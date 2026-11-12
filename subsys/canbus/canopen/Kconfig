@@ -140,6 +140,15 @@ config CANOPEN_STORAGE_APP_SIZE
 	  communication parameters. Storing parameters that do not fit is aborted with
 	  05040005h.
 
+config CANOPEN_LEDS
+	bool "CiA 303-3 indicator LEDs"
+	depends on LED
+	default y
+	help
+	  Drive the RUN and ERR LEDs given in the node configuration with the indicator states
+	  of CiA 303-3. The LEDs are updated from the CANopen thread, which only wakes up for
+	  them while one of them is blinking or flashing.
+
 config CANOPEN_NODE_GUARDING
 	bool "Node guarding"
 	depends on CAN_ACCEPT_RTR

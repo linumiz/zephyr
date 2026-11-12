@@ -22,6 +22,10 @@ heartbeat producer time (``1017h``) is 1000 ms.
 The node consumes TIME messages. Once it has received one and is made TIME producer by setting
 bit 30 of ``1012h``, it sends its clock once per second.
 
+If the board defines the ``canopen-run-led`` and ``canopen-err-led`` aliases to
+``gpio-leds`` nodes and :kconfig:option:`CONFIG_LED` is enabled, the node drives
+them as the CiA 303-3 RUN and ERR LEDs.
+
 Requirements
 ************
 

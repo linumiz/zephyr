@@ -14,6 +14,7 @@ zephyr_library_sources(
   canopen_sdo_server.c
   canopen_sync.c
 )
+zephyr_library_sources_ifdef(CONFIG_CANOPEN_LEDS canopen_leds.c)
 zephyr_library_sources_ifdef(CONFIG_CANOPEN_NODE_GUARDING canopen_guard.c)
 zephyr_library_sources_ifdef(CONFIG_CANOPEN_STORAGE canopen_storage.c)
 zephyr_library_sources_ifdef(CONFIG_CANOPEN_TIME canopen_time.c)

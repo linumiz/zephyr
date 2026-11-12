@@ -61,6 +61,7 @@ enum canopen_nmt_cmd {
 };
 
 struct canopen_node;
+struct led_dt_spec;
 
 /**
  * @brief Callback for NMT state changes.
@@ -265,6 +266,15 @@ struct canopen_node_config {
 	uint16_t rpdo_count;
 	/** Number of entries in @p hb_consumer */
 	uint8_t hb_consumer_count;
+	/** Optional CiA 303-3 RUN LED (green), see LED_DT_SPEC_GET() */
+	const struct led_dt_spec *led_run;
+	/** Optional CiA 303-3 ERR LED (red), see LED_DT_SPEC_GET() */
+	const struct led_dt_spec *led_err;
+	/**
+	 * @p led_run and @p led_err are the two colors of one bicolor status LED. Red has
+	 * priority when both would be on.
+	 */
+	bool led_bicolor;
 	/** User data passed to the callbacks */
 	void *user_data;
 	/** Serial number, identity object 1018h sub-index 4 */
@@ -314,9 +324,20 @@ struct canopen_sync {
 	uint32_t period;
 	uint32_t window;
 	int filter;
+	k_timepoint_t timeout;
 	uint8_t overflow;
 	uint8_t counter;
 	bool length_error;
+	bool timed_out;
+};
+
+struct canopen_leds {
+	k_timepoint_t next;
+	uint8_t run;
+	uint8_t err;
+	uint8_t run_phase;
+	uint8_t err_phase;
+	uint8_t on;
 };
 
 struct canopen_time {
@@ -374,6 +395,7 @@ struct canopen_node {
 	struct canopen_sync sync;
 	struct canopen_emcy emcy;
 	struct canopen_hb_consumer hb[CONFIG_CANOPEN_HB_CONSUMER_COUNT];
+	struct canopen_leds leds;
 	struct canopen_time time;
 #ifdef CONFIG_CANOPEN_NODE_GUARDING
 	struct canopen_guard guard;
@@ -405,7 +427,7 @@ struct canopen_node {
  *
  * @retval 0 Success.
  * @retval -EINVAL Invalid node-ID, object dictionary or PDO configuration.
- * @retval -ENODEV CAN controller not ready.
+ * @retval -ENODEV CAN controller or LED not ready.
  */
 int canopen_node_init(struct canopen_node *node, const struct canopen_node_config *cfg);
 
