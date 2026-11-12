@@ -60,6 +60,14 @@ counter on CAN-ID 190h. An SDO upload of ``1017h`` returns the heartbeat produce
    cansend can0 610#4017100000000000
      can0  590   [8]  4B 17 10 00 E8 03 00 00
 
+Master mode
+===========
+
+With :kconfig:option:`CONFIG_SAMPLE_MASTER` the node also acts as CANopen master. After
+start-up it configures the slave with node-ID ``CONFIG_SAMPLE_SLAVE_ID`` (default 32) over SDO
+(``1017h`` = 1000 ms, ``2000h`` = 11223344h), starts it with an NMT command, reads its device name
+and monitors its heartbeat.
+
 Sample Output
 =============
 

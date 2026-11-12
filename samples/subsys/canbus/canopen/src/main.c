@@ -56,6 +56,28 @@ static const struct canopen_pdo_config sample_tpdo[] = {
 	},
 };
 
+#ifdef CONFIG_SAMPLE_MASTER
+static const uint32_t sample_hb_consumer[] = {((uint32_t)CONFIG_SAMPLE_SLAVE_ID << 16) | 3000U};
+
+static const struct canopen_boot_entry slave_config[] = {
+	{.index = 0x1017, .sub = 0U, .len = 2U, .value = 1000U},
+	{.index = 0x2000, .sub = 0U, .len = 4U, .value = 0x11223344U},
+};
+
+static const struct canopen_boot_slave sample_slaves[] = {
+	{
+		.config = slave_config,
+		.config_count = ARRAY_SIZE(slave_config),
+		.node_id = CONFIG_SAMPLE_SLAVE_ID,
+	},
+};
+#define SAMPLE_HB_CONSUMER       sample_hb_consumer
+#define SAMPLE_HB_CONSUMER_COUNT ARRAY_SIZE(sample_hb_consumer)
+#else
+#define SAMPLE_HB_CONSUMER       NULL
+#define SAMPLE_HB_CONSUMER_COUNT 0U
+#endif
+
 static const struct canopen_pdo_config sample_rpdo[] = {
 	{
 		.map = rpdo1_map,
@@ -129,6 +151,8 @@ static const struct canopen_node_config sample_cfg = {
 	.rpdo_cb = rpdo_cb,
 	.hb_cb = hb_cb,
 	.time_cb = time_cb,
+	.hb_consumer = SAMPLE_HB_CONSUMER,
+	.hb_consumer_count = SAMPLE_HB_CONSUMER_COUNT,
 	.tpdo = sample_tpdo,
 	.rpdo = sample_rpdo,
 	.tpdo_count = ARRAY_SIZE(sample_tpdo),
@@ -158,6 +182,35 @@ static void time_produce(void)
 	}
 }
 
+#ifdef CONFIG_SAMPLE_MASTER
+static void sample_master(void)
+{
+	char name[32];
+	size_t len = sizeof(name) - 1U;
+	int err;
+
+	err = canopen_master_boot(&sample_node, sample_slaves, ARRAY_SIZE(sample_slaves),
+				  K_SECONDS(30));
+	if (err != 0) {
+		LOG_ERR("boot of node 0x%02x failed (%d)", CONFIG_SAMPLE_SLAVE_ID, err);
+		return;
+	}
+
+	LOG_INF("node 0x%02x configured and started", CONFIG_SAMPLE_SLAVE_ID);
+
+	err = canopen_sdo_upload(&sample_node, CONFIG_SAMPLE_SLAVE_ID, 0x1008, 0U, name, &len,
+				 NULL);
+	if (err != 0) {
+		LOG_ERR("reading the device name of node 0x%02x failed (%d)",
+			CONFIG_SAMPLE_SLAVE_ID, err);
+		return;
+	}
+
+	name[len] = '\0';
+	LOG_INF("node 0x%02x device name: %s", CONFIG_SAMPLE_SLAVE_ID, name);
+}
+#endif
+
 int main(void)
 {
 	uint32_t value;
@@ -183,6 +236,10 @@ int main(void)
 
 	LOG_INF("CANopen node 0x%02x started at %u bit/s", CONFIG_SAMPLE_NODE_ID,
 		CONFIG_SAMPLE_BITRATE);
+
+#ifdef CONFIG_SAMPLE_MASTER
+	sample_master();
+#endif
 
 	for (uint32_t elapsed = 0U; true; elapsed += CONFIG_SAMPLE_COUNTER_PERIOD_MS) {
 		k_sleep(K_MSEC(CONFIG_SAMPLE_COUNTER_PERIOD_MS));

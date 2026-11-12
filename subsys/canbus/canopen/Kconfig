@@ -149,6 +149,20 @@ config CANOPEN_LEDS
 	  of CiA 303-3. The LEDs are updated from the CANopen thread, which only wakes up for
 	  them while one of them is blinking or flashing.
 
+config CANOPEN_MASTER
+	bool "CANopen master functions"
+	help
+	  Provide the SDO client parameter object (1280h), the SDO client API, the NMT master API
+	  and a simple boot-up of slaves.
+
+config CANOPEN_SDO_CLIENT_TIMEOUT_MS
+	int "SDO client timeout in milliseconds"
+	default 1000
+	range 1 65535
+	depends on CANOPEN_MASTER
+	help
+	  Time to wait for each response of the SDO server before the transfer is aborted.
+
 config CANOPEN_NODE_GUARDING
 	bool "Node guarding"
 	depends on CAN_ACCEPT_RTR

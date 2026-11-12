@@ -24,6 +24,7 @@
 #define CANOPEN_OD_SYNC_OVERFLOW     0x1019U
 #define CANOPEN_OD_ERROR_BEHAVIOR    0x1029U
 #define CANOPEN_OD_SDO_SERVER_PARAM  0x1200U
+#define CANOPEN_OD_SDO_CLIENT_PARAM  0x1280U
 #define CANOPEN_OD_PDO_FIRST         0x1400U
 #define CANOPEN_OD_PDO_LAST          0x1BFFU
 
@@ -183,6 +184,11 @@ uint32_t canopen_od_comm_find(struct canopen_node *node, uint16_t index, uint8_t
 		return comm_identity_find(node, sub, ref);
 	case CANOPEN_OD_SDO_SERVER_PARAM:
 		return comm_sdo_server_find(node, sub, ref);
+	case CANOPEN_OD_SDO_CLIENT_PARAM:
+		if (!IS_ENABLED(CONFIG_CANOPEN_MASTER)) {
+			return CANOPEN_SDO_ABORT_NO_OBJECT;
+		}
+		return canopen_sdo_client_find(node, sub, ref);
 	case CANOPEN_OD_COB_ID_SYNC:
 	case CANOPEN_OD_SYNC_PERIOD:
 	case CANOPEN_OD_SYNC_WINDOW:
@@ -238,6 +244,11 @@ uint32_t canopen_od_comm_write(struct canopen_node *node, const struct canopen_o
 			return CANOPEN_SDO_ABORT_READ_ONLY;
 		}
 		return canopen_storage_write(node, ref->index, ref->sub, value);
+	case CANOPEN_OD_SDO_CLIENT_PARAM:
+		if (!IS_ENABLED(CONFIG_CANOPEN_MASTER)) {
+			return CANOPEN_SDO_ABORT_READ_ONLY;
+		}
+		return canopen_sdo_client_write(node, ref->sub, value);
 	default:
 		if ((ref->index >= CANOPEN_OD_PDO_FIRST) && (ref->index <= CANOPEN_OD_PDO_LAST)) {
 			return canopen_pdo_write(node, ref->index, ref->sub, value);
@@ -256,6 +267,10 @@ void canopen_od_comm_reset(struct canopen_node *node)
 	canopen_hb_reset(node);
 	canopen_sync_reset(node);
 	canopen_pdo_reset(node);
+
+	if (IS_ENABLED(CONFIG_CANOPEN_MASTER)) {
+		canopen_sdo_client_reset(node);
+	}
 
 	if (IS_ENABLED(CONFIG_CANOPEN_TIME)) {
 		canopen_time_reset(node);
