@@ -119,6 +119,13 @@ config CANOPEN_NODE_GUARDING
 	  only answered while the producer heartbeat time (1017h) is 0, since CiA 301 does not
 	  allow both protocols at the same time.
 
+config CANOPEN_TIME
+	bool "TIME producer and consumer"
+	help
+	  Provide the COB-ID time stamp object (1012h), the TIME consumer callback and
+	  canopen_time_send(). The node consumes TIME messages on CAN-ID 100h after power-on; the
+	  producer is enabled by setting bit 30 of 1012h.
+
 config CANOPEN_TPDO_COUNT
 	int "Number of TPDOs"
 	default 4

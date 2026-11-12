@@ -142,6 +142,8 @@ static void canopen_dispatch(struct canopen_node *node, const struct can_frame *
 		if (node->nmt_state != CANOPEN_NMT_STOPPED) {
 			canopen_sdo_server_rx(node, frame);
 		}
+	} else if (IS_ENABLED(CONFIG_CANOPEN_TIME) && canopen_time_rx(node, frame)) {
+		return;
 	} else if (!canopen_sync_rx(node, frame) && !canopen_hb_rx(node, frame)) {
 		canopen_pdo_rx(node, frame);
 	}
@@ -256,6 +258,9 @@ int canopen_node_init(struct canopen_node *node, const struct canopen_node_confi
 	k_poll_signal_init(&node->signal);
 	node->can_state_last = CAN_STATE_ERROR_ACTIVE;
 	canopen_sync_init(node);
+	if (IS_ENABLED(CONFIG_CANOPEN_TIME)) {
+		canopen_time_init(node);
+	}
 	if (IS_ENABLED(CONFIG_CANOPEN_NODE_GUARDING)) {
 		canopen_guard_init(node);
 	}

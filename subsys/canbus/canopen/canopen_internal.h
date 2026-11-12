@@ -17,6 +17,7 @@
 
 #define CANOPEN_OD_GUARD_TIME  0x100CU
 #define CANOPEN_OD_LIFE_FACTOR 0x100DU
+#define CANOPEN_OD_TIME        0x1012U
 #define CANOPEN_OD_HB_CONSUMER 0x1016U
 
 #define CANOPEN_ERROR_BEHAVIOR_PRE_OPERATIONAL 0U
@@ -134,6 +135,12 @@ void canopen_guard_rx(struct canopen_node *node, const struct can_frame *frame);
 void canopen_guard_process(struct canopen_node *node);
 k_timepoint_t canopen_guard_deadline(struct canopen_node *node);
 
+void canopen_time_init(struct canopen_node *node);
+void canopen_time_reset(struct canopen_node *node);
+void canopen_time_filter(struct canopen_node *node);
+uint32_t canopen_time_find(struct canopen_node *node, uint8_t sub, struct canopen_od_ref *ref);
+uint32_t canopen_time_write(struct canopen_node *node, uint32_t value);
+bool canopen_time_rx(struct canopen_node *node, const struct can_frame *frame);
 void canopen_hb_process(struct canopen_node *node);
 k_timepoint_t canopen_hb_deadline(struct canopen_node *node);
 

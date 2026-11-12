@@ -36,6 +36,9 @@ Features
   :kconfig:option:`CONFIG_CAN_ACCEPT_RTR`. Guarding requests are answered only while the producer
   heartbeat time (``1017h``) is 0. A life guarding timeout is reported with EMCY ``8130h`` and
   handled by the error behavior like a heartbeat timeout.
+* TIME producer and consumer (``1012h``), enabled with :kconfig:option:`CONFIG_CANOPEN_TIME`.
+  Received time stamps are passed to the ``time_cb`` callback, :c:func:`canopen_time_send`
+  sends one.
 
 Not supported: the master side of node guarding, PDOs requested by remote frames, MPDO, the
 CANopen manager boot-up of CiA 302, LSS (CiA 305) and CANopen FD (CiA 1301).
