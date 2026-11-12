@@ -90,6 +90,51 @@ Entries marked with :c:macro:`CANOPEN_OD_ATTR_PERSIST` are stored with ``1010h``
 The application reads and writes values with :c:func:`canopen_od_read` and
 :c:func:`canopen_od_write`, which take the node lock.
 
+Electronic data sheet
+*********************
+
+An electronic data sheet (EDS, CiA 306) describes the object dictionary of a node to PC tools.
+Two tools in :zephyr_file:`scripts/canopen` connect it to the stack, in both directions.
+
+With :kconfig:option:`CONFIG_CANOPEN_EDS` the build writes ``zephyr/canopen.eds`` from the linked
+image. The node configuration is named with :kconfig:option:`CONFIG_CANOPEN_EDS_NODE_CONFIG`. The
+application objects, the default values of their variables, the PDO and heartbeat consumer
+configuration and the serial number are read from the image, the communication objects follow
+from the Kconfig options. :kconfig:option:`CONFIG_CANOPEN_EDS_VENDOR_NAME` and
+:kconfig:option:`CONFIG_CANOPEN_EDS_BITRATES` fill in ``VendorName`` and the supported bit rates.
+
+The CMake function ``canopen_od_from_eds()`` generates the object dictionary from an EDS or DCF
+instead:
+
+.. code-block:: cmake
+
+   canopen_od_from_eds(app ${CMAKE_CURRENT_SOURCE_DIR}/node.eds node_od)
+
+The generated header ``node_od.h`` defines the variables, ``node_od`` and the PDO and heartbeat
+consumer configuration as macros for the node configuration:
+
+.. code-block:: c
+
+   #include "node_od.h"
+
+   static const struct canopen_node_config node_cfg = {
+           .od = &node_od,
+           .tpdo = NODE_OD_TPDO,
+           .tpdo_count = NODE_OD_TPDO_COUNT,
+           .rpdo = NODE_OD_RPDO,
+           .rpdo_count = NODE_OD_RPDO_COUNT,
+           .hb_consumer = NODE_OD_HB_CONSUMER,
+           .hb_consumer_count = NODE_OD_HB_CONSUMER_COUNT,
+           .serial_number = NODE_OD_SERIAL_NUMBER,
+           ...
+   };
+
+The communication objects of the EDS must match the objects the stack provides with the
+Kconfig options of the build, and the values that follow from Kconfig must be equal, otherwise
+the build fails with a list of the differences. The EDS has no field for the length of a string,
+so a string object gets the length of its default value. Objects stored with ``1010h`` are
+marked with ``StorageLocation=PERSIST``, an entry that is not defined by CiA 306.
+
 Node configuration
 ******************
 

@@ -61,6 +61,10 @@ counter on CAN-ID 190h. An SDO upload of ``1017h`` returns the heartbeat produce
    cansend can0 610#4017100000000000
      can0  590   [8]  4B 17 10 00 E8 03 00 00
 
+The build also writes the electronic data sheet of the node to ``build/zephyr/canopen.eds``
+(:kconfig:option:`CONFIG_CANOPEN_EDS`), which CANopen tools use to access the objects of the
+node.
+
 Shell
 =====
 

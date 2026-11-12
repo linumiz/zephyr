@@ -262,4 +262,32 @@ config CANOPEN_SHELL
 	  read and write their objects and show their error history. With CANOPEN_MASTER it
 	  also sends NMT commands and reads and writes objects of other nodes over SDO.
 
+config CANOPEN_EDS
+	bool "Generate the electronic data sheet"
+	help
+	  Generate canopen.eds, the electronic data sheet (CiA 306) of the node, in the zephyr
+	  build directory from the linked image. The application objects, the PDO and heartbeat
+	  consumer configuration and the serial number are taken from the node configuration
+	  named by CANOPEN_EDS_NODE_CONFIG.
+
+if CANOPEN_EDS
+
+config CANOPEN_EDS_NODE_CONFIG
+	string "Node configuration symbol"
+	help
+	  Name of the struct canopen_node_config variable that describes the node.
+
+config CANOPEN_EDS_VENDOR_NAME
+	string "Vendor name"
+	help
+	  Value of VendorName in the electronic data sheet.
+
+config CANOPEN_EDS_BITRATES
+	string "Supported bit rates"
+	help
+	  Bit rates in kbit/s, separated by spaces, that are marked as supported in the
+	  electronic data sheet, for example "125 250 500 1000".
+
+endif # CANOPEN_EDS
+
 endif # CANOPEN
