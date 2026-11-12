@@ -309,12 +309,23 @@ struct canopen_node_config {
 
 struct canopen_sdo_server {
 	k_timepoint_t deadline;
+	const struct canopen_od_entry *domain;
 	size_t size;
 	size_t pos;
 	uint16_t index;
 	uint8_t sub;
 	uint8_t state;
 	uint8_t toggle;
+	bool held;
+#ifdef CONFIG_CANOPEN_SDO_BLOCK
+	size_t block_pos;
+	size_t crc_pos;
+	uint16_t crc;
+	uint8_t blksize;
+	uint8_t seqno;
+	uint8_t last_len;
+	bool crc_on;
+#endif
 	uint8_t buf[CONFIG_CANOPEN_SDO_BUFFER_SIZE];
 };
 
@@ -692,6 +703,7 @@ int canopen_hb_consumer_state(struct canopen_node *node, uint8_t remote_id,
  *
  * @retval 0 Success.
  * @retval -ENOENT Entry does not exist.
+ * @retval -EACCES Entry is a DOMAIN.
  * @retval -EINVAL @p len does not match the size of the value.
  */
 int canopen_od_read(struct canopen_node *node, uint16_t index, uint8_t sub, void *buf, size_t len);
@@ -710,7 +722,7 @@ int canopen_od_read(struct canopen_node *node, uint16_t index, uint8_t sub, void
  *
  * @retval 0 Success.
  * @retval -ENOENT Entry does not exist.
- * @retval -EACCES Entry is not backed by writable storage.
+ * @retval -EACCES Entry is a DOMAIN or is not backed by writable storage.
  * @retval -EINVAL @p len does not match the size of the value, or the value is rejected.
  */
 int canopen_od_write(struct canopen_node *node, uint16_t index, uint8_t sub, const void *buf,

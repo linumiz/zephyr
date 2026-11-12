@@ -19,7 +19,17 @@ enum sdo_state {
 	SDO_IDLE,
 	SDO_DOWNLOAD,
 	SDO_UPLOAD,
+	SDO_BLOCK_DOWNLOAD,
+	SDO_BLOCK_DOWNLOAD_END,
+	SDO_BLOCK_UPLOAD_START,
+	SDO_BLOCK_UPLOAD,
+	SDO_BLOCK_UPLOAD_END,
 };
+
+static inline const struct canopen_od_domain *sdo_domain(const struct canopen_od_entry *entry)
+{
+	return entry->subs[0].data;
+}
 
 static inline void canopen_sdo_put_mux(uint8_t *data, uint16_t index, uint8_t sub)
 {
@@ -56,5 +66,8 @@ void canopen_sdo_send(struct canopen_node *node, const uint8_t *data);
 void canopen_sdo_abort(struct canopen_node *node, uint16_t index, uint8_t sub, uint32_t code);
 void canopen_sdo_start(struct canopen_sdo_server *sdo, enum sdo_state state, uint16_t index,
 		       uint8_t sub, size_t size);
+
+bool canopen_sdo_block_rx(struct canopen_node *node, const uint8_t *req);
+void canopen_sdo_block_process(struct canopen_node *node);
 
 #endif /* ZEPHYR_SUBSYS_CANBUS_CANOPEN_CANOPEN_SDO_H_ */

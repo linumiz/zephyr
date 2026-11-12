@@ -53,6 +53,8 @@ void canopen_sdo_abort(struct canopen_node *node, uint16_t index, uint8_t sub, u
 void canopen_sdo_start(struct canopen_sdo_server *sdo, enum sdo_state state, uint16_t index,
 		       uint8_t sub, size_t size)
 {
+	sdo->domain = NULL;
+	sdo->held = false;
 	sdo->state = state;
 	sdo->index = index;
 	sdo->sub = sub;
@@ -81,7 +83,26 @@ static void sdo_download_initiate(struct canopen_node *node, const uint8_t *req)
 	sdo->state = SDO_IDLE;
 	sdo_abort = canopen_sdo_find(node, index, sub, true, &ref);
 
-	if ((sdo_abort == CANOPEN_SDO_ABORT_NONE) && ((req[0] & SDO_EXPEDITED) != 0U)) {
+	if ((sdo_abort == CANOPEN_SDO_ABORT_NONE) && IS_ENABLED(CONFIG_CANOPEN_DOMAIN) &&
+	    (ref.type == CANOPEN_OD_TYPE_DOMAIN)) {
+		if ((req[0] & SDO_EXPEDITED) != 0U) {
+			size = ((req[0] & SDO_SIZE_INDICATED) != 0U)
+				       ? (SDO_EXPEDITED_DATA - ((req[0] >> 2) & 0x3U))
+				       : SDO_EXPEDITED_DATA;
+			sdo_abort = sdo_domain(ref.entry)->write(ref.entry, 0U, &req[4], size, size,
+								 true, ref.entry->user_data);
+		} else {
+			if ((req[0] & SDO_SIZE_INDICATED) != 0U) {
+				size = sys_get_le32(&req[4]);
+			}
+			sdo_abort = sdo_domain(ref.entry)->write(ref.entry, 0U, &req[4], 0U, size,
+								 false, ref.entry->user_data);
+			if (sdo_abort == CANOPEN_SDO_ABORT_NONE) {
+				canopen_sdo_start(sdo, SDO_DOWNLOAD, index, sub, size);
+				sdo->domain = ref.entry;
+			}
+		}
+	} else if ((sdo_abort == CANOPEN_SDO_ABORT_NONE) && ((req[0] & SDO_EXPEDITED) != 0U)) {
 		if ((req[0] & SDO_SIZE_INDICATED) != 0U) {
 			size = SDO_EXPEDITED_DATA - ((req[0] >> 2) & 0x3U);
 		} else {
@@ -111,6 +132,38 @@ static void sdo_download_initiate(struct canopen_node *node, const uint8_t *req)
 	canopen_sdo_send(node, resp);
 }
 
+static void sdo_download_domain(struct canopen_node *node, const uint8_t *req, const uint8_t *resp,
+				size_t len)
+{
+	struct canopen_sdo_server *sdo = &node->sdo;
+	const struct canopen_od_entry *entry = sdo->domain;
+	bool last = (req[0] & SDO_LAST) != 0U;
+	uint32_t sdo_abort = CANOPEN_SDO_ABORT_NONE;
+
+	if ((sdo->size != 0U) && ((sdo->pos + len) > sdo->size)) {
+		sdo_abort = CANOPEN_SDO_ABORT_LENGTH_TOO_HIGH;
+	} else if ((sdo->size != 0U) && last && ((sdo->pos + len) != sdo->size)) {
+		sdo_abort = CANOPEN_SDO_ABORT_LENGTH_TOO_LOW;
+	} else {
+		sdo_abort = sdo_domain(entry)->write(entry, sdo->pos, &req[1], len, sdo->size, last,
+						     entry->user_data);
+	}
+
+	if (sdo_abort != CANOPEN_SDO_ABORT_NONE) {
+		canopen_sdo_abort(node, sdo->index, sdo->sub, sdo_abort);
+		return;
+	}
+
+	sdo->pos += len;
+	if (last) {
+		sdo->state = SDO_IDLE;
+	} else {
+		sdo_next(sdo);
+	}
+
+	canopen_sdo_send(node, resp);
+}
+
 static void sdo_download_segment(struct canopen_node *node, const uint8_t *req)
 {
 	struct canopen_sdo_server *sdo = &node->sdo;
@@ -121,6 +174,9 @@ static void sdo_download_segment(struct canopen_node *node, const uint8_t *req)
 
 	if ((req[0] & SDO_TOGGLE) != sdo->toggle) {
 		sdo_abort = CANOPEN_SDO_ABORT_TOGGLE;
+	} else if (IS_ENABLED(CONFIG_CANOPEN_DOMAIN) && (sdo->domain != NULL)) {
+		sdo_download_domain(node, req, resp, len);
+		return;
 	} else if ((sdo->pos + len) > sizeof(sdo->buf)) {
 		sdo_abort = CANOPEN_SDO_ABORT_OUT_OF_MEMORY;
 	} else {
@@ -165,7 +221,26 @@ static void sdo_upload_initiate(struct canopen_node *node, const uint8_t *req)
 
 	sdo->state = SDO_IDLE;
 	sdo_abort = canopen_sdo_find(node, index, sub, false, &ref);
-	if (sdo_abort == CANOPEN_SDO_ABORT_NONE) {
+	if ((sdo_abort == CANOPEN_SDO_ABORT_NONE) && IS_ENABLED(CONFIG_CANOPEN_DOMAIN) &&
+	    (ref.type == CANOPEN_OD_TYPE_DOMAIN)) {
+		len = SDO_SEGMENT_DATA;
+		sdo_abort = sdo_domain(ref.entry)->read(ref.entry, 0U, sdo->buf, &len,
+							ref.entry->user_data);
+		if ((sdo_abort == CANOPEN_SDO_ABORT_NONE) &&
+		    ((len == SDO_SEGMENT_DATA) || (len == 0U) || (len > SDO_EXPEDITED_DATA))) {
+			canopen_sdo_put_mux(resp, index, sub);
+			resp[0] = SDO_SCS_UPLOAD_INITIATE;
+			if (len < SDO_SEGMENT_DATA) {
+				resp[0] |= SDO_SIZE_INDICATED;
+				sys_put_le32(len, &resp[4]);
+			}
+			canopen_sdo_start(sdo, SDO_UPLOAD, index, sub, len);
+			sdo->domain = ref.entry;
+			sdo->held = true;
+			canopen_sdo_send(node, resp);
+			return;
+		}
+	} else if (sdo_abort == CANOPEN_SDO_ABORT_NONE) {
 		sdo_abort = canopen_od_read_wire(&ref, sdo->buf, sizeof(sdo->buf), &len);
 	}
 
@@ -189,6 +264,40 @@ static void sdo_upload_initiate(struct canopen_node *node, const uint8_t *req)
 	canopen_sdo_send(node, resp);
 }
 
+static void sdo_upload_domain(struct canopen_node *node, uint8_t *resp)
+{
+	struct canopen_sdo_server *sdo = &node->sdo;
+	const struct canopen_od_entry *entry = sdo->domain;
+	size_t len = sdo->size;
+	uint32_t sdo_abort = CANOPEN_SDO_ABORT_NONE;
+
+	if (!sdo->held) {
+		len = SDO_SEGMENT_DATA;
+		sdo_abort = sdo_domain(entry)->read(entry, sdo->pos, &resp[1], &len,
+						    entry->user_data);
+	} else {
+		memcpy(&resp[1], sdo->buf, len);
+		sdo->held = false;
+	}
+
+	if (sdo_abort != CANOPEN_SDO_ABORT_NONE) {
+		canopen_sdo_abort(node, sdo->index, sdo->sub, sdo_abort);
+		return;
+	}
+
+	resp[0] = SDO_SCS_UPLOAD_SEGMENT | sdo->toggle | ((SDO_SEGMENT_DATA - len) << 1);
+	sdo->pos += len;
+
+	if (len < SDO_SEGMENT_DATA) {
+		resp[0] |= SDO_LAST;
+		sdo->state = SDO_IDLE;
+	} else {
+		sdo_next(sdo);
+	}
+
+	canopen_sdo_send(node, resp);
+}
+
 static void sdo_upload_segment(struct canopen_node *node, const uint8_t *req)
 {
 	struct canopen_sdo_server *sdo = &node->sdo;
@@ -197,6 +306,11 @@ static void sdo_upload_segment(struct canopen_node *node, const uint8_t *req)
 
 	if ((req[0] & SDO_TOGGLE) != sdo->toggle) {
 		canopen_sdo_abort(node, sdo->index, sdo->sub, CANOPEN_SDO_ABORT_TOGGLE);
+		return;
+	}
+
+	if (IS_ENABLED(CONFIG_CANOPEN_DOMAIN) && (sdo->domain != NULL)) {
+		sdo_upload_domain(node, resp);
 		return;
 	}
 
@@ -219,6 +333,10 @@ void canopen_sdo_server_rx(struct canopen_node *node, const struct can_frame *fr
 	const uint8_t *req = frame->data;
 
 	if (frame->dlc != SDO_FRAME_LEN) {
+		return;
+	}
+
+	if (IS_ENABLED(CONFIG_CANOPEN_SDO_BLOCK) && canopen_sdo_block_rx(node, req)) {
 		return;
 	}
 
@@ -263,6 +381,10 @@ void canopen_sdo_server_process(struct canopen_node *node)
 {
 	if ((node->sdo.state != SDO_IDLE) && sys_timepoint_expired(node->sdo.deadline)) {
 		canopen_sdo_abort(node, node->sdo.index, node->sdo.sub, CANOPEN_SDO_ABORT_TIMEOUT);
+	}
+
+	if (IS_ENABLED(CONFIG_CANOPEN_SDO_BLOCK)) {
+		canopen_sdo_block_process(node);
 	}
 }
 

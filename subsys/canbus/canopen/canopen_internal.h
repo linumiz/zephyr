@@ -32,6 +32,7 @@
 #define CANOPEN_FLAG_RX_OVERRUN 0
 #define CANOPEN_FLAG_SYNC_TICK  1
 #define CANOPEN_FLAG_CAN_STATE  2
+#define CANOPEN_FLAG_SDO_TX     3
 #define CANOPEN_FLAG_EMCY_TX    4
 
 struct canopen_od_ref {

@@ -14,6 +14,7 @@ This sample runs a CANopen node (CiA 301) on the CAN controller selected by the
   transmitted in TPDO1 (CAN-ID 180h + node-ID) every second.
 * ``2001h``: UNSIGNED8 output, read and write, received with RPDO1 (CAN-ID
   200h + node-ID).
+* ``5600h``: DOMAIN of up to 256 bytes, read and write over SDO.
 
 The node-ID (default 16), the bitrate (default 500 kbit/s), the counter period
 and the TPDO1 event timer are set with the ``CONFIG_SAMPLE_*`` options. The

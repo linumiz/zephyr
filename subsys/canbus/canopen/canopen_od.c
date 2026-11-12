@@ -142,6 +142,10 @@ uint32_t canopen_od_read_wire(const struct canopen_od_ref *ref, uint8_t *buf, si
 	uint8_t le[sizeof(uint64_t)];
 	const uint8_t *nul;
 
+	if (IS_ENABLED(CONFIG_CANOPEN_DOMAIN) && (ref->type == CANOPEN_OD_TYPE_DOMAIN)) {
+		return CANOPEN_SDO_ABORT_UNSUPPORTED_ACCESS;
+	}
+
 	if (wire == 0U) {
 		wire = ref->size;
 		if (ref->type == CANOPEN_OD_TYPE_VISIBLE_STRING) {
@@ -176,6 +180,10 @@ uint32_t canopen_od_write_wire(struct canopen_node *node, const struct canopen_o
 	uint64_t native = 0U;
 	const void *data = buf;
 	uint32_t sdo_abort;
+
+	if (IS_ENABLED(CONFIG_CANOPEN_DOMAIN) && (ref->type == CANOPEN_OD_TYPE_DOMAIN)) {
+		return CANOPEN_SDO_ABORT_UNSUPPORTED_ACCESS;
+	}
 
 	if (wire != 0U) {
 		if (len != wire) {
@@ -345,8 +353,12 @@ int canopen_od_validate(const struct canopen_od *od)
 		for (uint8_t j = 0U; j < entry->count; j++) {
 			const struct canopen_od_sub *s = &entry->subs[j];
 
-			if ((s->type == CANOPEN_OD_TYPE_DOMAIN) ||
-			    !od_native_size_valid(s->type, s->size)) {
+			if ((s->type == CANOPEN_OD_TYPE_DOMAIN)
+				    ? (!IS_ENABLED(CONFIG_CANOPEN_DOMAIN) ||
+				       (entry->code != CANOPEN_OD_CODE_VAR) ||
+				       ((s->attr & (CANOPEN_OD_ATTR_TPDO | CANOPEN_OD_ATTR_RPDO |
+						    CANOPEN_OD_ATTR_PERSIST)) != 0U))
+				    : !od_native_size_valid(s->type, s->size)) {
 				return -EINVAL;
 			}
 
@@ -373,6 +385,8 @@ int canopen_od_read(struct canopen_node *node, uint16_t index, uint8_t sub, void
 
 	if (canopen_od_find(node, index, sub, &ref) != CANOPEN_SDO_ABORT_NONE) {
 		err = -ENOENT;
+	} else if (IS_ENABLED(CONFIG_CANOPEN_DOMAIN) && (ref.type == CANOPEN_OD_TYPE_DOMAIN)) {
+		err = -EACCES;
 	} else if (len != ref.size) {
 		err = -EINVAL;
 	} else {
@@ -394,8 +408,9 @@ int canopen_od_write(struct canopen_node *node, uint16_t index, uint8_t sub, con
 
 	if (canopen_od_find(node, index, sub, &ref) != CANOPEN_SDO_ABORT_NONE) {
 		err = -ENOENT;
-	} else if (od_is_comm(index) ? ((ref.attr & CANOPEN_OD_ATTR_WRITE) == 0U)
-				     : (ref.dst == NULL)) {
+	} else if ((IS_ENABLED(CONFIG_CANOPEN_DOMAIN) && (ref.type == CANOPEN_OD_TYPE_DOMAIN)) ||
+		   (od_is_comm(index) ? ((ref.attr & CANOPEN_OD_ATTR_WRITE) == 0U)
+				      : (ref.dst == NULL))) {
 		err = -EACCES;
 	} else if (len != ref.size) {
 		err = -EINVAL;
