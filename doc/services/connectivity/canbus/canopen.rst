@@ -31,6 +31,9 @@ Features
   (``1003h``). The stack reports CAN overrun, error passive, recovery from bus-off, heartbeat
   timeout, RPDO length and timeout, and SYNC length errors.
 * Error behavior (``1029h``) for bus-off and heartbeat timeouts.
+* A ``canopen`` shell command, enabled with :kconfig:option:`CONFIG_CANOPEN_SHELL`: list the local
+  nodes, change their NMT state, read and write their objects and show the error history, and
+  with the master functions read and write other nodes and send NMT commands.
 * Master functions, enabled with :kconfig:option:`CONFIG_CANOPEN_MASTER`: an SDO client
   (``1280h``) with expedited and segmented transfers, NMT node control commands and a simple
   boot-up of slaves.

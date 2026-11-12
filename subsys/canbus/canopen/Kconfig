@@ -176,4 +176,12 @@ config CANOPEN_HB_CONSUMER_COUNT
 	  Number of entries of the consumer heartbeat time object (1016h). Each configured
 	  entry uses one CAN RX filter.
 
+config CANOPEN_SHELL
+	bool "CANopen shell commands"
+	depends on SHELL
+	help
+	  Provide the canopen shell command to list the local nodes, change their NMT state,
+	  read and write their objects and show their error history. With CANOPEN_MASTER it
+	  also sends NMT commands and reads and writes objects of other nodes over SDO.
+
 endif # CANOPEN

@@ -15,3 +15,4 @@ zephyr_library_sources(
   canopen_sync.c
 )
 zephyr_library_sources_ifdef(CONFIG_CANOPEN_MASTER canopen_master.c canopen_sdo_client.c)
+zephyr_library_sources_ifdef(CONFIG_CANOPEN_SHELL canopen_shell.c)
