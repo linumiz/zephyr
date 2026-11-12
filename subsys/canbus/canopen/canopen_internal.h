@@ -113,6 +113,15 @@ uint32_t canopen_emcy_write(struct canopen_node *node, uint16_t index, uint32_t 
 void canopen_emcy_process(struct canopen_node *node);
 k_timepoint_t canopen_emcy_deadline(struct canopen_node *node);
 
+void canopen_sdo_client_init(struct canopen_node *node);
+void canopen_sdo_client_reset(struct canopen_node *node);
+uint32_t canopen_sdo_client_find(struct canopen_node *node, uint8_t sub,
+				 struct canopen_od_ref *ref);
+uint32_t canopen_sdo_client_write(struct canopen_node *node, uint8_t sub, uint32_t value);
+bool canopen_sdo_client_rx(struct canopen_node *node, const struct can_frame *frame);
+void canopen_sdo_client_process(struct canopen_node *node);
+k_timepoint_t canopen_sdo_client_deadline(struct canopen_node *node);
+
 int canopen_hb_init(struct canopen_node *node);
 void canopen_hb_reset(struct canopen_node *node);
 void canopen_hb_filters(struct canopen_node *node);

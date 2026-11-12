@@ -219,6 +219,28 @@ struct canopen_pdo_config {
 	uint8_t map_count;
 };
 
+/** @brief Configuration value written to a slave by @ref canopen_master_boot. */
+struct canopen_boot_entry {
+	/** Value, sent little-endian with @p len bytes */
+	uint32_t value;
+	/** Index */
+	uint16_t index;
+	/** Sub-index */
+	uint8_t sub;
+	/** Length of the value in bytes, 1 to 4 */
+	uint8_t len;
+};
+
+/** @brief Slave started by @ref canopen_master_boot. */
+struct canopen_boot_slave {
+	/** Configuration values written before the slave is started */
+	const struct canopen_boot_entry *config;
+	/** Number of entries in @p config */
+	uint8_t config_count;
+	/** Node-ID of the slave */
+	uint8_t node_id;
+};
+
 /** @brief CANopen node configuration. */
 struct canopen_node_config {
 	/** CAN controller */
@@ -318,6 +340,26 @@ struct canopen_emcy {
 	uint8_t pending_count;
 };
 
+struct canopen_sdo_client {
+	k_timepoint_t deadline;
+	struct k_sem done;
+	uint8_t *dst;
+	const uint8_t *src;
+	size_t size;
+	size_t pos;
+	size_t max;
+	uint32_t cob_tx;
+	uint32_t cob_rx;
+	uint32_t sdo_abort;
+	int result;
+	int filter;
+	uint16_t index;
+	uint8_t sub;
+	uint8_t server_id;
+	uint8_t state;
+	uint8_t toggle;
+};
+
 struct canopen_hb_consumer {
 	k_timepoint_t deadline;
 	uint32_t entry;
@@ -342,6 +384,7 @@ struct canopen_node {
 	struct k_msgq txq;
 	struct k_poll_signal signal;
 	struct canopen_sdo_server sdo;
+	struct canopen_sdo_client client;
 	struct canopen_sync sync;
 	struct canopen_emcy emcy;
 	struct canopen_hb_consumer hb[CONFIG_CANOPEN_HB_CONSUMER_COUNT];
@@ -423,6 +466,96 @@ int canopen_nmt_local_cmd(struct canopen_node *node, enum canopen_nmt_cmd cmd);
  * @retval -EINVAL Invalid TPDO number.
  */
 int canopen_tpdo_trigger(struct canopen_node *node, uint16_t pdo);
+
+/**
+ * @brief Read an object dictionary value of another node (SDO upload).
+ *
+ * Requires @kconfig{CONFIG_CANOPEN_MASTER}. The transfer runs in the CANopen thread; the calling
+ * thread waits until it is complete. Must not be called from a node callback, which runs with
+ * the node locked.
+ *
+ * @param node      CANopen node.
+ * @param server_id Node-ID of the SDO server, 1 to 127, which sets the SDO client parameter
+ *                  (1280h) to the default SDO of that node, or 0 to use 1280h as configured.
+ * @param index     Index.
+ * @param sub       Sub-index.
+ * @param buf       Buffer for the value, in CANopen (little-endian) representation.
+ * @param len       Size of @p buf on entry, number of bytes received on return.
+ * @param sdo_abort Optional abort code of the server, or NULL.
+ *
+ * @retval 0 Success.
+ * @retval -ECANCELED The server aborted the transfer, see @p sdo_abort.
+ * @retval -ETIMEDOUT No response from the server.
+ * @retval -ENOSPC The value is larger than @p buf.
+ * @retval -EPROTO Unexpected response from the server.
+ * @retval -EBUSY An SDO client transfer is in progress.
+ * @retval -ENOTCONN @p server_id is 0 and the SDO client parameter is not valid.
+ * @retval -EDEADLK Called from a node callback.
+ * @retval -EINVAL Invalid argument.
+ */
+int canopen_sdo_upload(struct canopen_node *node, uint8_t server_id, uint16_t index, uint8_t sub,
+		       void *buf, size_t *len, uint32_t *sdo_abort);
+
+/**
+ * @brief Write an object dictionary value of another node (SDO download).
+ *
+ * Requires @kconfig{CONFIG_CANOPEN_MASTER}. See @ref canopen_sdo_upload for the threading rules.
+ *
+ * @param node      CANopen node.
+ * @param server_id Node-ID of the SDO server, 1 to 127, or 0 to use 1280h as configured.
+ * @param index     Index.
+ * @param sub       Sub-index.
+ * @param buf       Value, in CANopen (little-endian) representation.
+ * @param len       Length of the value in bytes.
+ * @param sdo_abort Optional abort code of the server, or NULL.
+ *
+ * @retval 0 Success.
+ * @retval -ECANCELED The server aborted the transfer, see @p sdo_abort.
+ * @retval -ETIMEDOUT No response from the server.
+ * @retval -EPROTO Unexpected response from the server.
+ * @retval -EBUSY An SDO client transfer is in progress.
+ * @retval -ENOTCONN @p server_id is 0 and the SDO client parameter is not valid.
+ * @retval -EDEADLK Called from a node callback.
+ * @retval -EINVAL Invalid argument.
+ */
+int canopen_sdo_download(struct canopen_node *node, uint8_t server_id, uint16_t index,
+			 uint8_t sub, const void *buf, size_t len, uint32_t *sdo_abort);
+
+/**
+ * @brief Send an NMT node control command to other nodes.
+ *
+ * Requires @kconfig{CONFIG_CANOPEN_MASTER}. The NMT state of @p node itself is not changed, use
+ * @ref canopen_nmt_local_cmd for that.
+ *
+ * @param node    CANopen node.
+ * @param node_id Node-ID of the addressed node, 1 to 127, or 0 for all nodes.
+ * @param cmd     NMT command.
+ *
+ * @retval 0 Success.
+ * @retval -EINVAL Invalid node-ID or command.
+ * @retval -EIO The frame could not be queued.
+ */
+int canopen_nmt_send(struct canopen_node *node, uint8_t node_id, enum canopen_nmt_cmd cmd);
+
+/**
+ * @brief Configure and start slaves.
+ *
+ * Requires @kconfig{CONFIG_CANOPEN_MASTER}. For each slave in turn, the device type (1000h) is
+ * read until the slave answers or @p timeout elapses, the configuration entries are written and
+ * the NMT command start is sent. This is a simple boot-up; the CANopen manager boot-up of CiA 302
+ * is not implemented. See @ref canopen_sdo_upload for the threading rules.
+ *
+ * @param node    CANopen node.
+ * @param slaves  Slaves to start.
+ * @param count   Number of entries in @p slaves.
+ * @param timeout Time to wait for each slave to answer.
+ *
+ * @retval 0 Success.
+ * @retval -ETIMEDOUT A slave did not answer within @p timeout.
+ * @return Other negative error codes of @ref canopen_sdo_download or @ref canopen_nmt_send.
+ */
+int canopen_master_boot(struct canopen_node *node, const struct canopen_boot_slave *slaves,
+			size_t count, k_timeout_t timeout);
 
 /**
  * @brief Report an application error.

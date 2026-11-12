@@ -31,6 +31,9 @@ Features
   (``1003h``). The stack reports CAN overrun, error passive, recovery from bus-off, heartbeat
   timeout, RPDO length and timeout, and SYNC length errors.
 * Error behavior (``1029h``) for bus-off and heartbeat timeouts.
+* Master functions, enabled with :kconfig:option:`CONFIG_CANOPEN_MASTER`: an SDO client
+  (``1280h``) with expedited and segmented transfers, NMT node control commands and a simple
+  boot-up of slaves.
 
 Not supported: node guarding, PDOs requested by remote frames, MPDO, the CANopen manager
 boot-up of CiA 302, LSS (CiA 305) and CANopen FD (CiA 1301).
@@ -84,6 +87,21 @@ only.
 Bus state errors are taken from :c:func:`can_add_state_change_callback`. Bus-off recovery uses
 the CAN controller's automatic recovery. With :kconfig:option:`CONFIG_CAN_MANUAL_RECOVERY_MODE`
 the application calls :c:func:`can_recover`.
+
+Master functions
+****************
+
+:c:func:`canopen_sdo_upload` and :c:func:`canopen_sdo_download` read and write the object
+dictionary of another node. The transfer runs in the CANopen thread while the calling thread
+waits, so they must not be called from a node callback. A server node-ID of 1 to 127 selects the
+default SDO of that node, 0 uses the SDO client parameter as configured.
+
+:c:func:`canopen_nmt_send` sends an NMT command to one node or to all nodes. The NMT state of
+the sending node itself is changed with :c:func:`canopen_nmt_local_cmd`.
+
+:c:func:`canopen_master_boot` brings up a list of slaves: it waits for each slave to answer an
+SDO read of the device type, writes its configuration values and starts it. The remote NMT
+states are monitored with the heartbeat consumer and :c:func:`canopen_hb_consumer_state`.
 
 Samples
 *******

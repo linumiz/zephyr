@@ -110,6 +110,20 @@ config CANOPEN_HEARTBEAT_PRODUCER_MS
 	help
 	  Power-on value of object 1017h. 0 disables the heartbeat producer.
 
+config CANOPEN_MASTER
+	bool "CANopen master functions"
+	help
+	  Provide the SDO client parameter object (1280h), the SDO client API, the NMT master API
+	  and a simple boot-up of slaves.
+
+config CANOPEN_SDO_CLIENT_TIMEOUT_MS
+	int "SDO client timeout in milliseconds"
+	default 1000
+	range 1 65535
+	depends on CANOPEN_MASTER
+	help
+	  Time to wait for each response of the SDO server before the transfer is aborted.
+
 config CANOPEN_TPDO_COUNT
 	int "Number of TPDOs"
 	default 4

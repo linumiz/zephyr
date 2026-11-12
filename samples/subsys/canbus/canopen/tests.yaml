@@ -14,3 +14,14 @@ tests:
       type: one_line
       regex:
         - "CANopen node 0x10 started at 500000 bit/s"
+  sample.canbus.canopen.master:
+    tags:
+      - can
+      - canopen
+    depends_on: can
+    filter: dt_chosen_enabled("zephyr,canbus")
+    integration_platforms:
+      - native_sim/native/64
+    build_only: true
+    extra_configs:
+      - CONFIG_SAMPLE_MASTER=y
