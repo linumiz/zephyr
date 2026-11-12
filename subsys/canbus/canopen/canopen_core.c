@@ -294,6 +294,10 @@ int canopen_node_init(struct canopen_node *node, const struct canopen_node_confi
 			      K_FOREVER);
 	k_thread_name_set(tid, "canopen");
 
+	if (IS_ENABLED(CONFIG_CANOPEN_SHELL)) {
+		canopen_shell_register(node);
+	}
+
 	return 0;
 }
 

@@ -61,6 +61,24 @@ counter on CAN-ID 190h. An SDO upload of ``1017h`` returns the heartbeat produce
    cansend can0 610#4017100000000000
      can0  590   [8]  4B 17 10 00 E8 03 00 00
 
+Shell
+=====
+
+Build with ``-DEXTRA_CONF_FILE=shell.conf`` to add the ``canopen`` shell command
+(:kconfig:option:`CONFIG_CANOPEN_SHELL`) on the console, for example:
+
+.. code-block:: console
+
+   uart:~$ canopen list
+   0x10 PRE-OPERATIONAL error register 0x00 can@40520200
+   uart:~$ canopen read 16 0x1017 0
+   1000 (0x03e8)
+   uart:~$ canopen nmt 16 start
+   uart:~$ canopen sdo read 16 0x20 0x1008 0
+
+The overlay also enables the master functions, so ``canopen sdo`` and ``canopen nmt`` with a
+target node-ID reach other nodes on the bus.
+
 Master mode
 ===========
 

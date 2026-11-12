@@ -144,6 +144,8 @@ uint32_t canopen_hb_write(struct canopen_node *node, uint8_t sub, uint32_t value
 bool canopen_hb_rx(struct canopen_node *node, const struct can_frame *frame);
 bool canopen_hb_timed_out(struct canopen_node *node);
 
+void canopen_shell_register(struct canopen_node *node);
+
 void canopen_guard_init(struct canopen_node *node);
 void canopen_guard_reset(struct canopen_node *node);
 void canopen_guard_filter(struct canopen_node *node);

@@ -29,6 +29,7 @@
 #include <zephyr/drivers/can.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/atomic.h>
+#include <zephyr/sys/slist.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -453,6 +454,9 @@ struct canopen_node {
 	struct canopen_time time;
 #ifdef CONFIG_CANOPEN_NODE_GUARDING
 	struct canopen_guard guard;
+#endif
+#ifdef CONFIG_CANOPEN_SHELL
+	sys_snode_t shell_node;
 #endif
 	struct can_state_change_callback can_state_cb;
 	atomic_t can_state;
