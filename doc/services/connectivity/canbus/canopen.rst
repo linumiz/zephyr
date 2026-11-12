@@ -39,6 +39,11 @@ Features
 * TIME producer and consumer (``1012h``), enabled with :kconfig:option:`CONFIG_CANOPEN_TIME`.
   Received time stamps are passed to the ``time_cb`` callback, :c:func:`canopen_time_send`
   sends one.
+* Store and restore parameters (``1010h``, ``1011h``) through the :ref:`settings subsystem
+  <settings_api>`, enabled with :kconfig:option:`CONFIG_CANOPEN_STORAGE`. The parameters of a
+  node are kept in one settings entry, ``canopen/<node-ID>``, and are ignored after a change of
+  the stored objects. :c:func:`canopen_node_start` initializes the settings subsystem, so the
+  calling thread needs the stack of the settings backend.
 
 Not supported: the master side of node guarding, PDOs requested by remote frames, MPDO, the
 CANopen manager boot-up of CiA 302, LSS (CiA 305) and CANopen FD (CiA 1301).
@@ -64,6 +69,7 @@ values are the application's own variables:
 Entries are listed in ascending index order. Array and record entries are described with
 :c:macro:`CANOPEN_OD_ARRAY` and :c:macro:`CANOPEN_OD_RECORD`. A write hook
 (:c:macro:`CANOPEN_OD_VAR_HOOK`) can validate or reject values written over the network.
+Entries marked with :c:macro:`CANOPEN_OD_ATTR_PERSIST` are stored with ``1010h``.
 
 The application reads and writes values with :c:func:`canopen_od_read` and
 :c:func:`canopen_od_write`, which take the node lock.

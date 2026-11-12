@@ -55,6 +55,9 @@ void canopen_nmt_boot(struct canopen_node *node, bool reset_app)
 		if (node->cfg->reset_app_cb != NULL) {
 			node->cfg->reset_app_cb(node, node->cfg->user_data);
 		}
+		if (IS_ENABLED(CONFIG_CANOPEN_STORAGE)) {
+			canopen_storage_load(node, true);
+		}
 		canopen_emcy_reset(node, true);
 	}
 

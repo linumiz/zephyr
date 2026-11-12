@@ -15,6 +15,8 @@
 #define CANOPEN_OD_DEVICE_NAME       0x1008U
 #define CANOPEN_OD_HW_VERSION        0x1009U
 #define CANOPEN_OD_SW_VERSION        0x100AU
+#define CANOPEN_OD_STORE             0x1010U
+#define CANOPEN_OD_RESTORE           0x1011U
 #define CANOPEN_OD_COB_ID_EMCY       0x1014U
 #define CANOPEN_OD_INHIBIT_EMCY      0x1015U
 #define CANOPEN_OD_PRODUCER_HB_TIME  0x1017U
@@ -161,6 +163,12 @@ uint32_t canopen_od_comm_find(struct canopen_node *node, uint16_t index, uint8_t
 		return canopen_guard_find(node, index, sub, ref);
 	case CANOPEN_OD_ERROR_BEHAVIOR:
 		return comm_error_behavior_find(node, sub, ref);
+	case CANOPEN_OD_STORE:
+	case CANOPEN_OD_RESTORE:
+		if (!IS_ENABLED(CONFIG_CANOPEN_STORAGE)) {
+			return CANOPEN_SDO_ABORT_NO_OBJECT;
+		}
+		return canopen_storage_find(index, sub, ref);
 	case CANOPEN_OD_DEVICE_NAME:
 		return comm_string(ref, index, sub, comm_device_name, sizeof(comm_device_name));
 	case CANOPEN_OD_HW_VERSION:
@@ -224,6 +232,12 @@ uint32_t canopen_od_comm_write(struct canopen_node *node, const struct canopen_o
 	case CANOPEN_OD_SYNC_WINDOW:
 	case CANOPEN_OD_SYNC_OVERFLOW:
 		return canopen_sync_write(node, ref->index, value);
+	case CANOPEN_OD_STORE:
+	case CANOPEN_OD_RESTORE:
+		if (!IS_ENABLED(CONFIG_CANOPEN_STORAGE)) {
+			return CANOPEN_SDO_ABORT_READ_ONLY;
+		}
+		return canopen_storage_write(node, ref->index, ref->sub, value);
 	default:
 		if ((ref->index >= CANOPEN_OD_PDO_FIRST) && (ref->index <= CANOPEN_OD_PDO_LAST)) {
 			return canopen_pdo_write(node, ref->index, ref->sub, value);
@@ -249,5 +263,9 @@ void canopen_od_comm_reset(struct canopen_node *node)
 
 	if (IS_ENABLED(CONFIG_CANOPEN_NODE_GUARDING)) {
 		canopen_guard_reset(node);
+	}
+
+	if (IS_ENABLED(CONFIG_CANOPEN_STORAGE)) {
+		canopen_storage_load(node, false);
 	}
 }

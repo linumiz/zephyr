@@ -7,6 +7,7 @@
 #include <errno.h>
 
 #include <zephyr/logging/log.h>
+#include <zephyr/settings/settings.h>
 
 #include "canopen_internal.h"
 
@@ -296,6 +297,13 @@ int canopen_node_start(struct canopen_node *node)
 	if (err < 0) {
 		can_remove_rx_filter(can, nmt_filter);
 		return err;
+	}
+
+	if (IS_ENABLED(CONFIG_CANOPEN_STORAGE)) {
+		err = settings_subsys_init();
+		if (err != 0) {
+			LOG_WRN("parameters not restored (%d)", err);
+		}
 	}
 
 	can_init_state_change_callback(&node->can_state_cb, canopen_can_state_cb);

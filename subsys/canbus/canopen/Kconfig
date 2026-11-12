@@ -17,13 +17,17 @@ source "subsys/logging/Kconfig.template.log_config"
 
 config CANOPEN_THREAD_STACK_SIZE
 	int "CANopen thread stack size"
-	default 1024 if CAN_MCP2515 || CAN_MCP251XFD || CAN_TCAN4X5X || LOG_MODE_IMMEDIATE
+	default 3072 if CANOPEN_STORAGE && SETTINGS_ZMS && ZMS_CUSTOMIZE_BLOCK_SIZE
+	default 1024 if CAN_MCP2515 || CAN_MCP251XFD || CAN_TCAN4X5X || LOG_MODE_IMMEDIATE || \
+			CANOPEN_STORAGE
 	default 896
 	help
 	  Stack size of the thread running the protocol of a CANopen node. The thread also runs
-	  the CAN driver's send and filter functions and the application callbacks, so SPI
-	  attached CAN controllers and immediate logging get a larger default. Increase it for
-	  application callbacks with large stack frames.
+	  the CAN driver's send and filter functions, the settings backend when parameters are
+	  stored, and the application callbacks, so SPI attached CAN controllers, immediate
+	  logging and parameter storage get a larger default. ZMS keeps buffers of its block size
+	  on the stack, so storage through ZMS with a custom block size gets the largest default.
+	  Increase it for application callbacks with large stack frames.
 
 config CANOPEN_THREAD_PRIORITY
 	int "CANopen thread priority"
@@ -109,6 +113,32 @@ config CANOPEN_HEARTBEAT_PRODUCER_MS
 	range 0 65535
 	help
 	  Power-on value of object 1017h. 0 disables the heartbeat producer.
+
+config CANOPEN_STORAGE
+	bool "Store parameters in non-volatile memory"
+	depends on SETTINGS
+	select CRC
+	default y
+	help
+	  Provide the store parameters (1010h) and restore default parameters (1011h) objects
+	  with sub-index 1 for all parameters, 2 for the communication parameters, 3 for the
+	  application parameters (6000h to 9FFFh) and 4 for the manufacturer-specific parameters
+	  (2000h to 5FFFh). Communication parameters and application entries marked with
+	  CANOPEN_OD_ATTR_PERSIST are saved through the settings subsystem in one settings entry
+	  per node, and are the power-on values after a reset. Stored parameters whose layout
+	  does not match the build are ignored.
+
+config CANOPEN_STORAGE_APP_SIZE
+	int "Size of the stored application parameters"
+	depends on CANOPEN_STORAGE
+	default 64
+	range 0 4096
+	help
+	  Number of bytes reserved in the storage buffer for the entries marked with
+	  CANOPEN_OD_ATTR_PERSIST in the application (6000h to 9FFFh) and the
+	  manufacturer-specific (2000h to 5FFFh) ranges together. The buffer also holds the
+	  communication parameters. Storing parameters that do not fit is aborted with
+	  05040005h.
 
 config CANOPEN_NODE_GUARDING
 	bool "Node guarding"
