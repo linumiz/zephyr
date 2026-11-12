@@ -28,6 +28,18 @@ static void sync_expiry(struct k_timer *timer)
 	k_poll_signal_raise(&node->signal, 0);
 }
 
+static void sync_monitor(struct canopen_node *node)
+{
+	bool active = IS_ENABLED(CONFIG_CANOPEN_LEDS) && !sync_producer(node) &&
+		      (node->sync.period != 0U) &&
+		      ((node->nmt_state == CANOPEN_NMT_PRE_OPERATIONAL) ||
+		       (node->nmt_state == CANOPEN_NMT_OPERATIONAL));
+
+	node->sync.timed_out = false;
+	node->sync.timeout = sys_timepoint_calc(
+		active ? K_USEC(((uint64_t)node->sync.period * 3U) / 2U) : K_FOREVER);
+}
+
 static void sync_event(struct canopen_node *node, uint8_t counter)
 {
 	node->sync.last = k_uptime_ticks();
@@ -52,6 +64,8 @@ void canopen_sync_reset(struct canopen_node *node)
 	node->sync.overflow = 0U;
 	node->sync.counter = 1U;
 	node->sync.length_error = false;
+	node->sync.timed_out = false;
+	node->sync.timeout = sys_timepoint_calc(K_FOREVER);
 	(void)canopen_emcy_unset(node, CANOPEN_EMCY_SYNC_LENGTH);
 }
 
@@ -63,6 +77,7 @@ void canopen_sync_update(struct canopen_node *node)
 
 	(void)canopen_filter_set(node, &node->sync.filter,
 				 sync_producer(node) ? CANOPEN_COB_ID_INVALID : node->sync.cob_id);
+	sync_monitor(node);
 
 	if (active) {
 		k_timer_start(&node->sync.timer, K_USEC(node->sync.period),
@@ -183,6 +198,7 @@ bool canopen_sync_rx(struct canopen_node *node, const struct can_frame *frame)
 		(void)canopen_emcy_unset(node, CANOPEN_EMCY_SYNC_LENGTH);
 	}
 
+	sync_monitor(node);
 	sync_event(node, (frame->dlc == 1U) ? frame->data[0] : 0U);
 
 	return true;
@@ -204,6 +220,10 @@ void canopen_sync_process(struct canopen_node *node)
 	};
 	uint8_t counter = 0U;
 
+	if (!node->sync.timed_out && sys_timepoint_expired(node->sync.timeout)) {
+		node->sync.timed_out = true;
+	}
+
 	if (!atomic_test_and_clear_bit(&node->flags, CANOPEN_FLAG_SYNC_TICK)) {
 		return;
 	}
@@ -217,6 +237,11 @@ void canopen_sync_process(struct canopen_node *node)
 
 	(void)canopen_send(node, &frame);
 	sync_event(node, counter);
+}
+
+k_timepoint_t canopen_sync_deadline(struct canopen_node *node)
+{
+	return node->sync.timed_out ? sys_timepoint_calc(K_FOREVER) : node->sync.timeout;
 }
 
 bool canopen_sync_window_open(struct canopen_node *node)

@@ -6,6 +6,7 @@
 
 #include <zephyr/canbus/canopen.h>
 #include <zephyr/drivers/can.h>
+#include <zephyr/drivers/led.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
@@ -13,6 +14,23 @@ LOG_MODULE_REGISTER(canopen_sample, LOG_LEVEL_INF);
 
 #define OD_COUNTER 0x2000U
 #define OD_OUTPUT  0x2001U
+
+#define RUN_LED_NODE DT_ALIAS(canopen_run_led)
+#define ERR_LED_NODE DT_ALIAS(canopen_err_led)
+
+#if DT_NODE_EXISTS(RUN_LED_NODE) && defined(CONFIG_CANOPEN_LEDS)
+static const struct led_dt_spec run_led = LED_DT_SPEC_GET(RUN_LED_NODE);
+#define SAMPLE_RUN_LED (&run_led)
+#else
+#define SAMPLE_RUN_LED NULL
+#endif
+
+#if DT_NODE_EXISTS(ERR_LED_NODE) && defined(CONFIG_CANOPEN_LEDS)
+static const struct led_dt_spec err_led = LED_DT_SPEC_GET(ERR_LED_NODE);
+#define SAMPLE_ERR_LED (&err_led)
+#else
+#define SAMPLE_ERR_LED NULL
+#endif
 
 static uint32_t counter;
 static uint8_t output;
@@ -90,6 +108,8 @@ static const struct canopen_node_config sample_cfg = {
 	.rpdo = sample_rpdo,
 	.tpdo_count = ARRAY_SIZE(sample_tpdo),
 	.rpdo_count = ARRAY_SIZE(sample_rpdo),
+	.led_run = SAMPLE_RUN_LED,
+	.led_err = SAMPLE_ERR_LED,
 	.node_id = CONFIG_SAMPLE_NODE_ID,
 };
 

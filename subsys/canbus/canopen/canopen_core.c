@@ -147,6 +147,9 @@ static k_timeout_t canopen_next_timeout(struct canopen_node *node)
 		canopen_pdo_deadline(node),
 		canopen_hb_deadline(node),
 		canopen_emcy_deadline(node),
+		canopen_sync_deadline(node),
+		IS_ENABLED(CONFIG_CANOPEN_LEDS) ? canopen_leds_deadline(node)
+						: sys_timepoint_calc(K_FOREVER),
 	};
 	k_timepoint_t next = canopen_nmt_deadline(node);
 
@@ -207,6 +210,9 @@ static void canopen_thread(void *p1, void *p2, void *p3)
 		canopen_hb_process(node);
 		canopen_pdo_process(node);
 		canopen_emcy_process(node);
+		if (IS_ENABLED(CONFIG_CANOPEN_LEDS)) {
+			canopen_leds_process(node);
+		}
 		timeout = canopen_next_timeout(node);
 
 		k_mutex_unlock(&node->lock);
@@ -232,6 +238,10 @@ int canopen_node_init(struct canopen_node *node, const struct canopen_node_confi
 	node->cfg = cfg;
 	if ((canopen_pdo_init(node) != 0) || (canopen_hb_init(node) != 0)) {
 		return -EINVAL;
+	}
+
+	if (IS_ENABLED(CONFIG_CANOPEN_LEDS) && (canopen_leds_init(node) != 0)) {
+		return -ENODEV;
 	}
 
 	node->nmt_state = CANOPEN_NMT_INITIALISING;
@@ -291,6 +301,9 @@ int canopen_node_start(struct canopen_node *node)
 
 	k_mutex_lock(&node->lock, K_FOREVER);
 	canopen_nmt_boot(node, true);
+	if (IS_ENABLED(CONFIG_CANOPEN_LEDS)) {
+		canopen_leds_process(node);
+	}
 	k_mutex_unlock(&node->lock);
 
 	k_thread_start(&node->thread);

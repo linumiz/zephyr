@@ -110,6 +110,15 @@ config CANOPEN_HEARTBEAT_PRODUCER_MS
 	help
 	  Power-on value of object 1017h. 0 disables the heartbeat producer.
 
+config CANOPEN_LEDS
+	bool "CiA 303-3 indicator LEDs"
+	depends on LED
+	default y
+	help
+	  Drive the RUN and ERR LEDs given in the node configuration with the indicator states
+	  of CiA 303-3. The LEDs are updated from the CANopen thread, which only wakes up for
+	  them while one of them is blinking or flashing.
+
 config CANOPEN_TPDO_COUNT
 	int "Number of TPDOs"
 	default 4
